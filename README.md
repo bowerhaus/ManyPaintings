@@ -1,4 +1,6 @@
-# PRD: Generative Art Application (Python Flask)
+# Many Paintings - Generative Art Application
+
+*A Python Flask web application inspired by Brian Eno's "77 Million Paintings"*
 
 ## 1. Introduction
 
@@ -76,9 +78,11 @@ The application should provide extensive configuration options to fine-tune the 
 #### UI Control Configuration ✅ IMPLEMENTED
 *   **Speed Range:** 0.1x to 20x multiplier with real-time effect on all animations
 *   **Layer Range:** 1-8 concurrent layers with immediate cleanup
-*   **Pattern Input:** Text field accepting alphanumeric pattern codes
+*   **Background Toggle:** Black/white background switching with adaptive blend modes
+*   **Pattern Display:** Real-time pattern code display with automatic updates
 *   **Control Panel:** 70% viewport width, bottom-center positioning, mouse-activated
 *   **Visual Design:** Glassmorphism effects with backdrop-blur and smooth transitions
+*   **Unified Interface:** All controls consolidated in single panel for improved UX
 
 ### 3.4. User Interaction
 
@@ -86,9 +90,11 @@ The application should provide extensive configuration options to fine-tune the 
 *   **Mouse-Activated Control Panel:** A sophisticated control interface that appears when hovering over the bottom-center area of the canvas
 *   **Real-time Speed Control:** Dynamic speed multiplier ranging from 0.1x to 20x affecting all animation timings (fade in/out, hold times, spawn intervals)
 *   **Layer Management:** Live adjustment of concurrent layer count (1-8 layers) with immediate cleanup of excess layers
-*   **Pattern Input:** Interactive pattern code editor allowing users to input custom pattern seeds for reproducible sequences
+*   **Background Theme Toggle:** Instant switching between black and white backgrounds with adaptive UI styling and smart blend modes
+*   **Pattern Code Display:** Real-time pattern code display showing current sequence with automatic updates
 *   **Glassmorphism UI Design:** Modern backdrop-blur visual effects with smooth opacity transitions
 *   **Responsive Layout:** 70% canvas width control panel optimized for different screen sizes
+*   **Unified Control Interface:** All settings consolidated in single horizontal layout for improved accessibility
 
 #### 3.4.2. Interactive Features
 *   **Speed Multiplier Effects:**
@@ -103,9 +109,16 @@ The application should provide extensive configuration options to fine-tune the 
     - 8 layers: Dense, dynamic layered experiences
 
 *   **Pattern Code System:**
-    - Editable alphanumeric codes for sequence reproduction
-    - Immediate pattern switching without application restart
+    - Real-time display of current pattern codes for sequence identification
+    - Automatic updates as patterns change and evolve
     - Deterministic generation for consistent results
+
+*   **Background Theme System:**
+    - Instant toggle between black and white backgrounds
+    - Adaptive UI styling that automatically adjusts for optimal contrast
+    - Smart blend mode switching (normal for black, multiply for white backgrounds)
+    - Persistent preference storage using localStorage
+    - Keyboard shortcut (B key) for quick switching
 
 ## 4. Target Audience
 
@@ -175,40 +188,107 @@ The application should provide extensive configuration options to fine-tune the 
 
 3. For kiosk mode, navigate to `http://localhost:5000/kiosk`
 
-### 6.4. Configuration
+### 6.4. Using the Application
 
-The application behavior can be customized through environment variables. Create a `.env` file based on `.env.example`:
+#### Interactive Controls
+- **Mouse hover** over the bottom area to reveal the control panel
+- **Speed slider:** Adjust animation speed from 0.1x to 20x
+- **Layer slider:** Control concurrent layers from 1 to 8  
+- **Background toggle:** Switch between black and white backgrounds (⚫⚪)
+- **Pattern display:** View current pattern code
 
-#### Animation Configuration Example
-```bash
-# Animation Timing (seconds)
-FADE_IN_DURATION_SEC=3.0
-FADE_OUT_DURATION_SEC=4.0
-MIN_HOLD_TIME_SEC=5.0
-MAX_HOLD_TIME_SEC=15.0
-MAX_OPACITY=0.7
+#### Keyboard Shortcuts
+- **Space:** Play/Pause animation
+- **N:** Generate new pattern
+- **B:** Toggle background (black/white)
 
-# Layer Management
-MAX_CONCURRENT_LAYERS=3
-LAYER_SPAWN_INTERVAL_SEC=4.0
+#### Control Panel Features
+- **Real-time adjustments:** All changes take effect immediately
+- **Persistent settings:** Background preference is saved automatically
+- **Adaptive UI:** Interface colors adjust based on background theme
 
-# Image Transformations
-ROTATION_ENABLED=true
-ROTATION_MIN_DEGREES=-15
-ROTATION_MAX_DEGREES=15
-SCALE_ENABLED=true
-SCALE_MIN_FACTOR=0.8
-SCALE_MAX_FACTOR=1.2
-TRANSLATION_ENABLED=true
-TRANSLATION_X_RANGE=20
-TRANSLATION_Y_RANGE=15
+### 6.5. Configuration
 
-# Performance
-ANIMATION_QUALITY=high
-PRELOAD_TRANSFORM_CACHE=true
+The application is configured using a **JSON-based configuration system** (`config.json`). The configuration supports different environment profiles (development, production, raspberry_pi).
+
+#### Configuration Structure
+```json
+{
+  "flask": {
+    "secret_key": "your-secret-key",
+    "debug": true,
+    "host": "127.0.0.1",
+    "port": 5000
+  },
+  "animation_timing": {
+    "fade_in_min_sec": 15.0,
+    "fade_in_max_sec": 60.0,
+    "fade_out_min_sec": 15.0,
+    "fade_out_max_sec": 60.0,
+    "min_hold_time_sec": 5.0,
+    "max_hold_time_sec": 120.0,
+    "layer_spawn_interval_sec": 4.0
+  },
+  "layer_management": {
+    "max_concurrent_layers": 4,
+    "max_opacity": 1.0
+  },
+  "transformations": {
+    "rotation": {
+      "enabled": true,
+      "min_degrees": -60,
+      "max_degrees": 60
+    },
+    "scale": {
+      "enabled": true,
+      "min_factor": 0.5,
+      "max_factor": 1.0
+    },
+    "translation": {
+      "enabled": true,
+      "x_range_percent": 30,
+      "y_range_percent": 30
+    }
+  }
+}
 ```
 
-### 6.5. Production Deployment
+#### Environment Profiles
+
+The configuration system supports three environment profiles:
+
+**Development** (default)
+- Full debugging enabled
+- High animation quality
+- Standard timing parameters
+
+**Production**
+- Debugging disabled
+- Optimized for deployment
+- Remember to change the secret key
+
+**Raspberry Pi**
+- Optimized for Pi hardware
+- Reduced concurrent layers (2)
+- Lower animation FPS (24)
+- Faster timing for better performance
+- Medium animation quality
+
+#### Environment Selection
+
+Set the environment using the `FLASK_CONFIG` environment variable:
+```bash
+# Development (default)
+python app.py
+
+# Production
+FLASK_CONFIG=production python app.py
+
+# Raspberry Pi
+FLASK_CONFIG=raspberry_pi python app.py
+```
+
+### 6.6. Production Deployment
 
 For production deployment on Raspberry Pi or other systems:
 

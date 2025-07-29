@@ -254,6 +254,7 @@ body.white-background .onscreen-controls {
     flex-direction: column;
     gap: 0.5rem;
     min-width: 120px;
+    align-items: center;
 }
 
 
@@ -274,18 +275,24 @@ body.white-background .control-label {
     display: flex;
     align-items: center;
     gap: 1rem;
+    height: 3rem;
+    width: 100%;
 }
 
 .button-container {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 3rem;
+    width: 100%;
 }
 
 .pattern-container {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 3rem;
+    width: 100%;
 }
 
 .control-slider {

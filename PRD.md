@@ -48,35 +48,64 @@ This document outlines the Product Requirements for a generative art application
 
 The application should provide extensive configuration options to fine-tune the visual experience:
 
-#### Animation Timing Configuration
-*   `FADE_IN_DURATION_SEC` - Time for image to fade from 0% to maximum opacity (default: 3.0 seconds)
-*   `FADE_OUT_DURATION_SEC` - Time for image to fade from maximum to 0% opacity (default: 4.0 seconds)
-*   `MIN_HOLD_TIME_SEC` - Minimum time image stays at maximum opacity (default: 5.0 seconds)
-*   `MAX_HOLD_TIME_SEC` - Maximum time image stays at maximum opacity (default: 15.0 seconds)
-*   `MAX_OPACITY` - Peak opacity level for images (default: 0.7, range: 0.1-1.0)
+#### Animation Timing Configuration (JSON-based)
+*   `fade_in_min_sec` / `fade_in_max_sec` - Random fade-in duration range (default: 15.0-60.0 seconds)
+*   `fade_out_min_sec` / `fade_out_max_sec` - Random fade-out duration range (default: 15.0-60.0 seconds)
+*   `min_hold_time_sec` / `max_hold_time_sec` - Random hold time range (default: 5.0-120.0 seconds)
+*   `max_opacity` - Peak opacity level for images (default: 1.0, range: 0.1-1.0)
+*   `layer_spawn_interval_sec` - Base interval between new images (default: 4.0 seconds)
 
 #### Layer Management Configuration
-*   `MAX_CONCURRENT_LAYERS` - Maximum simultaneous visible images (default: 3, range: 1-8)
-*   `LAYER_SPAWN_INTERVAL_SEC` - Time between new image appearances (default: 4.0 seconds)
+*   `max_concurrent_layers` - Maximum simultaneous visible images (default: 4, UI adjustable: 1-8)
 
-#### Image Transformation Configuration
-*   `ROTATION_ENABLED` - Enable random rotation (default: true)
-*   `ROTATION_MIN_DEGREES` - Minimum rotation angle (default: -15)
-*   `ROTATION_MAX_DEGREES` - Maximum rotation angle (default: 15)
-*   `SCALE_ENABLED` - Enable random scaling (default: true)
-*   `SCALE_MIN_FACTOR` - Minimum scale multiplier (default: 0.8)
-*   `SCALE_MAX_FACTOR` - Maximum scale multiplier (default: 1.2)
-*   `TRANSLATION_ENABLED` - Enable random positioning (default: true)
-*   `TRANSLATION_X_RANGE` - Horizontal position variance as % of screen width (default: 20)
-*   `TRANSLATION_Y_RANGE` - Vertical position variance as % of screen height (default: 15)
+#### Image Transformation Configuration (JSON-based)
+*   `rotation.enabled` - Enable random rotation (default: true)
+*   `rotation.min_degrees` - Minimum rotation angle (default: -60°)
+*   `rotation.max_degrees` - Maximum rotation angle (default: 60°)
+*   `scale.enabled` - Enable random scaling (default: true)
+*   `scale.min_factor` - Minimum scale multiplier (default: 0.5)
+*   `scale.max_factor` - Maximum scale multiplier (default: 1.0)
+*   `translation.enabled` - Enable random positioning (default: true)
+*   `translation.x_range_percent` - Horizontal variance as % of viewport (default: 30%)
+*   `translation.y_range_percent` - Vertical variance as % of viewport (default: 30%)
 
 #### Performance Optimization Configuration
-*   `ANIMATION_QUALITY` - Animation smoothness level (default: 'high', options: 'low', 'medium', 'high')
-*   `PRELOAD_TRANSFORM_CACHE` - Pre-calculate transformations for performance (default: true)
+*   `animation_quality` - Animation smoothness level (default: 'high', options: 'low', 'medium', 'high')
+*   `preload_transform_cache` - Pre-calculate transformations for performance (default: true)
+
+#### UI Control Configuration ✅ IMPLEMENTED
+*   **Speed Range:** 0.1x to 20x multiplier with real-time effect on all animations
+*   **Layer Range:** 1-8 concurrent layers with immediate cleanup
+*   **Pattern Input:** Text field accepting alphanumeric pattern codes
+*   **Control Panel:** 70% viewport width, bottom-center positioning, mouse-activated
+*   **Visual Design:** Glassmorphism effects with backdrop-blur and smooth transitions
 
 ### 3.4. User Interaction
 
-*   **No Direct Interaction (MVP):** The initial version of the application will not require any user interaction. The generative art will be displayed passively.
+#### 3.4.1. Onscreen Controls System ✅ IMPLEMENTED
+*   **Mouse-Activated Control Panel:** A sophisticated control interface that appears when hovering over the bottom-center area of the canvas
+*   **Real-time Speed Control:** Dynamic speed multiplier ranging from 0.1x to 20x affecting all animation timings (fade in/out, hold times, spawn intervals)
+*   **Layer Management:** Live adjustment of concurrent layer count (1-8 layers) with immediate cleanup of excess layers
+*   **Pattern Input:** Interactive pattern code editor allowing users to input custom pattern seeds for reproducible sequences
+*   **Glassmorphism UI Design:** Modern backdrop-blur visual effects with smooth opacity transitions
+*   **Responsive Layout:** 70% canvas width control panel optimized for different screen sizes
+
+#### 3.4.2. Interactive Features
+*   **Speed Multiplier Effects:**
+    - At 1x: Normal contemplative timing (15-60s fades, 5-120s hold times)
+    - At 10x: Rapid dynamic changes (1.5-6s fades, 0.5-12s holds)
+    - At 20x: Ultra-fast generative effects (0.75-3s fades, 0.25-6s holds)
+    - At 0.1x: Ultra-slow meditative experience (150-600s fades, 50-1200s holds)
+
+*   **Layer Control Benefits:**
+    - 1-2 layers: Minimalist, focused compositions
+    - 4-6 layers: Rich, complex overlapping visuals
+    - 8 layers: Dense, dynamic layered experiences
+
+*   **Pattern Code System:**
+    - Editable alphanumeric codes for sequence reproduction
+    - Immediate pattern switching without application restart
+    - Deterministic generation for consistent results
 
 ## 4. Target Audience
 

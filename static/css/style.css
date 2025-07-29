@@ -201,9 +201,9 @@ body.white-background .control-btn:hover {
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 70vw;
-    max-width: 800px;
-    min-width: 600px;
+    width: 85vw;
+    max-width: 1000px;
+    min-width: 800px;
     height: 120px;
     z-index: 200;
     pointer-events: auto;
@@ -215,15 +215,15 @@ body.white-background .control-btn:hover {
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%);
-    width: 70vw;
-    max-width: 800px;
-    min-width: 600px;
+    width: 85vw;
+    max-width: 1000px;
+    min-width: 800px;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1rem;
-    padding: 1.5rem 2rem;
+    padding: 1.5rem 2.5rem;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
@@ -245,7 +245,7 @@ body.white-background .onscreen-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
+    gap: 2.5rem;
     width: 100%;
 }
 
@@ -253,7 +253,7 @@ body.white-background .onscreen-controls {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    min-width: 120px;
+    min-width: 140px;
     align-items: center;
 }
 
@@ -537,7 +537,49 @@ body.white-background .error-message {
 }
 
 /* Responsive design */
+@media (max-width: 1200px) {
+    .onscreen-controls {
+        width: 90vw;
+        min-width: 700px;
+        padding: 1.5rem 2rem;
+    }
+    
+    .controls-trigger-area {
+        width: 90vw;
+        min-width: 700px;
+    }
+    
+    .controls-row {
+        gap: 2rem;
+    }
+    
+    .control-group {
+        min-width: 120px;
+    }
+}
+
 @media (max-width: 768px) {
+    .onscreen-controls {
+        width: 95vw;
+        min-width: 600px;
+        padding: 1rem 1.5rem;
+    }
+    
+    .controls-trigger-area {
+        width: 95vw;
+        min-width: 600px;
+    }
+    
+    .controls-row {
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .control-group {
+        min-width: 100px;
+        flex: 1;
+    }
+    
     .pattern-display {
         bottom: 1rem;
         left: 1rem;

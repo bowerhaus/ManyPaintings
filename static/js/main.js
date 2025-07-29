@@ -686,6 +686,187 @@ window.App = (function () {
   };
 
   /**
+   * Audio Manager - Handles background audio playback
+   */
+  const AudioManager = {
+    audioElement: null,
+    isEnabled: false,
+    volume: 0.5,
+    filePath: null,
+
+    init() {
+      console.log('AudioManager: Initializing with config:', config);
+      console.log('AudioManager: Audio config section:', config.audio);
+      
+      if (!config.audio || !config.audio.enabled) {
+        console.log('AudioManager: Audio disabled in config');
+        return;
+      }
+
+      this.isEnabled = config.audio.enabled;
+      this.volume = config.audio.volume || 0.5;
+      this.filePath = config.audio.file_path || 'static/audio/ambient.mp3';
+
+      console.log(`AudioManager: Initialized with file: ${this.filePath}, volume: ${this.volume}`);
+      
+      // Test if the audio file URL is accessible
+      fetch(this.filePath, { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            console.log('AudioManager: Audio file is accessible via HTTP');
+          } else {
+            console.error('AudioManager: Audio file not accessible:', response.status, response.statusText);
+          }
+        })
+        .catch(error => {
+          console.error('AudioManager: Failed to test audio file accessibility:', error);
+        });
+
+      this.createAudioElement();
+    },
+
+    createAudioElement() {
+      this.audioElement = document.createElement('audio');
+      this.audioElement.src = this.filePath;
+      this.audioElement.loop = config.audio.loop !== false;
+      this.audioElement.volume = this.volume;
+      this.audioElement.preload = 'auto';
+
+      // Handle audio loading and errors
+      this.audioElement.addEventListener('loadstart', () => {
+        console.log('AudioManager: Started loading audio file');
+      });
+
+      this.audioElement.addEventListener('loadedmetadata', () => {
+        console.log('AudioManager: Audio metadata loaded');
+      });
+
+      this.audioElement.addEventListener('canplaythrough', () => {
+        console.log('AudioManager: Audio loaded and ready to play');
+        if (config.audio.autoplay !== false) {
+          this.tryAutoplay();
+        }
+      });
+
+      this.audioElement.addEventListener('error', (e) => {
+        console.error('AudioManager: Audio error:', e);
+        console.error('AudioManager: Failed to load audio file:', this.filePath);
+        console.error('AudioManager: Error details:', e.target.error);
+      });
+
+      this.audioElement.addEventListener('ended', () => {
+        if (config.audio.loop !== false) {
+          this.play();
+        }
+      });
+
+      // Add to DOM (hidden)
+      this.audioElement.style.display = 'none';
+      document.body.appendChild(this.audioElement);
+    },
+
+    async tryAutoplay() {
+      if (!this.audioElement) return;
+
+      try {
+        await this.audioElement.play();
+        console.log('AudioManager: Autoplay started successfully');
+      } catch (error) {
+        console.log('AudioManager: Autoplay blocked by browser, waiting for user interaction');
+        // Autoplay was blocked, will need user interaction
+        this.setupUserInteractionHandler();
+      }
+    },
+
+    setupUserInteractionHandler() {
+      console.log('AudioManager: Setting up user interaction handler for autoplay');
+      
+      const handleUserInteraction = async (event) => {
+        console.log('AudioManager: User interaction detected, attempting to start audio');
+        try {
+          await this.audioElement.play();
+          console.log('AudioManager: Audio started successfully after user interaction');
+          // Update UI button state
+          if (window.App && window.App.UI) {
+            window.App.UI.updateAudioButton();
+          }
+        } catch (error) {
+          console.error('AudioManager: Failed to start audio after user interaction:', error);
+        }
+      };
+
+      // Listen for any user interaction
+      document.addEventListener('click', handleUserInteraction, { once: true });
+      document.addEventListener('keydown', handleUserInteraction, { once: true });
+      document.addEventListener('touchstart', handleUserInteraction, { once: true });
+      
+      console.log('AudioManager: User interaction listeners added');
+    },
+
+    async play() {
+      if (!this.audioElement || !this.isEnabled) {
+        console.log('AudioManager: Play called but audio element not ready or disabled');
+        return;
+      }
+
+      try {
+        console.log('AudioManager: Attempting to play audio...');
+        await this.audioElement.play();
+        console.log('AudioManager: Audio playing successfully');
+        // Update UI button state
+        if (window.App && window.App.UI) {
+          window.App.UI.updateAudioButton();
+        }
+      } catch (error) {
+        console.error('AudioManager: Failed to play audio:', error);
+        console.error('AudioManager: Error name:', error.name);
+        console.error('AudioManager: Error message:', error.message);
+      }
+    },
+
+    pause() {
+      if (!this.audioElement) return;
+
+      this.audioElement.pause();
+      console.log('AudioManager: Audio paused');
+      // Update UI button state
+      if (window.App && window.App.UI) {
+        window.App.UI.updateAudioButton();
+      }
+    },
+
+    stop() {
+      if (!this.audioElement) return;
+
+      this.audioElement.pause();
+      this.audioElement.currentTime = 0;
+      console.log('AudioManager: Audio stopped');
+    },
+
+    setVolume(volume) {
+      if (!this.audioElement) return;
+
+      this.volume = Math.max(0, Math.min(1, volume));
+      this.audioElement.volume = this.volume;
+      console.log(`AudioManager: Volume set to ${this.volume}`);
+    },
+
+    toggle() {
+      if (!this.audioElement) return;
+
+      if (this.audioElement.paused) {
+        this.play();
+      } else {
+        this.pause();
+      }
+    },
+
+    isPlaying() {
+      return this.audioElement && !this.audioElement.paused;
+    }
+  };
+
+  /**
    * UI Manager - Handles user interface and interactions
    */
   const UI = {
@@ -738,6 +919,18 @@ window.App = (function () {
         backgroundToggleBtn.addEventListener('click', this.toggleBackground.bind(this));
       }
 
+      // Audio toggle button
+      const audioToggleBtn = document.getElementById('audio-toggle-btn');
+      if (audioToggleBtn) {
+        audioToggleBtn.addEventListener('click', this.toggleAudio.bind(this));
+      }
+
+      // Main audio toggle button (always visible)
+      const mainAudioToggleBtn = document.getElementById('main-audio-toggle-btn');
+      if (mainAudioToggleBtn) {
+        mainAudioToggleBtn.addEventListener('click', this.toggleAudio.bind(this));
+      }
+
       // Retry button
       const retryBtn = document.getElementById('retry-btn');
       if (retryBtn) {
@@ -784,12 +977,25 @@ window.App = (function () {
         });
       }
 
+      // Audio volume slider
+      const audioVolumeSlider = document.getElementById('audio-volume-slider');
+      const audioVolumeValue = document.getElementById('audio-volume-value');
+      if (audioVolumeSlider && audioVolumeValue) {
+        audioVolumeSlider.addEventListener('input', (e) => {
+          const volume = parseFloat(e.target.value);
+          audioVolumeValue.textContent = `${Math.round(volume * 100)}%`;
+          console.log(`UI: Audio volume changed to ${volume}`);
+          AudioManager.setVolume(volume);
+        });
+      }
 
       // Set initial values from config
       if (speedSlider) speedSlider.value = this.speedMultiplier;
       if (speedValue) speedValue.textContent = `${this.speedMultiplier.toFixed(1)}x`;
       if (layersSlider) layersSlider.value = this.maxLayers;
       if (layersValue) layersValue.textContent = this.maxLayers.toString();
+      if (audioVolumeSlider) audioVolumeSlider.value = (config.audio && config.audio.volume) || 0.5;
+      if (audioVolumeValue) audioVolumeValue.textContent = `${Math.round(((config.audio && config.audio.volume) || 0.5) * 100)}%`;
     },
 
 
@@ -884,6 +1090,10 @@ window.App = (function () {
           event.preventDefault();
           this.toggleBackground();
           break;
+        case 'KeyA':
+          event.preventDefault();
+          this.toggleAudio();
+          break;
       }
     },
 
@@ -918,6 +1128,28 @@ window.App = (function () {
       }
 
       console.log(`UI: Background switched to ${this.isWhiteBackground ? 'white' : 'black'}`);
+    },
+
+    toggleAudio() {
+      AudioManager.toggle();
+      this.updateAudioButton();
+    },
+
+    updateAudioButton() {
+      const isPlaying = AudioManager.isPlaying();
+      const icon = isPlaying ? '🔊' : '🔇';
+      
+      const btn = document.getElementById('audio-toggle-btn');
+      if (btn) {
+        btn.textContent = icon;
+      }
+      
+      const mainBtn = document.getElementById('main-audio-toggle-btn');
+      if (mainBtn) {
+        mainBtn.textContent = icon;
+      }
+      
+      console.log(`UI: Audio button updated - ${isPlaying ? 'playing' : 'stopped'}`);
     },
 
     async generateNewPattern() {
@@ -991,6 +1223,7 @@ window.App = (function () {
 
         await ImageManager.init();
         AnimationEngine.init();
+        AudioManager.init();
         await PatternManager.init();
 
         AnimationEngine.start();
@@ -1010,6 +1243,7 @@ window.App = (function () {
     ImageManager,
     AnimationEngine,
     PatternManager,
+    AudioManager,
     UI
   };
 })();

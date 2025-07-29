@@ -51,6 +51,13 @@
     "animation_quality": "high",
     "preload_transform_cache": true
   },
+  "audio": {
+    "enabled": true,
+    "file_path": "static/audio/Ethereal Strokes Loop.mp3",
+    "volume": 0.5,
+    "loop": true,
+    "autoplay": true
+  },
   "environments": {
     "development": {
       "flask": {

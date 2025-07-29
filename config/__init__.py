@@ -20,7 +20,8 @@ def load_config_from_json(config_name='development'):
         'animation_timing': config_data.get('animation_timing', {}),
         'layer_management': config_data.get('layer_management', {}),
         'transformations': config_data.get('transformations', {}),
-        'performance': config_data.get('performance', {})
+        'performance': config_data.get('performance', {}),
+        'audio': config_data.get('audio', {})
     }
     
     # Apply environment-specific overrides
@@ -74,6 +75,7 @@ class Config:
         layer_config = self._config_data.get('layer_management', {})
         self.MAX_CONCURRENT_LAYERS = layer_config.get('max_concurrent_layers', 5)
         self.MAX_OPACITY = layer_config.get('max_opacity', 0.8)
+        self.MIN_OPACITY = layer_config.get('min_opacity', 0.7)
         
         # Transformation configuration
         transform_config = self._config_data.get('transformations', {})
@@ -96,6 +98,14 @@ class Config:
         perf_config = self._config_data.get('performance', {})
         self.ANIMATION_QUALITY = perf_config.get('animation_quality', 'high')
         self.PRELOAD_TRANSFORM_CACHE = perf_config.get('preload_transform_cache', True)
+        
+        # Audio configuration
+        audio_config = self._config_data.get('audio', {})
+        self.AUDIO_ENABLED = audio_config.get('enabled', False)
+        self.AUDIO_FILE_PATH = audio_config.get('file_path', 'static/audio/ambient.mp3')
+        self.AUDIO_VOLUME = audio_config.get('volume', 0.5)
+        self.AUDIO_LOOP = audio_config.get('loop', True)
+        self.AUDIO_AUTOPLAY = audio_config.get('autoplay', True)
 
 class DevelopmentConfig(Config):
     def __init__(self):

@@ -189,11 +189,18 @@ window.App = (function() {
             try {
                 const img = await ImageManager.loadImage(imageId);
                 
-                // Generate random timing and transformation parameters
-                const fadeInDuration = this.randomBetween(config.fadeInMinSec || 2, config.fadeInMaxSec || 5) * 1000;
-                const fadeOutDuration = this.randomBetween(config.fadeOutMinSec || 3, config.fadeOutMaxSec || 6) * 1000;
-                const holdTime = this.randomBetween(config.minHoldTimeSec || 4, config.maxHoldTimeSec || 12) * 1000;
+                // Generate random timing and transformation parameters (affected by speed multiplier)
+                const speedMultiplier = UI.speedMultiplier || 1.0;
+                const baseFadeInDuration = this.randomBetween(config.fadeInMinSec || 2, config.fadeInMaxSec || 5) * 1000;
+                const baseFadeOutDuration = this.randomBetween(config.fadeOutMinSec || 3, config.fadeOutMaxSec || 6) * 1000;
+                const baseHoldTime = this.randomBetween(config.minHoldTimeSec || 4, config.maxHoldTimeSec || 12) * 1000;
+                
+                const fadeInDuration = baseFadeInDuration / speedMultiplier;
+                const fadeOutDuration = baseFadeOutDuration / speedMultiplier;
+                const holdTime = baseHoldTime / speedMultiplier;
                 const opacity = Math.min(config.maxOpacity || 0.8, Math.random() * 0.3 + 0.4);
+                
+                console.log(`AnimationEngine: Speed ${speedMultiplier}x - fadeIn: ${fadeInDuration}ms, hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms`);
                 
                 const transformations = this.generateTransformations(imageId, options.seed);
                 const layer = this.createLayer(imageId, img, transformations);
@@ -208,7 +215,9 @@ window.App = (function() {
                     holdTime,
                     opacity,
                     transformations,
-                    phase: 'fade-in'
+                    phase: 'fade-in',
+                    originalSpeed: speedMultiplier,
+                    holdTimeout: null
                 };
                 
                 this.activeLayers.set(imageId, layerInfo);
@@ -216,7 +225,6 @@ window.App = (function() {
                 // Start fade in animation
                 this.startFadeIn(layerInfo);
 
-                console.log(`AnimationEngine: Started layer ${imageId} - fadeIn: ${fadeInDuration}ms, hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms`);
                 return layer;
                 
             } catch (error) {
@@ -241,7 +249,7 @@ window.App = (function() {
                 layerInfo.phase = 'hold';
                 
                 // Schedule hold phase end
-                setTimeout(() => {
+                layerInfo.holdTimeout = setTimeout(() => {
                     if (layerInfo.phase === 'hold') {
                         this.startFadeOut(layerInfo);
                     }
@@ -263,7 +271,13 @@ window.App = (function() {
         },
 
         removeLayer(layerInfo) {
-            const { layer } = layerInfo;
+            const { layer, holdTimeout } = layerInfo;
+            
+            // Clear any pending timeouts
+            if (holdTimeout) {
+                clearTimeout(holdTimeout);
+                layerInfo.holdTimeout = null;
+            }
             
             if (layer.parentNode) {
                 layer.parentNode.removeChild(layer);
@@ -393,6 +407,49 @@ window.App = (function() {
             return layer;
         },
 
+        updateExistingLayerSpeeds(newSpeedMultiplier) {
+            console.log(`AnimationEngine: Updating ${this.activeLayers.size} existing layers to ${newSpeedMultiplier}x speed`);
+            
+            this.activeLayers.forEach((layerInfo, imageId) => {
+                if (layerInfo.phase === 'fade-in' || layerInfo.phase === 'hold') {
+                    // Recalculate remaining times with new speed
+                    const elapsed = Date.now() - layerInfo.startTime;
+                    
+                    if (layerInfo.phase === 'fade-in') {
+                        // Still fading in - adjust the transition duration
+                        const originalFadeInDuration = layerInfo.fadeInDuration * (layerInfo.originalSpeed || 1.0);
+                        const newFadeInDuration = originalFadeInDuration / newSpeedMultiplier;
+                        const remainingFadeTime = Math.max(100, newFadeInDuration - elapsed);
+                        
+                        layerInfo.layer.style.transition = `opacity ${remainingFadeTime}ms ease-in-out`;
+                        console.log(`AnimationEngine: Updated layer ${imageId} fade-in duration to ${remainingFadeTime}ms`);
+                    } else if (layerInfo.phase === 'hold') {
+                        // In hold phase - adjust remaining hold time and fade out
+                        const originalHoldTime = layerInfo.holdTime * (layerInfo.originalSpeed || 1.0);
+                        const newHoldTime = originalHoldTime / newSpeedMultiplier;
+                        const holdElapsed = elapsed - (layerInfo.fadeInDuration * (layerInfo.originalSpeed || 1.0) / newSpeedMultiplier);
+                        const remainingHoldTime = Math.max(100, newHoldTime - holdElapsed);
+                        
+                        // Clear existing timeout and set new one
+                        if (layerInfo.holdTimeout) {
+                            clearTimeout(layerInfo.holdTimeout);
+                        }
+                        
+                        layerInfo.holdTimeout = setTimeout(() => {
+                            if (layerInfo.phase === 'hold') {
+                                this.startFadeOut(layerInfo);
+                            }
+                        }, remainingHoldTime);
+                        
+                        console.log(`AnimationEngine: Updated layer ${imageId} remaining hold time to ${remainingHoldTime}ms`);
+                    }
+                    
+                    // Store original speed for future calculations
+                    layerInfo.originalSpeed = layerInfo.originalSpeed || 1.0;
+                }
+            });
+        },
+
         clearAllLayers() {
             this.activeLayers.forEach((layerInfo, imageId) => {
                 this.hideImage(imageId);
@@ -421,23 +478,68 @@ window.App = (function() {
                     seed = this.generateSeed();
                 }
 
-                // For now, generate a simple random sequence
-                // TODO: Implement server-side pattern generation
+                // Generate deterministic sequence based on seed
                 this.currentSeed = seed;
-                this.imageSequence = ImageManager.getRandomImageIds(20);
+                this.imageSequence = this.generateDeterministicSequence(seed, 100); // Longer sequence
                 this.sequenceIndex = 0;
 
+
                 console.log(`PatternManager: Generated pattern with seed ${seed}`);
-                this.updatePatternDisplay();
+                console.log(`PatternManager: Sequence length: ${this.imageSequence.length}`);
+                console.log(`PatternManager: First 10 images in sequence:`, this.imageSequence.slice(0, 10));
                 
                 // Preload upcoming images
-                const upcomingImages = this.imageSequence.slice(0, config.preloadBufferSize);
+                const upcomingImages = this.imageSequence.slice(0, config.preloadBufferSize || 5);
                 await ImageManager.preloadImages(upcomingImages, true);
 
             } catch (error) {
                 console.error('PatternManager: Failed to generate pattern:', error);
                 throw error;
             }
+        },
+
+        generateDeterministicSequence(seed, length) {
+            // Create a seeded random number generator
+            const seededRandom = this.createSeededRandom(seed);
+            
+            // Get image IDs in a deterministic order (sorted by ID for consistency)
+            const allImageIds = Array.from(ImageManager.images.keys()).sort();
+            
+            if (allImageIds.length === 0) {
+                console.error('PatternManager: No images available for sequence generation');
+                return [];
+            }
+            
+            const sequence = [];
+            
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(seededRandom() * allImageIds.length);
+                sequence.push(allImageIds[randomIndex]);
+            }
+            
+            console.log(`PatternManager: Generated sequence with ${allImageIds.length} available images, first few IDs: ${allImageIds.slice(0, 5).join(', ')}`);
+            
+            return sequence;
+        },
+
+        createSeededRandom(seed) {
+            // Use the same hash function as AnimationEngine for consistency
+            const hashCode = (str) => {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32-bit integer
+                }
+                return Math.abs(hash);
+            };
+            
+            // Use the same seeded random implementation as AnimationEngine
+            let state = hashCode(seed);
+            return function() {
+                state = (state * 1664525 + 1013904223) % 4294967296;
+                return state / 4294967296;
+            };
         },
 
         generateSeed() {
@@ -450,10 +552,16 @@ window.App = (function() {
             // Show first image immediately
             this.showNextImage();
             
-            // Schedule next images based on configuration
+            // Schedule next images based on configuration and speed multiplier
+            const baseInterval = (config.layerSpawnIntervalSec || 4) * 1000;
+            const speedMultiplier = UI.speedMultiplier || 1.0;
+            const adjustedInterval = baseInterval / speedMultiplier;
+            
+            console.log(`PatternManager: Starting sequence - base: ${baseInterval}ms, speed: ${speedMultiplier}x, interval: ${adjustedInterval}ms`);
+            
             this.patternInterval = setInterval(() => {
                 this.showNextImage();
-            }, (config.layerSpawnIntervalSec || 4) * 1000);
+            }, adjustedInterval);
         },
 
         stopPatternSequence() {
@@ -470,7 +578,6 @@ window.App = (function() {
             }
 
             const imageId = this.imageSequence[this.sequenceIndex];
-            this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
 
             try {
                 // Pass the current seed for deterministic transformations
@@ -480,8 +587,11 @@ window.App = (function() {
                 
                 await AnimationEngine.showImage(imageId, options);
                 
+                // Increment sequence index after showing image
+                this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
+                
                 // Preload upcoming images
-                const upcomingCount = Math.min(config.preloadBufferSize, this.imageSequence.length);
+                const upcomingCount = Math.min(config.preloadBufferSize || 5, this.imageSequence.length);
                 const upcomingImages = [];
                 
                 for (let i = 0; i < upcomingCount; i++) {
@@ -499,12 +609,6 @@ window.App = (function() {
             }
         },
 
-        updatePatternDisplay() {
-            const codeElement = document.getElementById('current-pattern');
-            if (codeElement) {
-                codeElement.textContent = this.currentSeed || 'Loading...';
-            }
-        }
     };
 
     /**
@@ -513,12 +617,23 @@ window.App = (function() {
     const UI = {
         errorElement: null,
         loadingElement: null,
+        onscreenControls: null,
+        mouseTimer: null,
+        speedMultiplier: 1.0,
+        maxLayers: 4,
 
         init() {
             this.errorElement = document.getElementById('error-message');
             this.loadingElement = document.getElementById('loading-indicator');
+            this.onscreenControls = document.getElementById('onscreen-controls');
+            this.controlsTriggerArea = document.getElementById('controls-trigger-area');
+            
+            // Initialize UI values from config
+            this.maxLayers = config.maxConcurrentLayers || 4;
+            console.log(`UI: Initialized with maxLayers: ${this.maxLayers}, config.maxConcurrentLayers: ${config.maxConcurrentLayers}`);
             
             this.setupEventListeners();
+            this.setupOnscreenControls();
             this.hideLoading();
         },
 
@@ -535,6 +650,7 @@ window.App = (function() {
                 newPatternBtn.addEventListener('click', this.generateNewPattern.bind(this));
             }
 
+
             // Retry button
             const retryBtn = document.getElementById('retry-btn');
             if (retryBtn) {
@@ -545,7 +661,127 @@ window.App = (function() {
             if (!kioskMode) {
                 document.addEventListener('keydown', this.handleKeydown.bind(this));
             }
+
+            // Mouse movement detection for onscreen controls (non-kiosk mode)
+            if (!kioskMode && this.controlsTriggerArea) {
+                this.controlsTriggerArea.addEventListener('mouseenter', this.showOnscreenControls.bind(this));
+                this.controlsTriggerArea.addEventListener('mouseleave', this.scheduleHideControls.bind(this));
+            }
+
         },
+
+        setupOnscreenControls() {
+            if (!this.onscreenControls || kioskMode) return;
+
+            // Speed slider
+            const speedSlider = document.getElementById('speed-slider');
+            const speedValue = document.getElementById('speed-value');
+            if (speedSlider && speedValue) {
+                speedSlider.addEventListener('input', (e) => {
+                    this.speedMultiplier = parseFloat(e.target.value);
+                    speedValue.textContent = `${this.speedMultiplier.toFixed(1)}x`;
+                    console.log(`UI: Speed changed to ${this.speedMultiplier}x`);
+                    this.updateAnimationSpeed();
+                });
+            }
+
+            // Layers slider
+            const layersSlider = document.getElementById('layers-slider');
+            const layersValue = document.getElementById('layers-value');
+            if (layersSlider && layersValue) {
+                layersSlider.addEventListener('input', (e) => {
+                    this.maxLayers = parseInt(e.target.value);
+                    layersValue.textContent = this.maxLayers.toString();
+                    console.log(`UI: Max layers changed to ${this.maxLayers}`);
+                    this.updateMaxLayers();
+                });
+            }
+
+            
+            // Set initial values from config
+            if (speedSlider) speedSlider.value = this.speedMultiplier;
+            if (speedValue) speedValue.textContent = `${this.speedMultiplier.toFixed(1)}x`;
+            if (layersSlider) layersSlider.value = this.maxLayers;
+            if (layersValue) layersValue.textContent = this.maxLayers.toString();
+        },
+
+
+        showOnscreenControls() {
+            if (!this.onscreenControls || kioskMode) return;
+            
+            this.onscreenControls.classList.add('visible');
+            
+            // Clear any existing timer
+            if (this.mouseTimer) {
+                clearTimeout(this.mouseTimer);
+                this.mouseTimer = null;
+            }
+        },
+
+        scheduleHideControls() {
+            if (!this.onscreenControls || kioskMode) return;
+            
+            // Clear existing timer
+            if (this.mouseTimer) {
+                clearTimeout(this.mouseTimer);
+            }
+            
+            // Hide after 3 seconds of no mouse movement
+            this.mouseTimer = setTimeout(() => {
+                this.onscreenControls.classList.remove('visible');
+            }, 3000);
+        },
+
+        updateAnimationSpeed() {
+            // Update the pattern sequence interval based on speed multiplier
+            console.log(`UI: Updating animation speed to ${this.speedMultiplier}x`);
+            
+            // Update existing layers' animation speeds
+            AnimationEngine.updateExistingLayerSpeeds(this.speedMultiplier);
+            
+            if (PatternManager.patternInterval) {
+                console.log('UI: Restarting pattern sequence with new speed');
+                PatternManager.stopPatternSequence();
+                PatternManager.startPatternSequence();
+            } else {
+                console.log('UI: No active pattern interval to update');
+            }
+        },
+
+        updateMaxLayers() {
+            // Update the maximum concurrent layers configuration
+            console.log(`UI: Updating max concurrent layers to ${this.maxLayers}`);
+            config.maxConcurrentLayers = this.maxLayers;
+            console.log(`UI: Config updated - maxConcurrentLayers: ${config.maxConcurrentLayers}`);
+            
+            // If we've reduced the layer limit, remove excess layers immediately
+            const currentLayerCount = AnimationEngine.activeLayers.size;
+            if (currentLayerCount > this.maxLayers) {
+                const excessLayers = currentLayerCount - this.maxLayers;
+                console.log(`UI: Removing ${excessLayers} excess layers (${currentLayerCount} -> ${this.maxLayers})`);
+                this.removeExcessLayers(excessLayers);
+            }
+        },
+        
+        removeExcessLayers(count) {
+            // Remove the oldest layers first (FIFO)
+            const layerEntries = Array.from(AnimationEngine.activeLayers.entries());
+            const layersToRemove = layerEntries.slice(0, count);
+            
+            layersToRemove.forEach(([imageId, layerInfo]) => {
+                console.log(`UI: Force removing layer ${imageId}`);
+                // Start immediate fade out
+                layerInfo.phase = 'fade-out';
+                layerInfo.layer.style.transition = 'opacity 500ms ease-out';
+                layerInfo.layer.style.opacity = '0';
+                
+                // Remove after short fade
+                setTimeout(() => {
+                    AnimationEngine.removeLayer(layerInfo);
+                }, 500);
+            });
+        },
+        
 
         handleKeydown(event) {
             switch (event.code) {
@@ -660,6 +896,7 @@ window.App = (function() {
                 isInitialized = true;
 
                 console.log('App initialization complete');
+                console.log(`ImageManager loaded ${ImageManager.images.size} images`);
 
             } catch (error) {
                 console.error('App initialization failed:', error);

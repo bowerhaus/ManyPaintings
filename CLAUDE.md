@@ -84,56 +84,82 @@ The application follows a browser-centric Flask web application structure:
 - **Image Processing**: Pillow (PIL) for future dynamic generation
 - **Deployment**: Flask development server or Gunicorn for production
 
-## File Structure (Expected)
+## File Structure (Current)
 ```
 ManyPaintings/
 ├── app.py                 # Main Flask application
 ├── requirements.txt       # Python dependencies  
-├── config.py             # Configuration settings
+├── config.json           # Main configuration file
+├── config.example.json   # Configuration template
+├── config/               # Configuration system
+│   └── __init__.py       # JSON config loader
 ├── static/
-│   ├── css/style.css     # Styling
-│   ├── js/main.js        # Animation logic
-│   └── images/           # Art image assets
+│   ├── css/style.css     # Complete styling with animations
+│   ├── js/main.js        # Full animation engine with deterministic patterns
+│   └── images/           # Art image assets (17 images)
+│       └── *.json        # Optional per-image configuration files
 ├── templates/
 │   ├── base.html         # Base template
-│   ├── index.html        # Main page
+│   ├── index.html        # Main application interface
 │   └── kiosk.html        # Kiosk mode
 └── utils/
-    └── pattern_generator.py  # Pattern ID generation
+    ├── __init__.py
+    └── image_manager.py   # Image discovery and metadata management
 ```
 
 ## Configuration Management
 
-### Environment Variables
-The application should support different configurations via environment variables:
+### JSON Configuration System
+The application uses a JSON-based configuration system with environment-specific overrides:
 
-```bash
-# Flask Configuration
-FLASK_ENV=development|production
-FLASK_DEBUG=true|false
-FLASK_HOST=0.0.0.0  # For Raspberry Pi deployment
-FLASK_PORT=5000
-
-# Application Settings  
-IMAGE_DIRECTORY=static/images
-MAX_CONCURRENT_IMAGES=10  # Memory management
-PRELOAD_BUFFER_SIZE=5     # Number of images to preload
-ANIMATION_FPS=30          # Target frame rate
-PATTERN_SEED=auto|<number>  # For reproducible sequences
-
-# Performance Settings
-ENABLE_CACHING=true
-CACHE_MAX_AGE=3600
-LAZY_LOADING=true
+**Main Configuration**: `config.json`
+```json
+{
+  "flask": { "debug": true, "host": "127.0.0.1", "port": 5000 },
+  "application": {
+    "image_directory": "static/images",
+    "max_concurrent_images": 10,
+    "preload_buffer_size": 5,
+    "animation_fps": 30,
+    "pattern_seed": "auto",
+    "initial_pattern_code": "MP-2024-001",
+    "enable_caching": true,
+    "cache_max_age": 3600,
+    "lazy_loading": true
+  },
+  "animation_timing": { /* timing parameters */ },
+  "layer_management": { /* layer settings */ },
+  "transformations": { /* transformation settings */ },
+  "environments": {
+    "development": { /* dev overrides */ },
+    "production": { /* prod overrides */ },
+    "raspberry_pi": { /* pi overrides */ }
+  }
+}
 ```
 
-### Configuration Files
-Create environment-specific config files:
+**Per-Image Configuration**: `static/images/[image_name].json`
+```json
+{
+  "animation_timing": {
+    "fade_in_min_sec": 30.0,
+    "max_hold_time_sec": 180.0
+  },
+  "transformations": {
+    "rotation": { "enabled": false },
+    "scale": { "min_factor": 0.8, "max_factor": 1.5 }
+  },
+  "layer_management": {
+    "max_opacity": 0.7
+  }
+}
+```
 
-- `config/development.py` - Local development settings
-- `config/production.py` - Production deployment settings  
-- `config/raspberry_pi.py` - Raspberry Pi optimizations
-- `.env.example` - Template for environment variables
+### Configuration Loading
+- Environment selection via `FLASK_CONFIG` environment variable
+- JSON config loader in `config/__init__.py`
+- Deep merge of base config with environment overrides
+- Per-image configs override base settings for specific images
 
 ### Deployment Configurations
 - **Development**: Debug enabled, verbose logging, hot reload
@@ -142,26 +168,31 @@ Create environment-specific config files:
 
 ## Development Notes
 
-### Current State
-The repository currently contains only:
-- README.md with comprehensive project documentation
-- Static art images in `static/images/` directory
+## Current Implementation Status
 
-### Implementation Status  
-Based on the README, the Flask application and supporting files are not yet implemented. The project requires:
-- Flask application setup (app.py) with minimal API endpoints
-- HTML templates with JavaScript-heavy frontend
-- CSS/JavaScript for client-side animations and image management
-- Python utilities for pattern generation and image metadata
-- Requirements file for dependencies
-- Configuration management system
+### Completed Components ✅
+- **Flask Application**: Full app factory pattern with config loading
+- **API Endpoints**: Complete REST API with `/api/images`, `/api/config`, `/api/pattern/<seed>`
+- **Animation Engine**: JavaScript-based animation system with deterministic patterns
+- **Configuration System**: JSON-based config with per-image overrides
+- **Image Management**: Discovery, metadata extraction, and intelligent preloading
+- **Pattern System**: Deterministic sequences with initial pattern code support
+- **UI Controls**: Real-time speed, layer, and background controls
+- **Duplicate Prevention**: No image appears on multiple layers simultaneously
 
-### Key Implementation Priorities
-1. **Image Catalog API**: Endpoint to provide available images list/metadata
-2. **Client-Side Animation Engine**: JavaScript framework for smooth animations
-3. **Intelligent Image Loading**: On-demand loading with predictive preloading
-4. **Memory Management**: Browser-side caching and cleanup strategies
-5. **Pattern Generation**: Deterministic sequence generation with reproducible codes
+### Key Features Implemented
+1. **Deterministic Pattern System**: Same pattern code produces identical visual sequences
+2. **Per-Image Configuration**: JSON metadata files override settings per image
+3. **Seeded Random System**: All animations use deterministic random for repeatability
+4. **Real-time Controls**: Speed (0.1x-20x), layers (1-8), background toggle
+5. **Memory Management**: Dynamic layer cleanup and intelligent preloading
+6. **Clean Startup**: No loading popups, immediate animation start
+
+### Architecture Highlights
+- **Browser-Centric**: Minimal server contact, all animations client-side
+- **Deterministic**: Same inputs always produce same visual outputs
+- **Configurable**: Per-image timing and transformation overrides
+- **Performance-Optimized**: 30+ FPS targeting with responsive controls
 
 ### VS Code Integration
 The project is configured for VS Code development with:
@@ -172,5 +203,34 @@ The project is configured for VS Code development with:
 
 ## Development Guidance
 
+## API Endpoints
+
+### Current API Implementation
+1. **`GET /`** - Main application interface
+2. **`GET /kiosk`** - Full-screen kiosk mode
+3. **`GET /health`** - Health check endpoint
+4. **`GET /api/images`** - Image catalog with metadata and per-image configs
+5. **`GET /api/config`** - Application configuration including initial pattern code
+6. **`GET /api/pattern/<seed>`** - Deterministic pattern generation from seed
+
+### API Usage Examples
+```bash
+# Get image catalog
+curl http://localhost:5000/api/images
+
+# Get application config
+curl http://localhost:5000/api/config
+
+# Generate deterministic pattern
+curl http://localhost:5000/api/pattern/MP-2024-001
+
+# Health check
+curl http://localhost:5000/health
+```
+
 ### Testing Guidelines
 - **Server Startup**: Don't start the server yourself when testing. Ask the developer to do it
+
+## Developer Instructions
+
+- **IMPORTANT**: Don't start the app yourself, ask me to do it.

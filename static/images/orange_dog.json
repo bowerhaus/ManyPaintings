@@ -1,0 +1,20 @@
+{
+  "animation_timing": {
+    "fade_in_min_sec": 30.0,
+    "fade_in_max_sec": 90.0,
+    "min_hold_time_sec": 10.0,
+    "max_hold_time_sec": 180.0
+  },
+  "transformations": {
+    "rotation": {
+      "enabled": false
+    },
+    "scale": {
+      "min_factor": 0.8,
+      "max_factor": 1.5
+    }
+  },
+  "layer_management": {
+    "max_opacity": 1.0
+  }
+}

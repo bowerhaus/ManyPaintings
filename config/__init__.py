@@ -55,6 +55,7 @@ class Config:
         self.PRELOAD_BUFFER_SIZE = app_config.get('preload_buffer_size', 5)
         self.ANIMATION_FPS = app_config.get('animation_fps', 30)
         self.PATTERN_SEED = app_config.get('pattern_seed', 'auto')
+        self.INITIAL_PATTERN_CODE = app_config.get('initial_pattern_code')
         self.ENABLE_CACHING = app_config.get('enable_caching', True)
         self.CACHE_MAX_AGE = app_config.get('cache_max_age', 3600)
         self.LAZY_LOADING = app_config.get('lazy_loading', True)

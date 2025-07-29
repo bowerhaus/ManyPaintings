@@ -180,6 +180,12 @@ window.App = (function () {
     },
 
     async showImage(imageId, options = {}) {
+      // Check if this image is already being displayed on a layer
+      if (this.activeLayers.has(imageId)) {
+        console.log(`AnimationEngine: Image ${imageId} already active on a layer, skipping duplicate`);
+        return null;
+      }
+
       // Check if we've reached the concurrent layer limit
       if (this.activeLayers.size >= (config.maxConcurrentLayers || 5)) {
         console.log(`AnimationEngine: Max concurrent layers (${config.maxConcurrentLayers || 5}) reached, skipping ${imageId}`);
@@ -189,16 +195,23 @@ window.App = (function () {
       try {
         const img = await ImageManager.loadImage(imageId);
 
-        // Generate random timing and transformation parameters (affected by speed multiplier)
+        // Generate deterministic timing and transformation parameters (affected by speed multiplier)
         const speedMultiplier = UI.speedMultiplier || 1.0;
-        const baseFadeInDuration = this.randomBetween(config.fadeInMinSec || 2, config.fadeInMaxSec || 5) * 1000;
-        const baseFadeOutDuration = this.randomBetween(config.fadeOutMinSec || 3, config.fadeOutMaxSec || 6) * 1000;
-        const baseHoldTime = this.randomBetween(config.minHoldTimeSec || 4, config.maxHoldTimeSec || 12) * 1000;
+        
+        // Create seeded random generator for this specific image instance
+        const animationSeed = options.seed ? `${imageId}-${options.seed}-animation` : imageId;
+        const animationRandom = this.seededRandom(this.hashCode(animationSeed));
+        
+        const baseFadeInDuration = this.seededRandomBetween(animationRandom, config.fadeInMinSec || 2, config.fadeInMaxSec || 5) * 1000;
+        const baseFadeOutDuration = this.seededRandomBetween(animationRandom, config.fadeOutMinSec || 3, config.fadeOutMaxSec || 6) * 1000;
+        const baseHoldTime = this.seededRandomBetween(animationRandom, config.minHoldTimeSec || 4, config.maxHoldTimeSec || 12) * 1000;
 
         const fadeInDuration = baseFadeInDuration / speedMultiplier;
         const fadeOutDuration = baseFadeOutDuration / speedMultiplier;
         const holdTime = baseHoldTime / speedMultiplier;
-        const opacity = Math.min(config.maxOpacity || 0.8, Math.random() * 0.3 + 0.4);
+        const minOpacity = config.minOpacity || 0.7;
+        const maxOpacity = config.maxOpacity || 0.8;
+        const opacity = Math.min(maxOpacity, animationRandom() * (maxOpacity - minOpacity) + minOpacity);
 
         console.log(`AnimationEngine: Speed ${speedMultiplier}x - fadeIn: ${fadeInDuration}ms, hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms`);
 
@@ -370,6 +383,10 @@ window.App = (function () {
       return Math.random() * (max - min) + min;
     },
 
+    seededRandomBetween(seededRandom, min, max) {
+      return seededRandom() * (max - min) + min;
+    },
+
     createLayer(imageId, img, transformations) {
       const layer = document.createElement('div');
       layer.className = 'image-layer';
@@ -466,23 +483,55 @@ window.App = (function () {
     patternInterval: null,
     imageSequence: [],
     sequenceIndex: 0,
+    initialPatternCode: null,
 
     async init() {
-      await this.generateNewPattern();
+      // Fetch initial pattern code from config
+      await this.loadInitialPatternCode();
+      await this.generateNewPattern(this.initialPatternCode);
       this.startPatternSequence();
+    },
+
+    async loadInitialPatternCode() {
+      try {
+        const response = await fetch('/api/config', {
+          cache: 'no-cache', // Prevent browser caching
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        const configData = await response.json();
+        this.initialPatternCode = configData.initial_pattern_code;
+        
+        console.log(`PatternManager: Config loaded - initial_pattern_code: ${this.initialPatternCode}`);
+        
+        if (this.initialPatternCode) {
+          console.log(`PatternManager: Using initial pattern code: ${this.initialPatternCode}`);
+        } else {
+          console.log('PatternManager: No initial pattern code configured, will generate random seed');
+        }
+      } catch (error) {
+        console.error('PatternManager: Failed to load initial pattern code:', error);
+        this.initialPatternCode = null;
+      }
     },
 
     async generateNewPattern(seed = null) {
       try {
+        console.log(`PatternManager: generateNewPattern called with seed: ${seed}`);
+        
         if (!seed) {
           seed = this.generateSeed();
+          console.log(`PatternManager: No seed provided, generated random seed: ${seed}`);
+        } else {
+          console.log(`PatternManager: Using provided seed: ${seed}`);
         }
 
         // Generate deterministic sequence based on seed
         this.currentSeed = seed;
         this.imageSequence = this.generateDeterministicSequence(seed, 100); // Longer sequence
         this.sequenceIndex = 0;
-
 
         console.log(`PatternManager: Generated pattern with seed ${seed}`);
         console.log(`PatternManager: Sequence length: ${this.imageSequence.length}`);
@@ -579,36 +628,52 @@ window.App = (function () {
         return;
       }
 
-      const imageId = this.imageSequence[this.sequenceIndex];
+      let attempts = 0;
+      const maxAttempts = Math.min(10, this.imageSequence.length); // Avoid infinite loops
+      
+      while (attempts < maxAttempts) {
+        const imageId = this.imageSequence[this.sequenceIndex];
 
-      try {
-        // Pass the current seed for deterministic transformations
-        const options = {
-          seed: this.currentSeed + '-' + this.sequenceIndex
-        };
+        try {
+          // Pass the current seed for deterministic transformations
+          const options = {
+            seed: this.currentSeed + '-' + this.sequenceIndex
+          };
 
-        await AnimationEngine.showImage(imageId, options);
+          const layer = await AnimationEngine.showImage(imageId, options);
+          
+          // If showImage returns null (duplicate/max layers), try next image
+          if (layer === null) {
+            console.log(`PatternManager: Image ${imageId} skipped, trying next in sequence`);
+            this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
+            attempts++;
+            continue;
+          }
 
-        // Increment sequence index after showing image
-        this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
+          // Successfully showed image, increment sequence index
+          this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
+          break;
 
-        // Preload upcoming images
-        const upcomingCount = Math.min(config.preloadBufferSize || 5, this.imageSequence.length);
-        const upcomingImages = [];
-
-        for (let i = 0; i < upcomingCount; i++) {
-          const nextIndex = (this.sequenceIndex + i) % this.imageSequence.length;
-          upcomingImages.push(this.imageSequence[nextIndex]);
+        } catch (error) {
+          console.error(`PatternManager: Failed to show image ${imageId}:`, error);
+          this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
+          attempts++;
         }
-
-        ImageManager.preloadImages(upcomingImages);
-
-        // Cleanup memory if needed
-        ImageManager.cleanupMemory();
-
-      } catch (error) {
-        console.error('PatternManager: Failed to show next image:', error);
       }
+
+      // Preload upcoming images (regardless of success/failure)
+      const upcomingCount = Math.min(config.preloadBufferSize || 5, this.imageSequence.length);
+      const upcomingImages = [];
+
+      for (let i = 0; i < upcomingCount; i++) {
+        const nextIndex = (this.sequenceIndex + i) % this.imageSequence.length;
+        upcomingImages.push(this.imageSequence[nextIndex]);
+      }
+
+      ImageManager.preloadImages(upcomingImages);
+
+      // Cleanup memory if needed
+      ImageManager.cleanupMemory();
     },
 
     updatePatternDisplay() {
@@ -857,10 +922,9 @@ window.App = (function () {
 
     async generateNewPattern() {
       try {
-        this.showLoading();
         AnimationEngine.clearAllLayers();
+        // For manual new pattern generation, don't use initial code - generate random
         await PatternManager.generateNewPattern();
-        this.hideLoading();
       } catch (error) {
         this.showError('Failed to generate new pattern');
       }
@@ -924,15 +988,12 @@ window.App = (function () {
 
         // Initialize modules in sequence
         UI.init();
-        UI.showLoading();
 
         await ImageManager.init();
         AnimationEngine.init();
         await PatternManager.init();
 
         AnimationEngine.start();
-
-        UI.hideLoading();
         isInitialized = true;
 
         console.log('App initialization complete');

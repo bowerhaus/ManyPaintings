@@ -130,6 +130,7 @@ window.App = (function() {
         frameRate: 30,
         frameInterval: 1000 / 30,
         lastFrameTime: 0,
+        transformationCache: new Map(),
 
         init() {
             this.layersContainer = document.getElementById('image-layers');
@@ -140,7 +141,12 @@ window.App = (function() {
                 throw new Error('Image layers container not found');
             }
 
+            // Apply animation quality class to body
+            document.body.className = `animation-quality-${config.animationQuality || 'high'}`;
+
             console.log(`AnimationEngine: Initialized with ${this.frameRate} FPS target`);
+            console.log(`AnimationEngine: Max concurrent layers: ${config.maxConcurrentLayers || 5}`);
+            console.log(`AnimationEngine: Animation quality: ${config.animationQuality || 'high'}`);
         },
 
         start() {
@@ -173,29 +179,102 @@ window.App = (function() {
             // Animation logic will be implemented by PatternManager
         },
 
-        async showImage(imageId, duration = 5000, opacity = 0.7) {
+        async showImage(imageId, options = {}) {
+            // Check if we've reached the concurrent layer limit
+            if (this.activeLayers.size >= (config.maxConcurrentLayers || 5)) {
+                console.log(`AnimationEngine: Max concurrent layers (${config.maxConcurrentLayers || 5}) reached, skipping ${imageId}`);
+                return null;
+            }
+
             try {
                 const img = await ImageManager.loadImage(imageId);
-                const layer = this.createLayer(imageId, img);
+                
+                // Generate random timing and transformation parameters
+                const fadeInDuration = this.randomBetween(config.fadeInMinSec || 2, config.fadeInMaxSec || 5) * 1000;
+                const fadeOutDuration = this.randomBetween(config.fadeOutMinSec || 3, config.fadeOutMaxSec || 6) * 1000;
+                const holdTime = this.randomBetween(config.minHoldTimeSec || 4, config.maxHoldTimeSec || 12) * 1000;
+                const opacity = Math.min(config.maxOpacity || 0.8, Math.random() * 0.3 + 0.4);
+                
+                const transformations = this.generateTransformations(imageId, options.seed);
+                const layer = this.createLayer(imageId, img, transformations);
                 
                 this.layersContainer.appendChild(layer);
-                this.activeLayers.set(imageId, { layer, startTime: Date.now(), duration, opacity });
+                
+                const layerInfo = {
+                    layer,
+                    startTime: Date.now(),
+                    fadeInDuration,
+                    fadeOutDuration,
+                    holdTime,
+                    opacity,
+                    transformations,
+                    phase: 'fade-in'
+                };
+                
+                this.activeLayers.set(imageId, layerInfo);
 
-                // Trigger fade in
-                requestAnimationFrame(() => {
-                    layer.style.opacity = opacity;
-                    layer.classList.add('active');
-                });
+                // Start fade in animation
+                this.startFadeIn(layerInfo);
 
-                // Schedule fade out
-                setTimeout(() => {
-                    this.hideImage(imageId);
-                }, duration);
-
+                console.log(`AnimationEngine: Started layer ${imageId} - fadeIn: ${fadeInDuration}ms, hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms`);
                 return layer;
+                
             } catch (error) {
                 console.error(`AnimationEngine: Failed to show image ${imageId}:`, error);
                 throw error;
+            }
+        },
+
+        startFadeIn(layerInfo) {
+            const { layer, fadeInDuration, opacity } = layerInfo;
+            
+            // First set opacity to 0 without transition
+            layer.style.opacity = '0';
+            
+            // Force a reflow to ensure the opacity change is applied
+            layer.offsetHeight;
+            
+            // Then set the transition and target opacity
+            requestAnimationFrame(() => {
+                layer.style.transition = `opacity ${fadeInDuration}ms ease-in-out`;
+                layer.style.opacity = opacity;
+                layerInfo.phase = 'hold';
+                
+                // Schedule hold phase end
+                setTimeout(() => {
+                    if (layerInfo.phase === 'hold') {
+                        this.startFadeOut(layerInfo);
+                    }
+                }, layerInfo.holdTime);
+            });
+        },
+
+        startFadeOut(layerInfo) {
+            const { layer, fadeOutDuration } = layerInfo;
+            
+            layerInfo.phase = 'fade-out';
+            layer.style.transition = `opacity ${fadeOutDuration}ms ease-in-out`;
+            layer.style.opacity = '0';
+            
+            // Remove layer after fade out completes
+            setTimeout(() => {
+                this.removeLayer(layerInfo);
+            }, fadeOutDuration);
+        },
+
+        removeLayer(layerInfo) {
+            const { layer } = layerInfo;
+            
+            if (layer.parentNode) {
+                layer.parentNode.removeChild(layer);
+            }
+            
+            // Find and remove from activeLayers
+            for (const [imageId, info] of this.activeLayers.entries()) {
+                if (info === layerInfo) {
+                    this.activeLayers.delete(imageId);
+                    break;
+                }
             }
         },
 
@@ -216,13 +295,96 @@ window.App = (function() {
             }, 2000); // Match CSS transition duration
         },
 
-        createLayer(imageId, img) {
+        generateTransformations(imageId, seed = null) {
+            // Use imageId + seed for deterministic transformations
+            const transformSeed = seed ? `${imageId}-${seed}` : imageId;
+            
+            if (config.preloadTransformCache && this.transformationCache.has(transformSeed)) {
+                return this.transformationCache.get(transformSeed);
+            }
+
+            // Simple seeded random number generator
+            const random = this.seededRandom(this.hashCode(transformSeed));
+            
+            const transformations = {
+                rotation: 0,
+                scale: 1,
+                translateX: 0,
+                translateY: 0
+            };
+
+            if (config.rotationEnabled) {
+                transformations.rotation = random() * (config.rotationMaxDegrees - config.rotationMinDegrees) + config.rotationMinDegrees;
+            }
+
+            if (config.scaleEnabled) {
+                transformations.scale = random() * (config.scaleMaxFactor - config.scaleMinFactor) + config.scaleMinFactor;
+            }
+
+            if (config.translationEnabled) {
+                // Translation as percentage of viewport
+                transformations.translateX = (random() - 0.5) * 2 * config.translationXRange;
+                transformations.translateY = (random() - 0.5) * 2 * config.translationYRange;
+            }
+
+            if (config.preloadTransformCache) {
+                this.transformationCache.set(transformSeed, transformations);
+            }
+
+            return transformations;
+        },
+
+        hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return Math.abs(hash);
+        },
+
+        seededRandom(seed) {
+            let state = seed;
+            return function() {
+                state = (state * 1664525 + 1013904223) % 4294967296;
+                return state / 4294967296;
+            };
+        },
+
+        randomBetween(min, max) {
+            return Math.random() * (max - min) + min;
+        },
+
+        createLayer(imageId, img, transformations) {
             const layer = document.createElement('div');
             layer.className = 'image-layer';
-            layer.id = `layer-${imageId}`;
+            layer.id = `layer-${imageId}-${Date.now()}`;
             
             const imgElement = img.cloneNode();
             imgElement.draggable = false;
+            
+            // Apply transformations
+            if (transformations) {
+                const transforms = [];
+                
+                if (config.translationEnabled && (transformations.translateX || transformations.translateY)) {
+                    transforms.push(`translate(${transformations.translateX}vw, ${transformations.translateY}vh)`);
+                }
+                
+                if (config.rotationEnabled && transformations.rotation) {
+                    transforms.push(`rotate(${transformations.rotation}deg)`);
+                }
+                
+                if (config.scaleEnabled && transformations.scale !== 1) {
+                    transforms.push(`scale(${transformations.scale})`);
+                }
+                
+                if (transforms.length > 0) {
+                    imgElement.style.transform = transforms.join(' ');
+                    imgElement.style.transformOrigin = 'center center';
+                }
+            }
             
             layer.appendChild(imgElement);
             return layer;
@@ -285,10 +447,10 @@ window.App = (function() {
             // Show first image immediately
             this.showNextImage();
             
-            // Schedule next images
+            // Schedule next images based on configuration
             this.patternInterval = setInterval(() => {
                 this.showNextImage();
-            }, 3000); // Show new image every 3 seconds
+            }, (config.layerSpawnIntervalSec || 4) * 1000);
         },
 
         stopPatternSequence() {
@@ -308,7 +470,12 @@ window.App = (function() {
             this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
 
             try {
-                await AnimationEngine.showImage(imageId, 8000, 0.6 + Math.random() * 0.3);
+                // Pass the current seed for deterministic transformations
+                const options = {
+                    seed: this.currentSeed + '-' + this.sequenceIndex
+                };
+                
+                await AnimationEngine.showImage(imageId, options);
                 
                 // Preload upcoming images
                 const upcomingCount = Math.min(config.preloadBufferSize, this.imageSequence.length);

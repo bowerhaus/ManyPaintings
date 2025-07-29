@@ -14,7 +14,33 @@
             preloadBufferSize: {{ config.PRELOAD_BUFFER_SIZE }},
             animationFPS: {{ config.ANIMATION_FPS }},
             enableCaching: {{ config.ENABLE_CACHING|tojson }},
-            lazyLoading: {{ config.LAZY_LOADING|tojson }}
+            lazyLoading: {{ config.LAZY_LOADING|tojson }},
+            
+            // Animation timing (seconds)
+            fadeInMinSec: {{ config.FADE_IN_MIN_SEC }},
+            fadeInMaxSec: {{ config.FADE_IN_MAX_SEC }},
+            fadeOutMinSec: {{ config.FADE_OUT_MIN_SEC }},
+            fadeOutMaxSec: {{ config.FADE_OUT_MAX_SEC }},
+            minHoldTimeSec: {{ config.MIN_HOLD_TIME_SEC }},
+            maxHoldTimeSec: {{ config.MAX_HOLD_TIME_SEC }},
+            layerSpawnIntervalSec: {{ config.LAYER_SPAWN_INTERVAL_SEC }},
+            maxConcurrentLayers: {{ config.MAX_CONCURRENT_LAYERS }},
+            maxOpacity: {{ config.MAX_OPACITY }},
+            
+            // Image transformations
+            rotationEnabled: {{ config.ROTATION_ENABLED|tojson }},
+            rotationMinDegrees: {{ config.ROTATION_MIN_DEGREES }},
+            rotationMaxDegrees: {{ config.ROTATION_MAX_DEGREES }},
+            scaleEnabled: {{ config.SCALE_ENABLED|tojson }},
+            scaleMinFactor: {{ config.SCALE_MIN_FACTOR }},
+            scaleMaxFactor: {{ config.SCALE_MAX_FACTOR }},
+            translationEnabled: {{ config.TRANSLATION_ENABLED|tojson }},
+            translationXRange: {{ config.TRANSLATION_X_RANGE }},
+            translationYRange: {{ config.TRANSLATION_Y_RANGE }},
+            
+            // Performance
+            animationQuality: "{{ config.ANIMATION_QUALITY }}",
+            preloadTransformCache: {{ config.PRELOAD_TRANSFORM_CACHE|tojson }}
         };
     </script>
 </head>

@@ -1,0 +1,95 @@
+{
+  "flask": {
+    "secret_key": "dev-secret-key-change-in-production",
+    "debug": true,
+    "host": "127.0.0.1",
+    "port": 5000
+  },
+  "application": {
+    "image_directory": "static/images",
+    "max_concurrent_images": 10,
+    "preload_buffer_size": 5,
+    "animation_fps": 30,
+    "pattern_seed": "auto",
+    "enable_caching": true,
+    "cache_max_age": 3600,
+    "lazy_loading": true
+  },
+  "animation_timing": {
+    "fade_in_min_sec": 15.0,
+    "fade_in_max_sec": 60.0,
+    "fade_out_min_sec": 15.0,
+    "fade_out_max_sec": 60.0,
+    "min_hold_time_sec": 5.0,
+    "max_hold_time_sec": 120.0,
+    "layer_spawn_interval_sec": 4.0
+  },
+  "layer_management": {
+    "max_concurrent_layers": 3,
+    "max_opacity": 1.0
+  },
+  "transformations": {
+    "rotation": {
+      "enabled": false,
+      "min_degrees": -15,
+      "max_degrees": 15
+    },
+    "scale": {
+      "enabled": false,
+      "min_factor": 0.8,
+      "max_factor": 1.2
+    },
+    "translation": {
+      "enabled": true,
+      "x_range_percent": 50,
+      "y_range_percent": 50
+    }
+  },
+  "performance": {
+    "animation_quality": "high",
+    "preload_transform_cache": true
+  },
+  "environments": {
+    "development": {
+      "flask": {
+        "debug": true
+      },
+      "performance": {
+        "animation_quality": "high"
+      }
+    },
+    "production": {
+      "flask": {
+        "debug": false,
+        "secret_key": "CHANGE-THIS-IN-PRODUCTION"
+      },
+      "performance": {
+        "animation_quality": "high"
+      }
+    },
+    "raspberry_pi": {
+      "flask": {
+        "debug": false,
+        "host": "0.0.0.0"
+      },
+      "application": {
+        "max_concurrent_images": 8,
+        "preload_buffer_size": 3,
+        "animation_fps": 24
+      },
+      "layer_management": {
+        "max_concurrent_layers": 2
+      },
+      "animation_timing": {
+        "fade_in_min_sec": 2.5,
+        "fade_in_max_sec": 4.5,
+        "fade_out_min_sec": 3.5,
+        "fade_out_max_sec": 5.5
+      },
+      "performance": {
+        "animation_quality": "medium",
+        "preload_transform_cache": true
+      }
+    }
+  }
+}

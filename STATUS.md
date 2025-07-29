@@ -30,6 +30,8 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - [x] **Pattern Input** - Editable pattern codes for reproducible sequences
 - [x] **Memory Management** - Automatic layer cleanup and intelligent preloading
 - [x] **Real-time Updates** - All controls respond immediately without restart
+- [x] **Background Toggle System** - Switch between black/white backgrounds with smart blending modes
+- [x] **Consolidated Control Panel** - All controls unified in bottom-center panel
 
 ### Core Architecture Implemented
 - **Browser-Centric Design** - Minimal server contact, client-side animations
@@ -50,18 +52,21 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 ### Frontend (JavaScript)
 - ✅ **ImageManager** - Catalog loading, image preloading, memory management
 - ✅ **AnimationEngine** - Advanced layer animation with speed-responsive timing
-- ✅ **PatternManager** - Deterministic sequence generation with editable pattern codes
-- ✅ **UI Controls** - Mouse-activated onscreen controls with speed/layer adjustment
-- ✅ **Real-time Control** - Immediate response to speed and layer changes
+- ✅ **PatternManager** - Deterministic sequence generation with pattern codes
+- ✅ **UI Controls** - Consolidated mouse-activated control panel with all settings
+- ✅ **Real-time Control** - Immediate response to speed, layer, and background changes
+- ✅ **Background System** - Dynamic black/white switching with adaptive blending modes
 
 ### Current Capabilities
 - ✅ **Fully Functional Animation System** - Images animate continuously with smooth transitions
-- ✅ **Real-time Controls** - Speed (0.1x-20x) and layers (1-8) adjust immediately
-- ✅ **Pattern Management** - Editable pattern codes for reproducible sequences
+- ✅ **Real-time Controls** - Speed (0.1x-20x), layers (1-8), and background toggle
+- ✅ **Pattern Management** - Pattern codes display and update automatically
 - ✅ **Center-based Transformations** - Proper scaling, rotation, and translation
 - ✅ **Memory Optimization** - Dynamic layer management prevents overload
 - ✅ **Performance Optimization** - Speed affects all timings, not just spawn rate
-- ✅ **Responsive UI** - Bottom-center control panel appears on mouse hover
+- ✅ **Responsive UI** - Consolidated bottom-center control panel with mouse activation
+- ✅ **Background Themes** - Black/white backgrounds with adaptive UI and blend modes
+- ✅ **Keyboard Shortcuts** - Space (play/pause), N (new pattern), B (background toggle)
 
 ## 🚧 Known Limitations & TODOs
 
@@ -109,18 +114,20 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 ManyPaintings/
 ├── app.py ✅                     # Main Flask application
 ├── requirements.txt ✅           # Dependencies defined
-├── PRD.md ✅                     # Product requirements (renamed from README)
+├── README.md ✅                  # Main project documentation (renamed from PRD.md)
 ├── CLAUDE.md ✅                  # Development guidance for Claude
 ├── IMPLEMENTATION_PLAN.md ✅     # Complete step-by-step plan
 ├── STATUS.md ✅                  # This file
-├── .env.example ✅               # Environment template
+├── .env.example ⚠️               # Legacy file - configuration now uses config.json
 ├── .gitignore ✅                 # Git ignore rules
 ├── .vscode/ ✅                   # VS Code configuration
 │   ├── launch.json               # Debug configurations
 │   ├── settings.json             # Project settings
 │   └── tasks.json                # Build tasks
+├── config.json ✅                # Main configuration file
+├── config.example.json ✅        # Configuration template
 ├── config/ ✅                    # Configuration system
-│   └── __init__.py               # Environment-based configs
+│   └── __init__.py               # JSON config loader with environment profiles
 ├── templates/ ✅                 # Jinja2 templates
 │   ├── base.html                 # Base template with config injection
 │   ├── index.html                # Main application interface
@@ -149,8 +156,10 @@ ManyPaintings/
 - ✅ **End-to-end animation flow** - Fully functional
 - ✅ **Speed control system** - All timings respond to speed changes
 - ✅ **Layer management** - Dynamic layer count with immediate cleanup
-- ✅ **Pattern input system** - Editable codes work correctly
+- ✅ **Pattern display system** - Shows current pattern codes automatically
 - ✅ **Real-time control response** - No restart required for changes
+- ✅ **Background toggle system** - Black/white switching with proper blend modes
+- ✅ **Consolidated control panel** - All controls accessible in unified interface
 
 ### Testing Needed
 - [ ] Memory usage with large image sets (1000+ images)

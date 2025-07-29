@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Many Paintings - Generative Art{% endblock %}
+
+{% block content %}
+<div id="app-container">
+    <div id="canvas-container">
+        <div id="image-layers"></div>
+        <div id="loading-indicator" class="hidden">
+            <div class="loading-spinner"></div>
+            <p>Loading images...</p>
+        </div>
+    </div>
+    
+    <div id="ui-overlay" class="ui-overlay">
+        <div id="pattern-code" class="pattern-display">
+            <span class="label">Pattern:</span>
+            <span id="current-pattern" class="code">Loading...</span>
+        </div>
+        
+        <div id="controls" class="controls hidden">
+            <button id="play-pause-btn" class="control-btn" title="Play/Pause">⏸️</button>
+            <button id="new-pattern-btn" class="control-btn" title="New Pattern">🔄</button>
+        </div>
+        
+        <div id="error-message" class="error-message hidden">
+            <p id="error-text"></p>
+            <button id="retry-btn" class="retry-btn">Retry</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.App) {
+            window.App.init();
+        }
+    });
+</script>
+{% endblock %}

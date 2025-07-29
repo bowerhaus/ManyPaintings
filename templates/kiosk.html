@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Many Paintings - Kiosk Mode{% endblock %}
+
+{% block body_class %}kiosk-mode{% endblock %}
+
+{% block content %}
+<div id="kiosk-container">
+    <div id="canvas-container">
+        <div id="image-layers"></div>
+        <div id="loading-indicator" class="hidden">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+    
+    <div id="pattern-code" class="pattern-display kiosk-pattern">
+        <span id="current-pattern" class="code">Loading...</span>
+    </div>
+    
+    <div id="error-message" class="error-message hidden">
+        <p id="error-text">Connection lost</p>
+        <div class="retry-spinner"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.App) {
+            window.App.init({ kioskMode: true });
+        }
+    });
+    
+    // Prevent context menu and selection in kiosk mode
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('dragstart', e => e.preventDefault());
+</script>
+{% endblock %}

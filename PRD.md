@@ -20,13 +20,61 @@ This document outlines the Product Requirements for a generative art application
 
 ### 3.1. Core Functionality
 
-*   **Generative Art:** The application will display a continuous, non-repeating sequence of generative art. This will be achieved by layering multiple, semi-transparent abstract images that fade in and out at random intervals. 
+*   **Generative Art:** The application will display a continuous, non-repeating sequence of generative art. This will be achieved by layering multiple, semi-transparent abstract images that fade in and out with slow, contemplative transitions. 
 *   **Image Set:** The initial version will use a predefined set abstract images. These images are located in the `static/images` directory.
 *   **Web Interface:** The application will be built using Flask and will be accessible through a web browser. The web interface will display the generative art and a unique code that identifies the current state of the animation.
 *   **Kiosk Mode:** The application will have a kiosk mode that displays the generative art in full-screen, hiding all browser UI elements. On Raspberry Pi, this mode will also disable user input to prevent accidental interruption.
 *   **Pattern Identification Code:** The sequence should be deterministic being derived from a random seed. A unique code will be displayed on the screen, representing the current sequence of images and their current animation state. This code can be used to restart the application with the same visual pattern if required.
 
-### 3.2. User Interaction
+### 3.2. Animation System
+
+*   **Slow Transitions:** All image transitions should be deliberately slow and contemplative, creating a meditative viewing experience. Fade transitions should feel gradual and organic.
+
+*   **Layer Management:** Multiple images can be displayed simultaneously as semi-transparent layers, creating rich compositional depth through overlapping elements.
+
+*   **Image Transformations:** Before appearing, images can be randomly transformed to create visual variety:
+    *   **Rotation:** Images may be rotated by random angles
+    *   **Scaling:** Images may be scaled up or down within defined limits
+    *   **Translation:** Images may be positioned at different locations on the canvas
+
+*   **Configurable Animation Parameters:** The animation system should support fine-tuned control through configuration:
+    *   **Fade In/Out Duration:** Time taken for images to gradually appear and disappear
+    *   **Maximum Opacity:** The peak transparency level images reach when fully visible
+    *   **Hold Time Range:** Minimum and maximum duration images remain at peak opacity
+    *   **Concurrent Layers:** Maximum number of images displayed simultaneously
+    *   **Transformation Limits:** Ranges for rotation angles, scale factors, and position offsets
+
+### 3.3. Configuration System
+
+The application should provide extensive configuration options to fine-tune the visual experience:
+
+#### Animation Timing Configuration
+*   `FADE_IN_DURATION_SEC` - Time for image to fade from 0% to maximum opacity (default: 3.0 seconds)
+*   `FADE_OUT_DURATION_SEC` - Time for image to fade from maximum to 0% opacity (default: 4.0 seconds)
+*   `MIN_HOLD_TIME_SEC` - Minimum time image stays at maximum opacity (default: 5.0 seconds)
+*   `MAX_HOLD_TIME_SEC` - Maximum time image stays at maximum opacity (default: 15.0 seconds)
+*   `MAX_OPACITY` - Peak opacity level for images (default: 0.7, range: 0.1-1.0)
+
+#### Layer Management Configuration
+*   `MAX_CONCURRENT_LAYERS` - Maximum simultaneous visible images (default: 3, range: 1-8)
+*   `LAYER_SPAWN_INTERVAL_SEC` - Time between new image appearances (default: 4.0 seconds)
+
+#### Image Transformation Configuration
+*   `ROTATION_ENABLED` - Enable random rotation (default: true)
+*   `ROTATION_MIN_DEGREES` - Minimum rotation angle (default: -15)
+*   `ROTATION_MAX_DEGREES` - Maximum rotation angle (default: 15)
+*   `SCALE_ENABLED` - Enable random scaling (default: true)
+*   `SCALE_MIN_FACTOR` - Minimum scale multiplier (default: 0.8)
+*   `SCALE_MAX_FACTOR` - Maximum scale multiplier (default: 1.2)
+*   `TRANSLATION_ENABLED` - Enable random positioning (default: true)
+*   `TRANSLATION_X_RANGE` - Horizontal position variance as % of screen width (default: 20)
+*   `TRANSLATION_Y_RANGE` - Vertical position variance as % of screen height (default: 15)
+
+#### Performance Optimization Configuration
+*   `ANIMATION_QUALITY` - Animation smoothness level (default: 'high', options: 'low', 'medium', 'high')
+*   `PRELOAD_TRANSFORM_CACHE` - Pre-calculate transformations for performance (default: true)
+
+### 3.4. User Interaction
 
 *   **No Direct Interaction (MVP):** The initial version of the application will not require any user interaction. The generative art will be displayed passively.
 
@@ -98,7 +146,40 @@ This document outlines the Product Requirements for a generative art application
 
 3. For kiosk mode, navigate to `http://localhost:5000/kiosk`
 
-### 6.4. Production Deployment
+### 6.4. Configuration
+
+The application behavior can be customized through environment variables. Create a `.env` file based on `.env.example`:
+
+#### Animation Configuration Example
+```bash
+# Animation Timing (seconds)
+FADE_IN_DURATION_SEC=3.0
+FADE_OUT_DURATION_SEC=4.0
+MIN_HOLD_TIME_SEC=5.0
+MAX_HOLD_TIME_SEC=15.0
+MAX_OPACITY=0.7
+
+# Layer Management
+MAX_CONCURRENT_LAYERS=3
+LAYER_SPAWN_INTERVAL_SEC=4.0
+
+# Image Transformations
+ROTATION_ENABLED=true
+ROTATION_MIN_DEGREES=-15
+ROTATION_MAX_DEGREES=15
+SCALE_ENABLED=true
+SCALE_MIN_FACTOR=0.8
+SCALE_MAX_FACTOR=1.2
+TRANSLATION_ENABLED=true
+TRANSLATION_X_RANGE=20
+TRANSLATION_Y_RANGE=15
+
+# Performance
+ANIMATION_QUALITY=high
+PRELOAD_TRANSFORM_CACHE=true
+```
+
+### 6.5. Production Deployment
 
 For production deployment on Raspberry Pi or other systems:
 

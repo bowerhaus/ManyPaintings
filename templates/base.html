@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Generative Art Application - Continuous Visual Experience">
+    <title>{% block title %}Many Paintings{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <script>
+        window.APP_CONFIG = {
+            maxConcurrentImages: {{ config.MAX_CONCURRENT_IMAGES }},
+            preloadBufferSize: {{ config.PRELOAD_BUFFER_SIZE }},
+            animationFPS: {{ config.ANIMATION_FPS }},
+            enableCaching: {{ config.ENABLE_CACHING|tojson }},
+            lazyLoading: {{ config.LAZY_LOADING|tojson }}
+        };
+    </script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

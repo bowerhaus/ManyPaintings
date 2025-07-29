@@ -29,6 +29,16 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Implement environment-specific config files
 - [ ] Create `.env.example` template
 - [ ] Add environment variable support for Flask settings
+- [ ] Add animation timing configuration (seconds-based):
+  - `FADE_IN_MIN_SEC`, `FADE_IN_MAX_SEC` (random duration between min/max)
+  - `FADE_OUT_MIN_SEC`, `FADE_OUT_MAX_SEC` (random duration between min/max)
+  - `MIN_HOLD_TIME_SEC`, `MAX_HOLD_TIME_SEC`
+  - `LAYER_SPAWN_INTERVAL_SEC`
+- [ ] Add image transformation configuration:
+  - Rotation limits, scale factors, translation ranges
+  - Enable/disable flags for each transformation type
+- [ ] Add layer management configuration:
+  - `MAX_CONCURRENT_LAYERS`, `MAX_OPACITY`
 
 ### Step 1.3: Basic Flask Application
 - [ ] Create minimal `app.py` with Flask setup
@@ -127,33 +137,45 @@ This document outlines a step-by-step implementation plan for building the Flask
 
 ### Step 5.1: Core Animation System
 - [ ] Create `AnimationEngine` class with:
-  - Layer management for multiple simultaneous images
-  - Smooth fade in/out transitions
-  - Timing control for animation sequences
-  - Frame rate optimization
+  - Layer management for multiple simultaneous images (configurable max count)
+  - Slow, contemplative fade in/out transitions with random duration between min/max values
+  - Variable hold time at maximum opacity (configurable min/max range)
+  - Configurable maximum opacity levels per layer
+  - Frame rate optimization for smooth performance
+- [ ] Implement image transformation system:
+  - Random rotation within configurable angle limits
+  - Random scaling within configurable factor limits  
+  - Random translation within configurable position ranges
+  - Transformation enable/disable flags
 - [ ] Implement requestAnimationFrame-based rendering
 - [ ] Add performance monitoring and FPS tracking
 
 ### Step 5.2: Pattern-Based Animation Control
 - [ ] Integrate with `PatternManager` for deterministic sequences
-- [ ] Implement animation state persistence
+- [ ] Implement layer spawn timing based on `LAYER_SPAWN_INTERVAL_SEC`
+- [ ] Add transformation calculation using deterministic seeds
+- [ ] Implement animation state persistence with timing parameters
 - [ ] Add animation pause/resume functionality
 - [ ] Create smooth transitions between pattern changes
 
 ### Step 5.3: Performance Optimization
-- [ ] Implement GPU-accelerated CSS transforms
+- [ ] Implement GPU-accelerated CSS transforms for rotation/scaling/translation
 - [ ] Add will-change CSS hints for optimized rendering
+- [ ] Optimize transformation calculations for multiple concurrent layers
 - [ ] Create frame dropping for low-performance devices
 - [ ] Add memory usage optimization for continuous operation
+- [ ] Implement transformation caching when `PRELOAD_TRANSFORM_CACHE` enabled
 
 ## Phase 6: Pattern Management
 
 ### Step 6.1: Pattern Generation Client
 - [ ] Create `PatternManager` class to:
   - Fetch patterns from server API
-  - Generate deterministic sequences locally
-  - Handle pattern state transitions
-  - Manage pattern codes for reproducibility
+  - Generate deterministic sequences locally with timing parameters
+  - Calculate deterministic transformations (rotation, scale, position) per image
+  - Handle pattern state transitions with configurable timing
+  - Manage pattern codes for reproducibility including transformation data
+- [ ] Implement transformation seed generation for reproducible visual variations
 - [ ] Implement pattern caching and prefetching
 - [ ] Add pattern validation and error recovery
 
@@ -199,12 +221,18 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Verify API endpoints with real frontend calls
 - [ ] Test image loading performance with large datasets
 - [ ] Validate pattern generation and reproducibility
+- [ ] Test animation timing configuration (seconds-based parameters)
+- [ ] Verify image transformations work with all configuration combinations
+- [ ] Test layer management with different `MAX_CONCURRENT_LAYERS` values
 
 ### Step 8.2: Performance Testing
 - [ ] Test with 1000+ images in catalog
-- [ ] Measure memory usage during long operations
-- [ ] Verify 30+ FPS performance on Raspberry Pi
+- [ ] Measure memory usage during long operations with multiple concurrent layers
+- [ ] Verify 30+ FPS performance on Raspberry Pi with transformations enabled
 - [ ] Test network efficiency and caching
+- [ ] Benchmark transformation calculations performance
+- [ ] Test slow transition timing under various system loads
+- [ ] Validate animation quality settings (low/medium/high) performance impact
 
 ### Step 8.3: Cross-Platform Testing
 - [ ] Test on Windows development environment
@@ -250,17 +278,22 @@ This document outlines a step-by-step implementation plan for building the Flask
 
 ### Technical Requirements
 - [ ] Application runs smoothly on Raspberry Pi 4B (2GB+ RAM)
-- [ ] Maintains 30+ FPS during animations
-- [ ] Handles 1000+ images efficiently
+- [ ] Maintains 30+ FPS during animations with transformations enabled
+- [ ] Handles 1000+ images efficiently with configurable concurrent layers
 - [ ] Memory usage remains stable during continuous operation
-- [ ] Pattern codes allow perfect reproduction of sequences
+- [ ] Pattern codes allow perfect reproduction of sequences including transformations
+- [ ] Slow, contemplative transitions create meditative viewing experience
+- [ ] All timing parameters configurable in seconds with decimal precision
 
 ### User Experience Requirements
-- [ ] Smooth, continuous generative art display
+- [ ] Smooth, continuous generative art display with slow transitions
+- [ ] Multiple semi-transparent layers create rich visual depth
+- [ ] Images appear with subtle random transformations (rotation, scale, position)
 - [ ] No visible loading delays during normal operation
 - [ ] Responsive kiosk mode for immersive viewing
 - [ ] Intuitive pattern sharing and reproduction
 - [ ] Stable operation for extended periods (24/7)
+- [ ] Configurable animation parameters allow customization for different environments
 
 ## Implementation Notes
 
@@ -273,7 +306,10 @@ This document outlines a step-by-step implementation plan for building the Flask
 ### Key Technical Decisions
 - **Client-Heavy Architecture**: Minimize server requests for smooth performance
 - **Lazy Loading**: Load images only when needed to handle large collections
-- **Deterministic Patterns**: Use seeds for reproducible art sequences
+- **Deterministic Patterns**: Use seeds for reproducible art sequences including transformations
+- **Slow Transitions**: Emphasize contemplative timing over quick animations
+- **Configurable Transformations**: Support rotation, scaling, and translation with deterministic seeds
+- **Layer Management**: Multiple concurrent semi-transparent images for visual depth
 - **Progressive Enhancement**: Basic functionality works, enhanced features improve experience
 
 ### Risk Mitigation

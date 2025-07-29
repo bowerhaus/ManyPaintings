@@ -478,23 +478,68 @@ window.App = (function() {
                     seed = this.generateSeed();
                 }
 
-                // For now, generate a simple random sequence
-                // TODO: Implement server-side pattern generation
+                // Generate deterministic sequence based on seed
                 this.currentSeed = seed;
-                this.imageSequence = ImageManager.getRandomImageIds(20);
+                this.imageSequence = this.generateDeterministicSequence(seed, 100); // Longer sequence
                 this.sequenceIndex = 0;
 
+
                 console.log(`PatternManager: Generated pattern with seed ${seed}`);
-                this.updatePatternDisplay();
+                console.log(`PatternManager: Sequence length: ${this.imageSequence.length}`);
+                console.log(`PatternManager: First 10 images in sequence:`, this.imageSequence.slice(0, 10));
                 
                 // Preload upcoming images
-                const upcomingImages = this.imageSequence.slice(0, config.preloadBufferSize);
+                const upcomingImages = this.imageSequence.slice(0, config.preloadBufferSize || 5);
                 await ImageManager.preloadImages(upcomingImages, true);
 
             } catch (error) {
                 console.error('PatternManager: Failed to generate pattern:', error);
                 throw error;
             }
+        },
+
+        generateDeterministicSequence(seed, length) {
+            // Create a seeded random number generator
+            const seededRandom = this.createSeededRandom(seed);
+            
+            // Get image IDs in a deterministic order (sorted by ID for consistency)
+            const allImageIds = Array.from(ImageManager.images.keys()).sort();
+            
+            if (allImageIds.length === 0) {
+                console.error('PatternManager: No images available for sequence generation');
+                return [];
+            }
+            
+            const sequence = [];
+            
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(seededRandom() * allImageIds.length);
+                sequence.push(allImageIds[randomIndex]);
+            }
+            
+            console.log(`PatternManager: Generated sequence with ${allImageIds.length} available images, first few IDs: ${allImageIds.slice(0, 5).join(', ')}`);
+            
+            return sequence;
+        },
+
+        createSeededRandom(seed) {
+            // Use the same hash function as AnimationEngine for consistency
+            const hashCode = (str) => {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32-bit integer
+                }
+                return Math.abs(hash);
+            };
+            
+            // Use the same seeded random implementation as AnimationEngine
+            let state = hashCode(seed);
+            return function() {
+                state = (state * 1664525 + 1013904223) % 4294967296;
+                return state / 4294967296;
+            };
         },
 
         generateSeed() {
@@ -533,7 +578,6 @@ window.App = (function() {
             }
 
             const imageId = this.imageSequence[this.sequenceIndex];
-            this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
 
             try {
                 // Pass the current seed for deterministic transformations
@@ -543,8 +587,11 @@ window.App = (function() {
                 
                 await AnimationEngine.showImage(imageId, options);
                 
+                // Increment sequence index after showing image
+                this.sequenceIndex = (this.sequenceIndex + 1) % this.imageSequence.length;
+                
                 // Preload upcoming images
-                const upcomingCount = Math.min(config.preloadBufferSize, this.imageSequence.length);
+                const upcomingCount = Math.min(config.preloadBufferSize || 5, this.imageSequence.length);
                 const upcomingImages = [];
                 
                 for (let i = 0; i < upcomingCount; i++) {
@@ -562,12 +609,6 @@ window.App = (function() {
             }
         },
 
-        updatePatternDisplay() {
-            const inputElement = document.getElementById('pattern-input');
-            if (inputElement) {
-                inputElement.value = this.currentSeed || 'Loading...';
-            }
-        }
     };
 
     /**
@@ -609,6 +650,7 @@ window.App = (function() {
                 newPatternBtn.addEventListener('click', this.generateNewPattern.bind(this));
             }
 
+
             // Retry button
             const retryBtn = document.getElementById('retry-btn');
             if (retryBtn) {
@@ -625,6 +667,7 @@ window.App = (function() {
                 this.controlsTriggerArea.addEventListener('mouseenter', this.showOnscreenControls.bind(this));
                 this.controlsTriggerArea.addEventListener('mouseleave', this.scheduleHideControls.bind(this));
             }
+
         },
 
         setupOnscreenControls() {
@@ -654,25 +697,6 @@ window.App = (function() {
                 });
             }
 
-            // Pattern input
-            const patternInput = document.getElementById('pattern-input');
-            if (patternInput) {
-                patternInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        const newPattern = e.target.value.trim();
-                        if (newPattern && newPattern !== 'Loading...') {
-                            this.applyNewPattern(newPattern);
-                        }
-                    }
-                });
-                
-                patternInput.addEventListener('blur', (e) => {
-                    const newPattern = e.target.value.trim();
-                    if (newPattern && newPattern !== 'Loading...' && newPattern !== PatternManager.currentSeed) {
-                        this.applyNewPattern(newPattern);
-                    }
-                });
-            }
             
             // Set initial values from config
             if (speedSlider) speedSlider.value = this.speedMultiplier;
@@ -758,16 +782,6 @@ window.App = (function() {
             });
         },
         
-        async applyNewPattern(patternSeed) {
-            try {
-                console.log(`UI: Applying new pattern: ${patternSeed}`);
-                AnimationEngine.clearAllLayers();
-                await PatternManager.generateNewPattern(patternSeed);
-            } catch (error) {
-                console.error('UI: Failed to apply new pattern:', error);
-                this.showError('Failed to apply pattern');
-            }
-        },
 
         handleKeydown(event) {
             switch (event.code) {
@@ -882,6 +896,7 @@ window.App = (function() {
                 isInitialized = true;
 
                 console.log('App initialization complete');
+                console.log(`ImageManager loaded ${ImageManager.images.size} images`);
 
             } catch (error) {
                 console.error('App initialization failed:', error);

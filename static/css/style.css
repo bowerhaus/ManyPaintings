@@ -117,17 +117,18 @@ body.white-background .image-layer {
     z-index: 100;
 }
 
-/* Pattern display */
-.pattern-display {
+/* Kiosk pattern display */
+.pattern-display.kiosk-pattern {
     position: absolute;
-    bottom: 2rem;
-    left: 2rem;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.7);
     color: #fff;
-    padding: 0.75rem 1.25rem;
+    padding: 1rem 1.5rem;
     border-radius: 0.5rem;
     font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -135,37 +136,19 @@ body.white-background .image-layer {
     transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
 }
 
-body.white-background .pattern-display {
+body.white-background .pattern-display.kiosk-pattern {
     background: rgba(255, 255, 255, 0.9);
     color: #000;
     border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.pattern-display.kiosk-pattern {
-    bottom: 3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.1rem;
-    padding: 1rem 1.5rem;
-}
-
-.pattern-display .label {
-    color: #888;
-    margin-right: 0.5rem;
-    transition: color 0.5s ease;
-}
-
-body.white-background .pattern-display .label {
-    color: #666;
-}
-
-.pattern-display .code {
+.pattern-display.kiosk-pattern .code {
     color: #fff;
     font-weight: bold;
     transition: color 0.5s ease;
 }
 
-body.white-background .pattern-display .code {
+body.white-background .pattern-display.kiosk-pattern .code {
     color: #000;
 }
 
@@ -210,6 +193,225 @@ body.white-background .control-btn:hover {
 
 .control-btn:active {
     transform: scale(0.95);
+}
+
+/* Controls trigger area - larger invisible area to detect mouse */
+.controls-trigger-area {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70vw;
+    max-width: 800px;
+    min-width: 600px;
+    height: 120px;
+    z-index: 200;
+    pointer-events: auto;
+}
+
+/* Onscreen controls - appear on mouse movement at bottom center */
+.onscreen-controls {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70vw;
+    max-width: 800px;
+    min-width: 600px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
+    z-index: 200;
+}
+
+body.white-background .onscreen-controls {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.onscreen-controls.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Horizontal controls row */
+.controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    width: 100%;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 120px;
+}
+
+
+.control-label {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.5s ease;
+}
+
+body.white-background .control-label {
+    color: #000;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pattern-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-slider {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: background-color 0.5s ease;
+}
+
+body.white-background .control-slider {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+body.white-background .control-slider::-webkit-slider-thumb {
+    background: #000;
+    box-shadow: 0 2px 6px rgba(255, 255, 255, 0.3);
+}
+
+.control-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.control-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+body.white-background .control-slider::-moz-range-thumb {
+    background: #000;
+    box-shadow: 0 2px 6px rgba(255, 255, 255, 0.3);
+}
+
+.control-slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.slider-value {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-width: 3rem;
+    text-align: right;
+    transition: color 0.5s ease;
+}
+
+body.white-background .slider-value {
+    color: #000;
+}
+
+/* Control panel button */
+.control-panel-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.control-panel-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.control-panel-btn:active {
+    transform: scale(0.95);
+}
+
+body.white-background .control-panel-btn {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    color: #000;
+}
+
+body.white-background .control-panel-btn:hover {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Pattern code display */
+.pattern-code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.5s ease;
+    min-width: 8rem;
+    text-align: center;
+}
+
+body.white-background .pattern-code {
+    color: #000;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 /* Loading indicator */

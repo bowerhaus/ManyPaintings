@@ -26,6 +26,7 @@
             layerSpawnIntervalSec: {{ config.LAYER_SPAWN_INTERVAL_SEC }},
             maxConcurrentLayers: {{ config.MAX_CONCURRENT_LAYERS }},
             maxOpacity: {{ config.MAX_OPACITY }},
+            minOpacity: {{ config.MIN_OPACITY }},
             
             // Image transformations
             rotationEnabled: {{ config.ROTATION_ENABLED|tojson }},
@@ -40,7 +41,16 @@
             
             // Performance
             animationQuality: "{{ config.ANIMATION_QUALITY }}",
-            preloadTransformCache: {{ config.PRELOAD_TRANSFORM_CACHE|tojson }}
+            preloadTransformCache: {{ config.PRELOAD_TRANSFORM_CACHE|tojson }},
+            
+            // Audio
+            audio: {
+                enabled: {{ config.AUDIO_ENABLED|tojson }},
+                file_path: "{{ config.AUDIO_FILE_PATH }}",
+                volume: {{ config.AUDIO_VOLUME }},
+                loop: {{ config.AUDIO_LOOP|tojson }},
+                autoplay: {{ config.AUDIO_AUTOPLAY|tojson }}
+            }
         };
     </script>
 </head>

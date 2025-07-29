@@ -16,6 +16,7 @@
         <div id="controls" class="controls hidden">
             <button id="play-pause-btn" class="control-btn" title="Play/Pause">⏸️</button>
             <button id="new-pattern-btn" class="control-btn" title="New Pattern">🔄</button>
+            <button id="main-audio-toggle-btn" class="control-btn" title="Toggle Audio">🔇</button>
         </div>
         
         <!-- Mouse-activated onscreen controls -->
@@ -37,6 +38,16 @@
                         <input type="range" id="layers-slider" class="control-slider" 
                                min="1" max="8" step="1" value="4">
                         <span id="layers-value" class="slider-value">4</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Audio</label>
+                    <div class="slider-container">
+                        <input type="range" id="audio-volume-slider" class="control-slider" 
+                               min="0" max="1" step="0.1" value="0.5">
+                        <span id="audio-volume-value" class="slider-value">50%</span>
+                        <button id="audio-toggle-btn" class="control-panel-btn" title="Toggle Audio">🔊</button>
                     </div>
                 </div>
                 

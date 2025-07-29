@@ -45,6 +45,7 @@ The application follows a browser-centric Flask web application structure:
 - **Flask Backend**: Minimal server providing image endpoints and configuration
 - **Frontend**: JavaScript-heavy client handling all animations and visual logic
 - **Image Assets**: Large collection (potentially 1000+) of abstract art images
+- **Audio System**: Background ambient audio with MP3 playback and controls
 - **Pattern Generation**: Deterministic sequences based on random seeds
 - **Kiosk Mode**: Full-screen immersive experience
 
@@ -61,6 +62,7 @@ The application follows a browser-centric Flask web application structure:
   - All animation logic and timing
   - Image loading and caching management
   - Layer composition and effects
+  - Audio playback and volume control
   - State management for current pattern
   - Performance optimization for smooth animations
 
@@ -77,6 +79,14 @@ The application follows a browser-centric Flask web application structure:
 - **Memory Management**: Unload unused images to prevent memory bloat
 - **Caching Strategy**: Browser cache optimization for frequently used images
 - **Progressive Loading**: Start animations while images still loading in background
+
+### Audio System Architecture
+- **Background Ambient Audio**: Continuous MP3 playback for immersive experience
+- **Browser Autoplay Compliance**: Graceful fallback when autoplay is blocked
+- **User Interaction Detection**: Automatic audio start after first user interaction
+- **Volume Control**: Real-time volume adjustment (0-100%) with persistent settings
+- **Loop Management**: Seamless audio looping for continuous experience
+- **Manual Controls**: Toggle play/pause with visual feedback
 
 ### Technology Stack
 - **Backend**: Python 3.9+ with Flask
@@ -96,6 +106,8 @@ ManyPaintings/
 ├── static/
 │   ├── css/style.css     # Complete styling with animations
 │   ├── js/main.js        # Full animation engine with deterministic patterns
+│   ├── audio/            # Audio assets
+│   │   └── *.mp3         # Background ambient audio files
 │   └── images/           # Art image assets (17 images)
 │       └── *.json        # Optional per-image configuration files
 ├── templates/
@@ -128,8 +140,19 @@ The application uses a JSON-based configuration system with environment-specific
     "lazy_loading": true
   },
   "animation_timing": { /* timing parameters */ },
-  "layer_management": { /* layer settings */ },
+  "layer_management": { 
+    "max_concurrent_layers": 4,
+    "max_opacity": 1.0,
+    "min_opacity": 0.7
+  },
   "transformations": { /* transformation settings */ },
+  "audio": {
+    "enabled": true,
+    "file_path": "static/audio/Ethereal Strokes Loop.mp3",
+    "volume": 0.5,
+    "loop": true,
+    "autoplay": true
+  },
   "environments": {
     "development": { /* dev overrides */ },
     "production": { /* prod overrides */ },
@@ -150,7 +173,8 @@ The application uses a JSON-based configuration system with environment-specific
     "scale": { "min_factor": 0.8, "max_factor": 1.5 }
   },
   "layer_management": {
-    "max_opacity": 0.7
+    "max_opacity": 0.7,
+    "min_opacity": 0.5
   }
 }
 ```
@@ -174,25 +198,56 @@ The application uses a JSON-based configuration system with environment-specific
 - **Flask Application**: Full app factory pattern with config loading
 - **API Endpoints**: Complete REST API with `/api/images`, `/api/config`, `/api/pattern/<seed>`
 - **Animation Engine**: JavaScript-based animation system with deterministic patterns
+- **Audio System**: MP3 background audio with volume control and browser autoplay handling
 - **Configuration System**: JSON-based config with per-image overrides
 - **Image Management**: Discovery, metadata extraction, and intelligent preloading
 - **Pattern System**: Deterministic sequences with initial pattern code support
-- **UI Controls**: Real-time speed, layer, and background controls
+- **UI Controls**: Real-time speed, layer, audio, and background controls
 - **Duplicate Prevention**: No image appears on multiple layers simultaneously
 
 ### Key Features Implemented
 1. **Deterministic Pattern System**: Same pattern code produces identical visual sequences
 2. **Per-Image Configuration**: JSON metadata files override settings per image
 3. **Seeded Random System**: All animations use deterministic random for repeatability
-4. **Real-time Controls**: Speed (0.1x-20x), layers (1-8), background toggle
-5. **Memory Management**: Dynamic layer cleanup and intelligent preloading
-6. **Clean Startup**: No loading popups, immediate animation start
+4. **Real-time Controls**: Speed (0.1x-20x), layers (1-8), audio volume/toggle, background toggle
+5. **Audio Integration**: Background ambient music with autoplay fallback and manual controls
+6. **Opacity Control**: Configurable min/max opacity ranges for layered images
+7. **Memory Management**: Dynamic layer cleanup and intelligent preloading
+8. **Clean Startup**: No loading popups, immediate animation start
 
 ### Architecture Highlights
 - **Browser-Centric**: Minimal server contact, all animations client-side
 - **Deterministic**: Same inputs always produce same visual outputs
 - **Configurable**: Per-image timing and transformation overrides
 - **Performance-Optimized**: 30+ FPS targeting with responsive controls
+- **Modular Design**: Separate managers for images, animation, patterns, audio, and UI
+
+### JavaScript Architecture Modules
+
+#### ImageManager
+- **Purpose**: Image loading, caching, and memory management
+- **Key Features**: Lazy loading, intelligent preloading, memory cleanup
+- **API**: `loadImage()`, `preloadImages()`, `cleanupMemory()`
+
+#### AnimationEngine
+- **Purpose**: Layer management and smooth transitions
+- **Key Features**: Deterministic animations, seeded random, transformation cache
+- **API**: `showImage()`, `hideImage()`, `updateExistingLayerSpeeds()`
+
+#### PatternManager
+- **Purpose**: Deterministic sequence generation and management
+- **Key Features**: Seeded pattern generation, sequence management, preloading
+- **API**: `generateNewPattern()`, `startPatternSequence()`
+
+#### AudioManager
+- **Purpose**: Background audio playback and control
+- **Key Features**: Browser autoplay handling, volume control, loop management
+- **API**: `play()`, `pause()`, `setVolume()`, `toggle()`
+
+#### UI Manager
+- **Purpose**: User interface and interaction handling
+- **Key Features**: Control panels, keyboard shortcuts, responsive design
+- **API**: `togglePlayPause()`, `updateAnimationSpeed()`, `toggleAudio()`
 
 ### VS Code Integration
 The project is configured for VS Code development with:
@@ -230,6 +285,81 @@ curl http://localhost:5000/health
 
 ### Testing Guidelines
 - **Server Startup**: Don't start the server yourself when testing. Ask the developer to do it
+
+## UI Controls & Interaction
+
+### Main Controls (Always Visible)
+Located in the top-right corner:
+- **⏸️ Play/Pause Button**: Toggle animation playback (Spacebar)
+- **🔄 New Pattern Button**: Generate new random pattern (N key)
+- **🔇/🔊 Audio Toggle**: Toggle background audio playback (A key)
+
+### Onscreen Controls (Mouse-Activated)
+Appear at bottom center when mouse hovers over the bottom area:
+
+#### Speed Control
+- **Slider Range**: 0.1x to 20.0x speed multiplier
+- **Default**: 1.0x (normal speed)
+- **Real-time**: Affects both new and existing layer animations
+- **Use Case**: Slow motion (0.1x-0.5x) or time-lapse (2x-20x) effects
+
+#### Layer Control
+- **Slider Range**: 1 to 8 concurrent layers
+- **Default**: 4 layers
+- **Dynamic**: Excess layers are immediately removed when reduced
+- **Performance**: Lower values improve performance on slower devices
+
+#### Audio Control
+- **Volume Slider**: 0% to 100% volume control
+- **Toggle Button**: Play/pause audio with visual feedback (🔊/🔇)
+- **Real-time**: Volume changes applied immediately
+- **Browser Policy**: Respects autoplay restrictions with fallback
+
+#### Background Control
+- **Toggle Button**: Switch between black and white backgrounds
+- **Persistent**: Setting saved to localStorage
+- **Visual Feedback**: ⚫⚪ icon indicates current state
+
+#### Pattern Display
+- **Current Pattern Code**: Shows active deterministic pattern seed
+- **Read-only**: Updates when new patterns are generated
+- **Format**: Alphanumeric seed string for pattern reproducibility
+
+### Keyboard Shortcuts
+- **Spacebar**: Play/Pause animations
+- **N**: Generate new pattern
+- **B**: Toggle background (black/white)
+- **A**: Toggle audio playback
+
+### Responsive Design
+- **Desktop**: Full control panel with all features
+- **Tablet (1200px-768px)**: Slightly condensed layout
+- **Mobile (< 768px)**: Compact layout with control wrapping
+
+## Audio Configuration
+
+### Audio File Requirements
+- **Format**: MP3 files recommended for broad browser support
+- **Location**: Place audio files in `static/audio/` directory
+- **Naming**: Use descriptive filenames (spaces allowed)
+- **Size**: Optimize for web delivery while maintaining quality
+
+### Audio Configuration Options
+```json
+"audio": {
+  "enabled": true,                    // Enable/disable audio system
+  "file_path": "static/audio/ambient.mp3",  // Path to audio file
+  "volume": 0.5,                     // Default volume (0.0-1.0)
+  "loop": true,                      // Enable seamless looping
+  "autoplay": true                   // Attempt autoplay on load
+}
+```
+
+### Browser Autoplay Handling
+- **Autoplay Attempt**: Tries to start audio automatically on page load
+- **Fallback Strategy**: Waits for user interaction if autoplay blocked
+- **User Interaction**: Any click, keypress, or touch activates audio
+- **Visual Feedback**: Audio button shows current playback state
 
 ## Developer Instructions
 

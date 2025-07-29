@@ -513,10 +513,18 @@ window.App = (function() {
     const UI = {
         errorElement: null,
         loadingElement: null,
+        isWhiteBackground: false,
 
         init() {
             this.errorElement = document.getElementById('error-message');
             this.loadingElement = document.getElementById('loading-indicator');
+            
+            // Load background preference from localStorage
+            const savedBackground = localStorage.getItem('manypaintings-background');
+            if (savedBackground === 'white') {
+                this.isWhiteBackground = true;
+                document.body.classList.add('white-background');
+            }
             
             this.setupEventListeners();
             this.hideLoading();
@@ -533,6 +541,12 @@ window.App = (function() {
             const newPatternBtn = document.getElementById('new-pattern-btn');
             if (newPatternBtn) {
                 newPatternBtn.addEventListener('click', this.generateNewPattern.bind(this));
+            }
+
+            // Background toggle button
+            const backgroundToggleBtn = document.getElementById('background-toggle-btn');
+            if (backgroundToggleBtn) {
+                backgroundToggleBtn.addEventListener('click', this.toggleBackground.bind(this));
             }
 
             // Retry button
@@ -557,6 +571,10 @@ window.App = (function() {
                     event.preventDefault();
                     this.generateNewPattern();
                     break;
+                case 'KeyB':
+                    event.preventDefault();
+                    this.toggleBackground();
+                    break;
             }
         },
 
@@ -577,6 +595,20 @@ window.App = (function() {
             if (btn) {
                 btn.textContent = icon;
             }
+        },
+
+        toggleBackground() {
+            this.isWhiteBackground = !this.isWhiteBackground;
+            
+            if (this.isWhiteBackground) {
+                document.body.classList.add('white-background');
+                localStorage.setItem('manypaintings-background', 'white');
+            } else {
+                document.body.classList.remove('white-background');
+                localStorage.setItem('manypaintings-background', 'black');
+            }
+            
+            console.log(`UI: Background switched to ${this.isWhiteBackground ? 'white' : 'black'}`);
         },
 
         async generateNewPattern() {

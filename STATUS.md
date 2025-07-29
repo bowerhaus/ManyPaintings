@@ -1,8 +1,8 @@
 # Development Status - ManyPaintings
 
 **Last Updated:** 2025-07-29  
-**Current Phase:** Animation System Enhancement - Complete  
-**Next Phase:** Phase 2 Backend API Development
+**Current Phase:** Advanced Features Implementation - Complete  
+**Next Phase:** Performance Testing & Optimization
 
 ## 🎯 Project Overview
 
@@ -33,6 +33,16 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - [x] **Background Toggle System** - Switch between black/white backgrounds with smart blending modes
 - [x] **Consolidated Control Panel** - All controls unified in bottom-center panel
 
+### Advanced Features Implementation ✅ COMPLETE
+- [x] **Per-Image Configuration** - JSON metadata files for individual image overrides
+- [x] **Deterministic Pattern System** - Initial pattern codes generate identical sequences
+- [x] **Deterministic Animations** - Same pattern code produces identical timing/opacity
+- [x] **Duplicate Layer Prevention** - No image appears on multiple layers simultaneously
+- [x] **Clean Startup Experience** - Removed loading popup for immediate animation start
+- [x] **JSON Serialization Fix** - Resolved API errors with non-serializable config data
+- [x] **Pattern API Implementation** - Server-side deterministic pattern generation
+- [x] **Seeded Random System** - All randomness now deterministic based on pattern codes
+
 ### Core Architecture Implemented
 - **Browser-Centric Design** - Minimal server contact, client-side animations
 - **Image Management** - On-demand loading, intelligent preloading, memory cleanup
@@ -44,37 +54,42 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 
 ### Backend (Flask)
 - ✅ App factory pattern with config loading
-- ✅ Image discovery and metadata extraction
-- ✅ API endpoints: `/`, `/kiosk`, `/health`, `/api/images`
+- ✅ Image discovery and metadata extraction with per-image config support
+- ✅ API endpoints: `/`, `/kiosk`, `/health`, `/api/images`, `/api/config`, `/api/pattern/<seed>`
 - ✅ Error handling and caching headers
-- ⏳ Pattern generation API (`/api/pattern/<seed>`) - placeholder only
+- ✅ Deterministic pattern generation API with server-side seeded random
+- ✅ JSON serialization handling for all config data types
 
 ### Frontend (JavaScript)
 - ✅ **ImageManager** - Catalog loading, image preloading, memory management
-- ✅ **AnimationEngine** - Advanced layer animation with speed-responsive timing
-- ✅ **PatternManager** - Deterministic sequence generation with pattern codes
+- ✅ **AnimationEngine** - Advanced layer animation with deterministic timing and duplicate prevention
+- ✅ **PatternManager** - Deterministic sequence generation with initial pattern code support
 - ✅ **UI Controls** - Consolidated mouse-activated control panel with all settings
 - ✅ **Real-time Control** - Immediate response to speed, layer, and background changes
 - ✅ **Background System** - Dynamic black/white switching with adaptive blending modes
+- ✅ **Seeded Random System** - All animations use deterministic random for repeatability
 
 ### Current Capabilities
-- ✅ **Fully Functional Animation System** - Images animate continuously with smooth transitions
+- ✅ **Fully Deterministic System** - Same pattern code produces identical visual sequences
+- ✅ **Per-Image Customization** - JSON config files override timing and transformations per image
+- ✅ **Duplicate Prevention** - No image appears on multiple layers simultaneously
 - ✅ **Real-time Controls** - Speed (0.1x-20x), layers (1-8), and background toggle
-- ✅ **Pattern Management** - Pattern codes display and update automatically
+- ✅ **Pattern Management** - Initial pattern codes and automatic generation
 - ✅ **Center-based Transformations** - Proper scaling, rotation, and translation
 - ✅ **Memory Optimization** - Dynamic layer management prevents overload
 - ✅ **Performance Optimization** - Speed affects all timings, not just spawn rate
 - ✅ **Responsive UI** - Consolidated bottom-center control panel with mouse activation
 - ✅ **Background Themes** - Black/white backgrounds with adaptive UI and blend modes
 - ✅ **Keyboard Shortcuts** - Space (play/pause), N (new pattern), B (background toggle)
+- ✅ **Clean Startup** - No loading popups, immediate animation start
 
 ## 🚧 Known Limitations & TODOs
 
 ### Remaining Issues
-- [ ] Pattern generation could be enhanced with server-side algorithms
 - [ ] Memory management needs testing with 1000+ images
 - [ ] No production deployment scripts
 - [ ] Cross-browser compatibility testing needed
+- [ ] Per-image configs need validation and error handling
 
 ### Performance Concerns
 - [ ] Not tested with 1000+ images yet
@@ -84,29 +99,29 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 
 ## 📋 Next Development Phase
 
-### Phase 2: Backend API Development (NEXT)
+### Phase 2: Performance Testing & Large-Scale Validation (NEXT)
 **Priority Tasks:**
-1. **Pattern Generation System** 
-   - Implement server-side deterministic pattern generation
-   - Create pattern algorithms that use image metadata
-   - Add pattern validation and reproducibility testing
+1. **Large-Scale Testing** 
+   - Test with 100-1000+ images for memory management
+   - Validate deterministic patterns with large image sets
+   - Performance profiling and optimization
 
-2. **Enhanced Image Management**
-   - Add image categorization/tagging system
-   - Implement smart preloading based on pattern predictions
-   - Add image loading performance metrics
+2. **Enhanced Configuration System**
+   - Add validation for per-image JSON configs
+   - Error handling for malformed config files
+   - Configuration documentation and examples
 
-3. **Static File Optimization**
-   - Configure proper cache headers for images
-   - Add compression for API responses
-   - Implement conditional requests (304 Not Modified)
+3. **Production Readiness**
+   - Deployment scripts for various environments
+   - Performance monitoring and metrics
+   - Cross-browser compatibility testing
 
-### Phase 3: Animation Engine Enhancement
+### Phase 3: Advanced Features & Deployment
 **Upcoming Tasks:**
-- Pattern-based animation control integration
+- Image categorization and smart preloading
+- Advanced pattern algorithms using image metadata  
 - Performance optimization for continuous operation
-- Frame dropping for low-performance devices
-- GPU-accelerated CSS transforms validation
+- Raspberry Pi deployment and auto-start scripts
 
 ## 🏗️ File Structure Status
 
@@ -153,13 +168,17 @@ ManyPaintings/
 - ✅ Templates render without errors
 
 ### Testing Completed
-- ✅ **End-to-end animation flow** - Fully functional
+- ✅ **End-to-end animation flow** - Fully functional with deterministic patterns
 - ✅ **Speed control system** - All timings respond to speed changes
 - ✅ **Layer management** - Dynamic layer count with immediate cleanup
 - ✅ **Pattern display system** - Shows current pattern codes automatically
 - ✅ **Real-time control response** - No restart required for changes
 - ✅ **Background toggle system** - Black/white switching with proper blend modes
 - ✅ **Consolidated control panel** - All controls accessible in unified interface
+- ✅ **Deterministic behavior** - Same pattern codes produce identical sequences
+- ✅ **Per-image configuration** - JSON config overrides work correctly
+- ✅ **Duplicate prevention** - No images appear on multiple layers
+- ✅ **API endpoints** - All backend APIs functional and tested
 
 ### Testing Needed
 - [ ] Memory usage with large image sets (1000+ images)
@@ -220,12 +239,13 @@ curl http://localhost:5000/health
 ## 📝 Notes for Next Session
 
 1. **Priority 1:** Test with larger image collections (100-1000+ images)
-2. **Priority 2:** Implement enhanced server-side pattern generation algorithms
-3. **Priority 3:** Performance testing and optimization on Raspberry Pi
-4. **Priority 4:** Production deployment scripts and configuration
-5. **Completed:** ✅ Animation system is fully functional with real-time controls
-6. **Completed:** ✅ Speed control affects all animation timings (0.1x-20x range)
-7. **Completed:** ✅ Layer management with immediate cleanup (1-8 layers)
+2. **Priority 2:** Performance testing and optimization on Raspberry Pi
+3. **Priority 3:** Production deployment scripts and configuration
+4. **Priority 4:** Enhanced configuration validation and error handling
+5. **Completed:** ✅ Fully deterministic pattern and animation system
+6. **Completed:** ✅ Per-image configuration with JSON metadata files
+7. **Completed:** ✅ Duplicate layer prevention and clean startup experience
+8. **Completed:** ✅ Complete API implementation with pattern generation
 
 ---
 *This status file should be updated after each development session*

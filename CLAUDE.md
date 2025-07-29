@@ -169,3 +169,8 @@ The project is configured for VS Code development with:
 - Task definitions for common operations
 - Recommended extensions for Python/Flask development
 - Workspace settings for optimal development experience
+
+## Development Guidance
+
+### Testing Guidelines
+- **Server Startup**: Don't start the server yourself when testing. Ask the developer to do it

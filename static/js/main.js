@@ -364,20 +364,23 @@ window.App = (function() {
             const imgElement = img.cloneNode();
             imgElement.draggable = false;
             
-            // Apply transformations
+            // Apply transformations in proper order: scale -> rotate -> translate
             if (transformations) {
                 const transforms = [];
                 
-                if (config.translationEnabled && (transformations.translateX || transformations.translateY)) {
-                    transforms.push(`translate(${transformations.translateX}vw, ${transformations.translateY}vh)`);
+                // Scale first (around center)
+                if (config.scaleEnabled && transformations.scale !== 1) {
+                    transforms.push(`scale(${transformations.scale})`);
                 }
                 
+                // Rotate second (around center of scaled image)
                 if (config.rotationEnabled && transformations.rotation) {
                     transforms.push(`rotate(${transformations.rotation}deg)`);
                 }
                 
-                if (config.scaleEnabled && transformations.scale !== 1) {
-                    transforms.push(`scale(${transformations.scale})`);
+                // Translate last (move the final transformed image)
+                if (config.translationEnabled && (transformations.translateX || transformations.translateY)) {
+                    transforms.push(`translate(${transformations.translateX}vw, ${transformations.translateY}vh)`);
                 }
                 
                 if (transforms.length > 0) {

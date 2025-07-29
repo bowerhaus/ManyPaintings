@@ -25,24 +25,24 @@
     "layer_spawn_interval_sec": 4.0
   },
   "layer_management": {
-    "max_concurrent_layers": 3,
+    "max_concurrent_layers": 4,
     "max_opacity": 1.0
   },
   "transformations": {
     "rotation": {
-      "enabled": false,
-      "min_degrees": -15,
-      "max_degrees": 15
+      "enabled": true,
+      "min_degrees": -60,
+      "max_degrees": 60
     },
     "scale": {
-      "enabled": false,
-      "min_factor": 0.8,
-      "max_factor": 1.2
+      "enabled": true,
+      "min_factor": 0.5,
+      "max_factor": 1
     },
     "translation": {
       "enabled": true,
-      "x_range_percent": 50,
-      "y_range_percent": 50
+      "x_range_percent": 30,
+      "y_range_percent": 30
     }
   },
   "performance": {
@@ -85,6 +85,13 @@
         "fade_in_max_sec": 4.5,
         "fade_out_min_sec": 3.5,
         "fade_out_max_sec": 5.5
+      },
+      "transformations": {
+        "translation": {
+          "enabled": true,
+          "x_range_percent": 25,
+          "y_range_percent": 25
+        }
       },
       "performance": {
         "animation_quality": "medium",

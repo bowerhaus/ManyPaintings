@@ -743,8 +743,15 @@ window.App = (function () {
 
       this.audioElement.addEventListener('canplaythrough', () => {
         console.log('AudioManager: Audio loaded and ready to play');
-        if (config.audio.autoplay !== false) {
+        console.log('AudioManager: Autoplay setting:', config.audio.autoplay);
+        if (config.audio.autoplay === true) {
           this.tryAutoplay();
+        } else {
+          console.log('AudioManager: Autoplay disabled, audio will remain paused');
+          // Update UI to show correct initial state
+          if (window.App && window.App.UI) {
+            window.App.UI.updateAudioButton();
+          }
         }
       });
 
@@ -898,8 +905,9 @@ window.App = (function () {
       if (savedBackground === 'white') {
         this.isWhiteBackground = true;
         document.body.classList.add('white-background');
-        this.updateBackgroundToggle();
       }
+      // Always update the background toggle button state
+      this.updateBackgroundToggle();
 
       this.setupEventListeners();
       this.setupOnscreenControls();
@@ -959,6 +967,11 @@ window.App = (function () {
           window.App.MatteBorderManager.handleResize();
         }
       });
+
+      // Click outside to close onscreen controls (non-kiosk mode)
+      if (!kioskMode) {
+        document.addEventListener('click', this.handleClickOutside.bind(this));
+      }
 
     },
 
@@ -1039,8 +1052,7 @@ window.App = (function () {
 
       // Hide after 3 seconds of no mouse movement
       this.mouseTimer = setTimeout(() => {
-        console.log('UI: Hiding onscreen controls');
-        this.onscreenControls.classList.remove('visible');
+        this.hideOnscreenControls();
       }, 3000);
     },
 
@@ -1113,6 +1125,36 @@ window.App = (function () {
           event.preventDefault();
           this.toggleAudio();
           break;
+      }
+    },
+
+    handleClickOutside(event) {
+      if (!this.onscreenControls || kioskMode) return;
+      
+      // Check if the panel is currently visible
+      if (!this.onscreenControls.classList.contains('visible')) return;
+      
+      // Check if the click was inside the control panel or trigger area
+      const clickedInsidePanel = this.onscreenControls.contains(event.target);
+      const clickedInsideTrigger = this.controlsTriggerArea && this.controlsTriggerArea.contains(event.target);
+      
+      // If clicked outside both the panel and trigger area, hide the controls
+      if (!clickedInsidePanel && !clickedInsideTrigger) {
+        console.log('UI: Click outside detected, hiding onscreen controls');
+        this.hideOnscreenControls();
+      }
+    },
+
+    hideOnscreenControls() {
+      if (!this.onscreenControls || kioskMode) return;
+      
+      console.log('UI: Hiding onscreen controls');
+      this.onscreenControls.classList.remove('visible');
+      
+      // Clear any existing timer
+      if (this.mouseTimer) {
+        clearTimeout(this.mouseTimer);
+        this.mouseTimer = null;
       }
     },
 
@@ -1282,19 +1324,10 @@ window.App = (function () {
         border: getComputedStyle(this.borderElement).border
       });
       
-      // Force border to be visible immediately as a test
-      this.borderElement.style.border = '80px solid #F5F5DC';
+      // Initialize border element with basic styles
       this.borderElement.style.display = 'block';
       this.borderElement.style.opacity = '1';
       this.borderElement.style.visibility = 'visible';
-      this.borderElement.style.position = 'absolute';
-      this.borderElement.style.top = '0';
-      this.borderElement.style.left = '0';
-      this.borderElement.style.width = '100%';
-      this.borderElement.style.height = '100%';
-      this.borderElement.style.boxSizing = 'border-box';
-      this.borderElement.style.zIndex = '50';
-      this.borderElement.style.pointerEvents = 'none';
       
       console.log('MatteBorderManager: Forced border styles applied');
       
@@ -1365,8 +1398,8 @@ window.App = (function () {
       console.log('MatteBorderManager: Using default configuration');
       this.config = {
         enabled: true,
-        width_percent: 2,
-        color: '#F5F5DC',
+        width_percent: 10,
+        color: '#F8F8F8',
         style: 'classic',
         shadow: {
           enabled: true,
@@ -1407,16 +1440,18 @@ window.App = (function () {
       // Apply style class
       this.borderElement.className = `matte-border ${this.config.style || 'classic'}`;
       
-      // Calculate border width based on viewport
-      const viewportMin = Math.min(window.innerWidth, window.innerHeight);
-      const widthPercent = this.config.width_percent || 15;
-      const calculatedWidth = Math.round((widthPercent / 100) * viewportMin);
-      const borderWidth = Math.max(5, calculatedWidth); // Minimum 5px to allow for very thin borders
+      // Calculate border width based on viewport with consistent sizing
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const widthPercent = this.config.width_percent || 10;
+      
+      // Use a consistent calculation based on viewport width for horizontal stability
+      const calculatedWidth = Math.round((widthPercent / 100) * viewportWidth * 0.8); // 0.8 factor for more reasonable sizing
+      const borderWidth = Math.max(30, Math.min(150, calculatedWidth)); // Clamp between 30px and 150px
       
       console.log('MatteBorderManager: Width calculation:', {
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        viewportMin: viewportMin,
+        viewportWidth: viewportWidth,
+        viewportHeight: viewportHeight,
         widthPercent: widthPercent,
         calculatedWidth: calculatedWidth,
         finalBorderWidth: borderWidth
@@ -1439,12 +1474,16 @@ window.App = (function () {
       }
       
       // Apply styles with fallback
-      const borderColor = this.config.color || '#F5F5DC';
+      const borderColor = this.config.color || '#F8F8F8';
       
-      // Force border width with !important via setProperty
-      this.borderElement.style.setProperty('border-width', `${borderWidth}px`, 'important');
+      // Apply border color and style immediately
       this.borderElement.style.setProperty('border-color', borderColor, 'important');
       this.borderElement.style.setProperty('border-style', 'solid', 'important');
+      
+      // Apply border width with a small delay to trigger smooth animation from 0px
+      requestAnimationFrame(() => {
+        this.borderElement.style.setProperty('border-width', `${borderWidth}px`, 'important');
+      });
       
       if (boxShadow.length > 0) {
         this.borderElement.style.setProperty('box-shadow', boxShadow.join(', '), 'important');

@@ -56,22 +56,22 @@
     "file_path": "static/audio/Ethereal Strokes Loop.mp3",
     "volume": 0.5,
     "loop": true,
-    "autoplay": true
+    "autoplay": false
   },
   "matte_border": {
     "enabled": true,
     "width_percent": 10,
-    "color": "#F5F5DC",
+    "color": "#F8F8F8",
     "style": "classic",
     "shadow": {
       "enabled": true,
       "blur": 20,
       "spread": 5,
-      "color": "rgba(0, 0, 0, 0.3)"
+      "color": "rgba(0, 0, 0, 0.8)"
     },
     "bevel": {
-      "enabled": false,
-      "width": 2,
+      "enabled": true,
+      "width": 1.5,
       "inner_color": "rgba(255, 255, 255, 0.3)",
       "outer_color": "rgba(0, 0, 0, 0.2)"
     }

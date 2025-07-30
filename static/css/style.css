@@ -77,14 +77,71 @@ body.white-background #canvas-container {
     left: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    border: 80px solid #F5F5DC;
+    border-style: solid !important;
+    border-color: #F8F8F8 !important;
+    border-width: 0px !important; /* Start at 0px, will be animated to correct size by JavaScript */
     box-sizing: border-box !important;
     background: transparent !important;
+    background-image: 
+        /* Paper fiber texture */
+        radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.15) 1px, transparent 1px),
+        radial-gradient(circle at 80% 50%, rgba(120, 119, 108, 0.12) 1px, transparent 1px),
+        radial-gradient(circle at 40% 20%, rgba(120, 119, 108, 0.14) 1px, transparent 1px),
+        radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.13) 1px, transparent 1px),
+        radial-gradient(circle at 60% 30%, rgba(120, 119, 108, 0.11) 1px, transparent 1px),
+        radial-gradient(circle at 60% 70%, rgba(120, 119, 108, 0.12) 1px, transparent 1px),
+        /* Additional fiber spots */
+        radial-gradient(circle at 30% 40%, rgba(140, 120, 100, 0.08) 0.5px, transparent 0.5px),
+        radial-gradient(circle at 70% 60%, rgba(140, 120, 100, 0.09) 0.5px, transparent 0.5px),
+        radial-gradient(circle at 15% 75%, rgba(140, 120, 100, 0.07) 0.5px, transparent 0.5px),
+        radial-gradient(circle at 85% 25%, rgba(140, 120, 100, 0.08) 0.5px, transparent 0.5px),
+        /* Paper grain lines */
+        linear-gradient(90deg, rgba(0,0,0,0.06) 50%, transparent 50%),
+        linear-gradient(rgba(0,0,0,0.05) 50%, transparent 50%),
+        linear-gradient(45deg, rgba(0,0,0,0.04) 50%, transparent 50%),
+        linear-gradient(-45deg, rgba(0,0,0,0.04) 50%, transparent 50%),
+        /* Subtle color variations */
+        radial-gradient(ellipse at 25% 25%, rgba(250, 248, 240, 0.3) 30%, transparent 70%),
+        radial-gradient(ellipse at 75% 75%, rgba(248, 250, 245, 0.25) 25%, transparent 75%);
+    background-size: 
+        8px 8px, 
+        12px 12px, 
+        10px 10px, 
+        14px 14px, 
+        7px 7px, 
+        9px 9px,
+        4px 4px,
+        5px 5px,
+        6px 6px,
+        11px 11px,
+        1px 1px,
+        1px 1px,
+        2px 2px,
+        2px 2px,
+        80px 80px,
+        60px 60px;
+    background-position:
+        0 0, 
+        3px 3px, 
+        6px 6px, 
+        1px 1px, 
+        4px 4px, 
+        7px 7px,
+        2px 2px,
+        8px 8px,
+        5px 5px,
+        9px 9px,
+        0 0,
+        0.5px 0.5px,
+        1px 1px,
+        1.5px 1.5px,
+        0 0,
+        20px 20px;
     box-shadow: 
-        inset 0 0 0 2px rgba(255, 255, 255, 0.3),
-        inset 0 0 0 4px rgba(0, 0, 0, 0.2),
-        0 0 20px 5px rgba(0, 0, 0, 0.3);
-    transition: border-width 0.3s ease, border-color 0.3s ease;
+        inset 0 0 0 2px rgba(255, 255, 255, 0.4),
+        inset 0 0 0 4px rgba(0, 0, 0, 0.1),
+        0 0 20px 5px rgba(0, 0, 0, 0.2);
+    transition: border-width 0.8s ease-out, border-color 0.3s ease;
     opacity: 1 !important;
     visibility: visible !important;
     display: block !important;
@@ -104,6 +161,35 @@ body.white-background #canvas-container {
 
 .matte-border.elegant {
     border-style: solid;
+    background-image: 
+        /* Enhanced paper fiber texture for elegant style */
+        radial-gradient(circle at 25% 25%, rgba(120, 119, 108, 0.18) 1px, transparent 1px),
+        radial-gradient(circle at 75% 75%, rgba(120, 119, 108, 0.16) 1px, transparent 1px),
+        radial-gradient(circle at 50% 10%, rgba(120, 119, 108, 0.14) 1px, transparent 1px),
+        radial-gradient(circle at 50% 90%, rgba(120, 119, 108, 0.15) 1px, transparent 1px),
+        radial-gradient(circle at 10% 60%, rgba(140, 120, 100, 0.12) 0.5px, transparent 0.5px),
+        radial-gradient(circle at 90% 40%, rgba(140, 120, 100, 0.11) 0.5px, transparent 0.5px),
+        /* Elegant grain pattern */
+        linear-gradient(45deg, rgba(0,0,0,0.08) 50%, transparent 50%),
+        linear-gradient(-45deg, rgba(0,0,0,0.07) 50%, transparent 50%),
+        linear-gradient(90deg, rgba(0,0,0,0.06) 50%, transparent 50%),
+        linear-gradient(rgba(0,0,0,0.05) 50%, transparent 50%),
+        /* Elegant color washes */
+        radial-gradient(ellipse at 30% 30%, rgba(252, 250, 248, 0.4) 25%, transparent 75%),
+        radial-gradient(ellipse at 70% 70%, rgba(250, 252, 250, 0.35) 20%, transparent 80%);
+    background-size: 
+        12px 12px, 
+        15px 15px, 
+        10px 10px, 
+        18px 18px,
+        6px 6px,
+        8px 8px,
+        2px 2px,
+        2px 2px,
+        1px 1px,
+        1px 1px,
+        90px 90px,
+        70px 70px;
     box-shadow: 
         inset 0 0 0 1px rgba(255, 255, 255, 0.5),
         inset 0 0 0 3px rgba(0, 0, 0, 0.1),
@@ -257,7 +343,7 @@ body.white-background .control-btn:hover {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 25vh;
+    height: 18.75vh; /* 25% less than 25vh */
     z-index: 200;
     pointer-events: auto;
 }
@@ -268,17 +354,14 @@ body.white-background .control-btn:hover {
     left: 0;
     right: 0;
     height: 100%;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 60%, transparent 100%);
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 60%, transparent 100%);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     opacity: 0;
     transform: translateY(100%);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
-}
-
-body.white-background .bottom-overlay-panel {
-    background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 60%, transparent 100%);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.2), 0 -1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .bottom-overlay-panel.visible {
@@ -313,47 +396,26 @@ body.white-background .bottom-overlay-panel {
     justify-content: center;
     width: 50px;
     height: 50px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s ease;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-body.white-background .control-btn {
-    background: rgba(0, 0, 0, 0.1);
-    border-color: rgba(0, 0, 0, 0.2);
     color: rgba(0, 0, 0, 0.9);
 }
 
 .control-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-body.white-background .control-btn:hover {
     background: rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .control-btn.primary {
-    background: rgba(255, 255, 255, 0.9);
-    color: rgba(0, 0, 0, 0.9);
-}
-
-body.white-background .control-btn.primary {
     background: rgba(0, 0, 0, 0.9);
     color: rgba(255, 255, 255, 0.9);
 }
 
 .control-btn.primary:hover {
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
-}
-
-body.white-background .control-btn.primary:hover {
     background: rgba(0, 0, 0, 1);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
@@ -380,15 +442,11 @@ body.white-background .control-btn.primary:hover {
 }
 
 .control-group label {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(0, 0, 0, 0.8);
     font-size: 0.9rem;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-}
-
-body.white-background .control-group label {
-    color: rgba(0, 0, 0, 0.8);
 }
 
 .control-input {
@@ -401,7 +459,7 @@ body.white-background .control-group label {
 .control-input input[type="range"] {
     flex: 1;
     height: 4px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
     border-radius: 2px;
     outline: none;
     -webkit-appearance: none;
@@ -409,59 +467,43 @@ body.white-background .control-group label {
     cursor: pointer;
 }
 
-body.white-background .control-input input[type="range"] {
-    background: rgba(0, 0, 0, 0.2);
-}
-
 .control-input input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
     height: 18px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.9);
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-body.white-background .control-input input[type="range"]::-webkit-slider-thumb {
-    background: rgba(0, 0, 0, 0.9);
-}
-
 .control-input input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.2);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .control-input input[type="range"]::-moz-range-thumb {
     width: 18px;
     height: 18px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.9);
     border-radius: 50%;
     cursor: pointer;
     border: none;
     transition: all 0.3s ease;
 }
 
-body.white-background .control-input input[type="range"]::-moz-range-thumb {
-    background: rgba(0, 0, 0, 0.9);
-}
 
 .control-input span {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(0, 0, 0, 0.9);
     font-size: 0.85rem;
     font-weight: 600;
     font-family: 'Courier New', monospace;
     min-width: 3rem;
     text-align: center;
     padding: 0.25rem 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 0.25rem;
-}
-
-body.white-background .control-input span {
-    color: rgba(0, 0, 0, 0.9);
     background: rgba(0, 0, 0, 0.1);
+    border-radius: 0.25rem;
 }
 
 .pattern-display {
@@ -469,25 +511,17 @@ body.white-background .control-input span {
     align-items: center;
     justify-content: center;
     padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
     border-radius: 0.25rem;
     width: 100%;
-}
-
-body.white-background .pattern-display {
-    background: rgba(0, 0, 0, 0.1);
 }
 
 .pattern-display span {
     font-family: 'Courier New', monospace;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(0, 0, 0, 0.9);
     background: none;
     padding: 0;
-}
-
-body.white-background .pattern-display span {
-    color: rgba(0, 0, 0, 0.9);
 }
 
 
@@ -609,7 +643,7 @@ body.white-background .error-message {
 /* Responsive design for bottom overlay panel */
 @media (max-width: 768px) {
     .bottom-controls-trigger {
-        height: 30vh;
+        height: 22.5vh; /* 25% less than 30vh */
     }
     
     .overlay-content {
@@ -640,7 +674,7 @@ body.white-background .error-message {
 
 @media (max-width: 480px) {
     .bottom-controls-trigger {
-        height: 35vh;
+        height: 26.25vh; /* 25% less than 35vh */
     }
     
     .overlay-content {

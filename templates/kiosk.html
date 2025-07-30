@@ -13,9 +13,12 @@
         </div>
     </div>
     
-    <div id="pattern-code" class="pattern-display kiosk-pattern">
-        <span id="current-pattern" class="code">Loading...</span>
-    </div>
+    <button id="fullscreen-btn" class="fullscreen-button" title="Enter Fullscreen">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+    </button>
+    
     
     <div id="error-message" class="error-message hidden">
         <p id="error-text">Connection lost</p>
@@ -30,6 +33,60 @@
         if (window.App) {
             window.App.init({ kioskMode: true });
         }
+        
+        // Fullscreen functionality
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+        
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+        
+        function updateFullscreenButton() {
+            const isFullscreen = document.fullscreenElement || 
+                                document.webkitFullscreenElement || 
+                                document.msFullscreenElement;
+            
+            if (isFullscreen) {
+                fullscreenBtn.style.display = 'none';
+            } else {
+                fullscreenBtn.style.display = 'block';
+                fullscreenBtn.innerHTML = `
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                    </svg>
+                `;
+                fullscreenBtn.title = "Enter Fullscreen";
+            }
+        }
+        
+        fullscreenBtn.addEventListener('click', function() {
+            enterFullscreen();
+        });
+        
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+        
+        // Initial button state
+        updateFullscreenButton();
     });
     
     // Prevent context menu and selection in kiosk mode

@@ -884,6 +884,11 @@ window.App = (function () {
       this.onscreenControls = document.getElementById('onscreen-controls');
       this.controlsTriggerArea = document.getElementById('controls-trigger-area');
 
+      console.log('UI: Elements found:', {
+        onscreenControls: !!this.onscreenControls,
+        controlsTriggerArea: !!this.controlsTriggerArea
+      });
+
       // Initialize UI values from config
       this.maxLayers = config.maxConcurrentLayers || 4;
       console.log(`UI: Initialized with maxLayers: ${this.maxLayers}, config.maxConcurrentLayers: ${config.maxConcurrentLayers}`);
@@ -893,43 +898,40 @@ window.App = (function () {
       if (savedBackground === 'white') {
         this.isWhiteBackground = true;
         document.body.classList.add('white-background');
+        this.updateBackgroundToggle();
       }
 
       this.setupEventListeners();
       this.setupOnscreenControls();
+      this.showMainControls();
       this.hideLoading();
     },
 
     setupEventListeners() {
-      // Play/Pause button
+      // Play/Pause button (in onscreen controls)
       const playPauseBtn = document.getElementById('play-pause-btn');
       if (playPauseBtn) {
         playPauseBtn.addEventListener('click', this.togglePlayPause.bind(this));
       }
 
-      // New pattern button
+      // New pattern button (in onscreen controls)
       const newPatternBtn = document.getElementById('new-pattern-btn');
       if (newPatternBtn) {
         newPatternBtn.addEventListener('click', this.generateNewPattern.bind(this));
       }
 
-      // Background toggle button
+      // Background toggle button (in onscreen controls)
       const backgroundToggleBtn = document.getElementById('background-toggle-btn');
       if (backgroundToggleBtn) {
         backgroundToggleBtn.addEventListener('click', this.toggleBackground.bind(this));
       }
 
-      // Audio toggle button
+      // Audio toggle button (in onscreen controls)
       const audioToggleBtn = document.getElementById('audio-toggle-btn');
       if (audioToggleBtn) {
         audioToggleBtn.addEventListener('click', this.toggleAudio.bind(this));
       }
 
-      // Main audio toggle button (always visible)
-      const mainAudioToggleBtn = document.getElementById('main-audio-toggle-btn');
-      if (mainAudioToggleBtn) {
-        mainAudioToggleBtn.addEventListener('click', this.toggleAudio.bind(this));
-      }
 
       // Retry button
       const retryBtn = document.getElementById('retry-btn');
@@ -946,6 +948,9 @@ window.App = (function () {
       if (!kioskMode && this.controlsTriggerArea) {
         this.controlsTriggerArea.addEventListener('mouseenter', this.showOnscreenControls.bind(this));
         this.controlsTriggerArea.addEventListener('mouseleave', this.scheduleHideControls.bind(this));
+        
+        // Also add pointer events to ensure trigger works
+        this.controlsTriggerArea.style.pointerEvents = 'auto';
       }
 
     },
@@ -983,7 +988,7 @@ window.App = (function () {
       if (audioVolumeSlider && audioVolumeValue) {
         audioVolumeSlider.addEventListener('input', (e) => {
           const volume = parseFloat(e.target.value);
-          audioVolumeValue.textContent = `${Math.round(volume * 100)}%`;
+          this.updateVolumeDisplay(volume);
           console.log(`UI: Audio volume changed to ${volume}`);
           AudioManager.setVolume(volume);
         });
@@ -996,12 +1001,16 @@ window.App = (function () {
       if (layersValue) layersValue.textContent = this.maxLayers.toString();
       if (audioVolumeSlider) audioVolumeSlider.value = (config.audio && config.audio.volume) || 0.5;
       if (audioVolumeValue) audioVolumeValue.textContent = `${Math.round(((config.audio && config.audio.volume) || 0.5) * 100)}%`;
+      
+      // Initialize play/pause button
+      this.updatePlayPauseButton();
     },
 
 
     showOnscreenControls() {
       if (!this.onscreenControls || kioskMode) return;
 
+      console.log('UI: Showing onscreen controls');
       this.onscreenControls.classList.add('visible');
 
       // Clear any existing timer
@@ -1014,6 +1023,8 @@ window.App = (function () {
     scheduleHideControls() {
       if (!this.onscreenControls || kioskMode) return;
 
+      console.log('UI: Scheduling hide controls');
+      
       // Clear existing timer
       if (this.mouseTimer) {
         clearTimeout(this.mouseTimer);
@@ -1021,6 +1032,7 @@ window.App = (function () {
 
       // Hide after 3 seconds of no mouse movement
       this.mouseTimer = setTimeout(() => {
+        console.log('UI: Hiding onscreen controls');
         this.onscreenControls.classList.remove('visible');
       }, 3000);
     },
@@ -1101,18 +1113,29 @@ window.App = (function () {
       if (AnimationEngine.isPlaying) {
         AnimationEngine.stop();
         PatternManager.stopPatternSequence();
-        this.updatePlayPauseButton('▶️');
+        this.updatePlayPauseButton(false);
       } else {
         AnimationEngine.start();
         PatternManager.startPatternSequence();
-        this.updatePlayPauseButton('⏸️');
+        this.updatePlayPauseButton(true);
       }
     },
 
-    updatePlayPauseButton(icon) {
+    updatePlayPauseButton(isPlaying = null) {
       const btn = document.getElementById('play-pause-btn');
       if (btn) {
-        btn.textContent = icon;
+        const playing = isPlaying !== null ? isPlaying : AnimationEngine.isPlaying;
+        const icon = btn.querySelector('svg path');
+        
+        if (playing) {
+          // Pause icon
+          if (icon) icon.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
+          btn.title = 'Pause (Spacebar)';
+        } else {
+          // Play icon  
+          if (icon) icon.setAttribute('d', 'M8 5v14l11-7z');
+          btn.title = 'Play (Spacebar)';
+        }
       }
     },
 
@@ -1127,7 +1150,16 @@ window.App = (function () {
         localStorage.setItem('manypaintings-background', 'black');
       }
 
+      this.updateBackgroundToggle();
       console.log(`UI: Background switched to ${this.isWhiteBackground ? 'white' : 'black'}`);
+    },
+
+    updateBackgroundToggle() {
+      // Background toggle is now just a simple button, no need for complex updates
+      const toggleBtn = document.getElementById('background-toggle-btn');
+      if (toggleBtn) {
+        toggleBtn.title = `Switch to ${this.isWhiteBackground ? 'Dark' : 'Light'} Background (B)`;
+      }
     },
 
     toggleAudio() {
@@ -1135,18 +1167,31 @@ window.App = (function () {
       this.updateAudioButton();
     },
 
+
+    updateVolumeDisplay(volume) {
+      const volumeValue = document.getElementById('audio-volume-value');
+      if (volumeValue) {
+        volumeValue.textContent = `${Math.round(volume * 100)}%`;
+      }
+    },
+
     updateAudioButton() {
       const isPlaying = AudioManager.isPlaying();
-      const icon = isPlaying ? '🔊' : '🔇';
       
       const btn = document.getElementById('audio-toggle-btn');
       if (btn) {
-        btn.textContent = icon;
-      }
-      
-      const mainBtn = document.getElementById('main-audio-toggle-btn');
-      if (mainBtn) {
-        mainBtn.textContent = icon;
+        const icon = btn.querySelector('svg path');
+        if (icon) {
+          if (isPlaying) {
+            // Speaker on icon
+            icon.setAttribute('d', 'M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.03C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z');
+            btn.title = 'Pause Audio';
+          } else {
+            // Muted speaker icon
+            icon.setAttribute('d', 'M12,4L9.91,6.09L12,8.18M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.52C15.58,18.04 14.83,18.46 14,18.7V20.77C15.38,20.45 16.63,19.82 17.68,18.96L19.73,21L21,19.73L12,10.73M19,12C19,12.94 18.8,13.82 18.46,14.64L19.97,16.15C20.62,14.91 21,13.5 21,12C21,7.72 18,4.14 14,3.23V5.29C16.89,6.15 19,8.83 19,12M16.5,12C16.5,10.23 15.5,8.71 14,7.97V10.18L16.45,12.63C16.5,12.43 16.5,12.21 16.5,12Z');
+            btn.title = 'Play Audio';
+          }
+        }
       }
       
       console.log(`UI: Audio button updated - ${isPlaying ? 'playing' : 'stopped'}`);
@@ -1171,6 +1216,13 @@ window.App = (function () {
     hideLoading() {
       if (this.loadingElement) {
         this.loadingElement.classList.add('hidden');
+      }
+    },
+
+    showMainControls() {
+      const controls = document.getElementById('controls');
+      if (controls) {
+        controls.classList.remove('hidden');
       }
     },
 

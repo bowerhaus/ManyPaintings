@@ -14,57 +14,75 @@
     
     <div id="ui-overlay" class="ui-overlay">
         <div id="controls" class="controls hidden">
-            <button id="play-pause-btn" class="control-btn" title="Play/Pause">⏸️</button>
-            <button id="new-pattern-btn" class="control-btn" title="New Pattern">🔄</button>
-            <button id="main-audio-toggle-btn" class="control-btn" title="Toggle Audio">🔇</button>
+            <button id="fullscreen-btn" class="control-btn" title="Enter Fullscreen">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                </svg>
+            </button>
         </div>
         
-        <!-- Mouse-activated onscreen controls -->
-        <div id="controls-trigger-area" class="controls-trigger-area">
-            <div id="onscreen-controls" class="onscreen-controls">
-            <div class="controls-row">
-                <div class="control-group">
-                    <label class="control-label">Speed</label>
-                    <div class="slider-container">
-                        <input type="range" id="speed-slider" class="control-slider" 
-                               min="0.1" max="20.0" step="0.1" value="1.0">
-                        <span id="speed-value" class="slider-value">1.0x</span>
+        <!-- Bottom overlay control panel -->
+        <div id="controls-trigger-area" class="bottom-controls-trigger">
+            <div id="onscreen-controls" class="bottom-overlay-panel">
+                <div class="overlay-content">
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button id="play-pause-btn" class="control-btn primary" title="Play/Pause (Spacebar)">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </button>
+                        <button id="new-pattern-btn" class="control-btn" title="New Pattern (N)">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </button>
+                        <button id="background-toggle-btn" class="control-btn" title="Toggle Background (B)">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12,18.5A6.5,6.5 0 0,1 5.5,12A6.5,6.5 0 0,1 12,5.5A6.5,6.5 0 0,1 18.5,12A6.5,6.5 0 0,1 12,18.5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                            </svg>
+                        </button>
+                        <button id="audio-toggle-btn" class="control-btn" title="Toggle Audio (A)">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.03C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Controls Grid -->
+                    <div class="controls-grid">
+                        <div class="control-group">
+                            <label>Speed</label>
+                            <div class="control-input">
+                                <input type="range" id="speed-slider" min="0.1" max="20.0" step="0.1" value="1.0">
+                                <span id="speed-value">1.0x</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Layers</label>
+                            <div class="control-input">
+                                <input type="range" id="layers-slider" min="1" max="8" step="1" value="4">
+                                <span id="layers-value">4</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Volume</label>
+                            <div class="control-input">
+                                <input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.5">
+                                <span id="audio-volume-value">50%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Pattern</label>
+                            <div class="pattern-display">
+                                <span id="current-pattern">Loading...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="control-group">
-                    <label class="control-label">Layers</label>
-                    <div class="slider-container">
-                        <input type="range" id="layers-slider" class="control-slider" 
-                               min="1" max="8" step="1" value="4">
-                        <span id="layers-value" class="slider-value">4</span>
-                    </div>
-                </div>
-                
-                <div class="control-group">
-                    <label class="control-label">Audio</label>
-                    <div class="slider-container">
-                        <input type="range" id="audio-volume-slider" class="control-slider" 
-                               min="0" max="1" step="0.1" value="0.5">
-                        <span id="audio-volume-value" class="slider-value">50%</span>
-                        <button id="audio-toggle-btn" class="control-panel-btn" title="Toggle Audio">🔊</button>
-                    </div>
-                </div>
-                
-                <div class="control-group">
-                    <label class="control-label">Background</label>
-                    <div class="button-container">
-                        <button id="background-toggle-btn" class="control-panel-btn" title="Toggle Background">⚫⚪</button>
-                    </div>
-                </div>
-                
-                <div class="control-group">
-                    <label class="control-label">Pattern</label>
-                    <div class="pattern-container">
-                        <span id="current-pattern" class="pattern-code">Loading...</span>
-                    </div>
-                </div>
-            </div>
             </div>
         </div>
         
@@ -82,6 +100,60 @@
         if (window.App) {
             window.App.init();
         }
+        
+        // Fullscreen functionality
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+        
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+        
+        function updateFullscreenButton() {
+            const isFullscreen = document.fullscreenElement || 
+                                document.webkitFullscreenElement || 
+                                document.msFullscreenElement;
+            
+            if (isFullscreen) {
+                fullscreenBtn.style.display = 'none';
+            } else {
+                fullscreenBtn.style.display = 'inline-block';
+                fullscreenBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                    </svg>
+                `;
+                fullscreenBtn.title = "Enter Fullscreen";
+            }
+        }
+        
+        fullscreenBtn.addEventListener('click', function() {
+            enterFullscreen();
+        });
+        
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+        
+        // Initial button state
+        updateFullscreenButton();
     });
 </script>
 {% endblock %}

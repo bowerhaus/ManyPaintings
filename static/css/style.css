@@ -195,231 +195,245 @@ body.white-background .control-btn:hover {
     transform: scale(0.95);
 }
 
-/* Controls trigger area - larger invisible area to detect mouse */
-.controls-trigger-area {
-    position: absolute;
+/* Bottom overlay control panel */
+.bottom-controls-trigger {
+    position: fixed;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 85vw;
-    max-width: 1000px;
-    min-width: 800px;
-    height: 120px;
+    left: 0;
+    right: 0;
+    height: 25vh;
     z-index: 200;
     pointer-events: auto;
 }
 
-/* Onscreen controls - appear on mouse movement at bottom center */
-.onscreen-controls {
+.bottom-overlay-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 60%, transparent 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    opacity: 0;
+    transform: translateY(100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+body.white-background .bottom-overlay-panel {
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 60%, transparent 100%);
+}
+
+.bottom-overlay-panel.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.overlay-content {
     position: absolute;
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%);
-    width: 85vw;
-    max-width: 1000px;
-    min-width: 800px;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    padding: 1.5rem 2.5rem;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
-    z-index: 200;
+    width: 90%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
 }
 
-body.white-background .onscreen-controls {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
 }
 
-.onscreen-controls.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* Horizontal controls row */
-.controls-row {
+.control-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2.5rem;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.white-background .control-btn {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+    color: rgba(0, 0, 0, 0.9);
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.white-background .control-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.control-btn.primary {
+    background: rgba(255, 255, 255, 0.9);
+    color: rgba(0, 0, 0, 0.9);
+}
+
+body.white-background .control-btn.primary {
+    background: rgba(0, 0, 0, 0.9);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.control-btn.primary:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+}
+
+body.white-background .control-btn.primary:hover {
+    background: rgba(0, 0, 0, 1);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* Controls Grid */
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
     width: 100%;
 }
 
 .control-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    min-width: 140px;
+    gap: 0.75rem;
     align-items: center;
 }
 
-
-.control-label {
-    color: #fff;
+.control-group label {
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.9rem;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: color 0.5s ease;
 }
 
-body.white-background .control-label {
-    color: #000;
+body.white-background .control-group label {
+    color: rgba(0, 0, 0, 0.8);
 }
 
-.slider-container {
+.control-input {
     display: flex;
     align-items: center;
     gap: 1rem;
-    height: 3rem;
     width: 100%;
 }
 
-.button-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 3rem;
-    width: 100%;
-}
-
-.pattern-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 3rem;
-    width: 100%;
-}
-
-.control-slider {
+.control-input input[type="range"] {
     flex: 1;
-    height: 6px;
+    height: 4px;
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+    border-radius: 2px;
     outline: none;
     -webkit-appearance: none;
     appearance: none;
-    transition: background-color 0.5s ease;
+    cursor: pointer;
 }
 
-body.white-background .control-slider {
+body.white-background .control-input input[type="range"] {
     background: rgba(0, 0, 0, 0.2);
 }
 
-.control-slider::-webkit-slider-thumb {
+.control-input input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;
-    height: 20px;
-    background: #fff;
+    width: 18px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-body.white-background .control-slider::-webkit-slider-thumb {
-    background: #000;
-    box-shadow: 0 2px 6px rgba(255, 255, 255, 0.3);
+body.white-background .control-input input[type="range"]::-webkit-slider-thumb {
+    background: rgba(0, 0, 0, 0.9);
 }
 
-.control-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+.control-input input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-.control-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: #fff;
+.control-input input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     cursor: pointer;
     border: none;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-body.white-background .control-slider::-moz-range-thumb {
-    background: #000;
-    box-shadow: 0 2px 6px rgba(255, 255, 255, 0.3);
+body.white-background .control-input input[type="range"]::-moz-range-thumb {
+    background: rgba(0, 0, 0, 0.9);
 }
 
-.control-slider::-moz-range-thumb:hover {
-    transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-}
-
-.slider-value {
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 500;
-    min-width: 3rem;
-    text-align: right;
-    transition: color 0.5s ease;
-}
-
-body.white-background .slider-value {
-    color: #000;
-}
-
-/* Control panel button */
-.control-panel-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #fff;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    font-size: 1.1rem;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.control-panel-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.4);
-}
-
-.control-panel-btn:active {
-    transform: scale(0.95);
-}
-
-body.white-background .control-panel-btn {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    color: #000;
-}
-
-body.white-background .control-panel-btn:hover {
-    background: rgba(0, 0, 0, 0.3);
-    border-color: rgba(0, 0, 0, 0.4);
-}
-
-/* Pattern code display */
-.pattern-code {
+.control-input span {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    font-weight: 600;
     font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
-    font-weight: bold;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.5s ease;
-    min-width: 8rem;
+    min-width: 3rem;
     text-align: center;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
 }
 
-body.white-background .pattern-code {
-    color: #000;
+body.white-background .control-input span {
+    color: rgba(0, 0, 0, 0.9);
     background: rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(0, 0, 0, 0.2);
 }
+
+.pattern-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    width: 100%;
+}
+
+body.white-background .pattern-display {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.pattern-display span {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    background: none;
+    padding: 0;
+}
+
+body.white-background .pattern-display span {
+    color: rgba(0, 0, 0, 0.9);
+}
+
 
 /* Loading indicator */
 #loading-indicator {
@@ -536,68 +550,128 @@ body.white-background .error-message {
     cursor: none !important;
 }
 
-/* Responsive design */
-@media (max-width: 1200px) {
-    .onscreen-controls {
-        width: 90vw;
-        min-width: 700px;
-        padding: 1.5rem 2rem;
-    }
-    
-    .controls-trigger-area {
-        width: 90vw;
-        min-width: 700px;
-    }
-    
-    .controls-row {
-        gap: 2rem;
-    }
-    
-    .control-group {
-        min-width: 120px;
-    }
-}
-
+/* Responsive design for bottom overlay panel */
 @media (max-width: 768px) {
-    .onscreen-controls {
-        width: 95vw;
-        min-width: 600px;
-        padding: 1rem 1.5rem;
+    .bottom-controls-trigger {
+        height: 30vh;
     }
     
-    .controls-trigger-area {
-        width: 95vw;
-        min-width: 600px;
-    }
-    
-    .controls-row {
+    .overlay-content {
+        width: 95%;
         gap: 1.5rem;
-        flex-wrap: wrap;
+        bottom: 1.5rem;
     }
     
-    .control-group {
-        min-width: 100px;
-        flex: 1;
+    .controls-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
     }
     
-    .pattern-display {
-        bottom: 1rem;
-        left: 1rem;
-        right: 1rem;
-        font-size: 0.8rem;
-        padding: 0.5rem 1rem;
-    }
-    
-    .controls {
-        top: 1rem;
-        right: 1rem;
-        gap: 0.25rem;
+    .quick-actions {
+        gap: 0.75rem;
     }
     
     .control-btn {
-        padding: 0.6rem;
-        font-size: 1rem;
+        width: 45px;
+        height: 45px;
     }
+    
+    .control-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bottom-controls-trigger {
+        height: 35vh;
+    }
+    
+    .overlay-content {
+        width: 100%;
+        gap: 1rem;
+        bottom: 1rem;
+    }
+    
+    .controls-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .control-group {
+        gap: 0.5rem;
+    }
+    
+    .control-group label {
+        font-size: 0.8rem;
+    }
+    
+    .control-input span {
+        font-size: 0.75rem;
+        min-width: 2.5rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .quick-actions {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .control-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .control-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .pattern-display span {
+        font-size: 0.75rem;
+    }
+}
+
+/* Fullscreen button for kiosk mode */
+.fullscreen-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+.fullscreen-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.fullscreen-button:active {
+    transform: scale(0.95);
+}
+
+body.white-background .fullscreen-button {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+    color: #000;
+}
+
+body.white-background .fullscreen-button:hover {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.4);
 }
 
 @media (max-height: 600px) {
@@ -609,5 +683,13 @@ body.white-background .error-message {
         bottom: 1.5rem;
         font-size: 1rem;
         padding: 0.75rem 1.25rem;
+    }
+    
+    .fullscreen-button {
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+        padding: 0.5rem;
     }
 }

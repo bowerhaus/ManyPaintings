@@ -1,8 +1,8 @@
 # Development Status - ManyPaintings
 
 **Last Updated:** 2025-07-30  
-**Current Phase:** Documentation Updates - Complete  
-**Previous Phase:** Matte Border Aspect Ratio Enhancement - Complete  
+**Current Phase:** Fullscreen Positioning & Config Hot Reload - Complete  
+**Previous Phase:** Documentation Updates - Complete  
 **Next Phase:** Performance Testing & Optimization
 
 ## 🎯 Project Overview
@@ -100,6 +100,13 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - [x] **Multiple Aspect Ratio Support** - Framework supports any ratio format (1:1, 16:9, 4:3, 3:2, etc.)
 - [x] **Fallback Configuration** - Graceful handling when aspect ratio config is missing or invalid
 
+### Fullscreen Positioning & Config Hot Reload ✅ COMPLETE
+- [x] **Fullscreen Positioning Fix** - Fixed image layer positioning to maintain consistent appearance between windowed and fullscreen modes
+- [x] **Container-Relative Transformations** - Changed translations from viewport units (vw/vh) to percentage units for consistent positioning
+- [x] **Configuration Hot Reload** - File modification detection for config.json with automatic reload on browser refresh
+- [x] **Automatic Config Updates** - Main routes check for config changes and reload without server restart
+- [x] **Thread-Safe Config Reloading** - Thread-safe implementation with proper locking mechanisms
+
 ### Core Architecture Implemented
 - **Browser-Centric Design** - Minimal server contact, client-side animations
 - **Image Management** - On-demand loading, intelligent preloading, memory cleanup
@@ -111,12 +118,13 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 ## 🔧 Current Technical Status
 
 ### Backend (Flask)
-- ✅ App factory pattern with config loading
+- ✅ App factory pattern with config loading and hot reload support
 - ✅ Image discovery and metadata extraction with per-image config support
 - ✅ API endpoints: `/`, `/kiosk`, `/health`, `/api/images`, `/api/config`, `/api/pattern/<seed>`
 - ✅ Error handling and caching headers
 - ✅ Deterministic pattern generation API with server-side seeded random
 - ✅ JSON serialization handling for all config data types
+- ✅ Configuration hot reload with file modification detection and thread-safe reloading
 
 ### Frontend (JavaScript)
 - ✅ **ImageManager** - Catalog loading, image preloading, memory management
@@ -147,6 +155,8 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - ✅ **Clean Startup** - No loading popups, immediate animation start
 - ✅ **Optimized Control Panel** - 25% smaller with unified white design and click-outside dismiss
 - ✅ **Polished User Experience** - Fixed background toggle initialization and enhanced panel visibility
+- ✅ **Fullscreen Consistency** - Image positioning remains consistent between windowed and fullscreen modes
+- ✅ **Configuration Hot Reload** - Config changes take effect on browser refresh without server restart
 
 ## 🚧 Known Limitations & TODOs
 
@@ -254,6 +264,8 @@ ManyPaintings/
 - ✅ **Enhanced Visibility** - Consistent white panel design with proper shadows
 - ✅ **Tailwind CSS Migration** - Complete UI modernization with responsive design and missing JavaScript functions
 - ✅ **Matte Border Aspect Ratio** - Configurable aspect ratios for image display area within matte border frames
+- ✅ **Fullscreen Positioning Fix** - Consistent image positioning between windowed and fullscreen modes
+- ✅ **Configuration Hot Reload** - Automatic config.json reload on browser refresh without server restart
 
 ### Testing Needed
 - [ ] Memory usage with large image sets (1000+ images)
@@ -328,6 +340,8 @@ curl http://localhost:5000/health
 13. **Completed:** ✅ Tailwind CSS migration with modern responsive design and complete UI modernization
 14. **Completed:** ✅ Matte border aspect ratio enhancement with configurable image area constraints
 15. **Completed:** ✅ Documentation updates - Updated IMPLEMENTATION_PLAN.md, README.md, and STATUS.md with latest features
+16. **Completed:** ✅ Fullscreen positioning fix - Images maintain consistent positioning between windowed and fullscreen modes
+17. **Completed:** ✅ Configuration hot reload - Config changes take effect on browser refresh without server restart
 
 ---
 *This status file should be updated after each development session*

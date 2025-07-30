@@ -64,7 +64,7 @@
     "color": "#F8F8F8",
     "style": "classic",
     "image_area": {
-      "aspect_ratio": "1:1"
+      "aspect_ratio": "16:9"
     },
     "shadow": {
       "enabled": true,

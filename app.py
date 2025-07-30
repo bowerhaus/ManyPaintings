@@ -11,10 +11,18 @@ def create_app(config_name=None):
     
     @app.route('/')
     def index():
+        # Check for config changes on page load
+        config_obj = config[config_name or 'default']
+        config_obj.check_and_reload()
+        app.config.from_object(config_obj)
         return render_template('index.html', config=app.config)
     
     @app.route('/kiosk')
     def kiosk():
+        # Check for config changes on page load
+        config_obj = config[config_name or 'default']
+        config_obj.check_and_reload()
+        app.config.from_object(config_obj)
         return render_template('kiosk.html', config=app.config)
     
     @app.route('/health')
@@ -83,6 +91,10 @@ def create_app(config_name=None):
     @app.route('/api/config')
     def get_config():
         """Get application configuration including initial pattern code."""
+        # Check for config changes before serving config
+        config_obj = config[config_name or 'default']
+        config_obj.check_and_reload()
+        
         config_data = {
             'initial_pattern_code': app.config.get('INITIAL_PATTERN_CODE'),
             'pattern_seed': app.config.get('PATTERN_SEED', 'auto'),

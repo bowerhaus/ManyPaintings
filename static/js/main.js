@@ -411,7 +411,7 @@ window.App = (function () {
 
         // Translate last (move the final transformed image)
         if (config.translationEnabled && (transformations.translateX || transformations.translateY)) {
-          transforms.push(`translate(${transformations.translateX}vw, ${transformations.translateY}vh)`);
+          transforms.push(`translate(${transformations.translateX}%, ${transformations.translateY}%)`);
         }
 
         if (transforms.length > 0) {

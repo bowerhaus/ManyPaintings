@@ -100,6 +100,12 @@ The application should provide extensive configuration options to fine-tune the 
 *   `bevel.inner_color` - Light highlight color (default: "rgba(255, 255, 255, 0.3)")
 *   `bevel.outer_color` - Dark shadow color (default: "rgba(0, 0, 0, 0.2)")
 
+#### Fullscreen Mode Support ✅ IMPLEMENTED
+*   **Consistent Positioning:** Image layers maintain identical visual positioning between windowed and fullscreen modes
+*   **Container-Relative Transformations:** Image translations use percentage-based positioning instead of viewport units
+*   **Seamless Transition:** No visual jump or repositioning when entering/exiting fullscreen
+*   **Automatic Detection:** Browser fullscreen API integration with responsive layout adjustments
+
 #### Performance Optimization Configuration
 *   `animation_quality` - Animation smoothness level (default: 'high', options: 'low', 'medium', 'high')
 *   `preload_transform_cache` - Pre-calculate transformations for performance (default: true)
@@ -150,6 +156,12 @@ The application should provide extensive configuration options to fine-tune the 
     - Smart blend mode switching (normal for black, multiply for white backgrounds)
     - Persistent preference storage using localStorage
     - Keyboard shortcut (B key) for quick switching
+
+*   **Fullscreen Mode:**
+    - Consistent image positioning between windowed and fullscreen modes
+    - Use F11 or browser fullscreen controls for immersive viewing
+    - All animations and controls work identically in fullscreen
+    - Seamless transition without visual jumps or repositioning
 
 ## 4. Target Audience
 
@@ -243,7 +255,7 @@ The application should provide extensive configuration options to fine-tune the 
 
 ### 6.5. Configuration
 
-The application is configured using a **JSON-based configuration system** (`config.json`). The configuration supports different environment profiles (development, production, raspberry_pi).
+The application is configured using a **JSON-based configuration system** (`config.json`) with **hot reload support**. The configuration supports different environment profiles (development, production, raspberry_pi).
 
 #### Configuration Structure
 ```json
@@ -330,6 +342,30 @@ FLASK_CONFIG=production python app.py
 FLASK_CONFIG=raspberry_pi python app.py
 ```
 
+#### Configuration Hot Reload ✅ NEW FEATURE
+
+The application now supports **hot reloading** of configuration changes without requiring a server restart:
+
+**How to use:**
+1. Edit `config.json` with any desired changes
+2. Save the file
+3. Refresh your browser (F5 or Ctrl+R)
+4. Changes take effect immediately
+
+**Features:**
+- **Automatic Detection:** File modification timestamps are monitored
+- **Thread-Safe:** Multiple browser refreshes safely trigger config reloads
+- **No Server Restart:** Changes apply without stopping the Flask server
+- **All Settings:** Works with all configuration sections (timing, transformations, audio, etc.)
+
+**What gets reloaded:**
+- Animation timing parameters
+- Layer management settings
+- Image transformation settings
+- Audio configuration
+- Matte border settings
+- Performance settings
+
 ### 6.6. Production Deployment
 
 For production deployment on Raspberry Pi or other systems:
@@ -415,6 +451,8 @@ The project includes VS Code settings in `.vscode/settings.json`:
 
 *   **User-Provided Content:** Allow users to upload their own images to be used in the generative art.
 *   **Enhanced Audio Integration:** ✅ COMPLETED - Background ambient audio with volume control and browser autoplay handling
+*   **Configuration Hot Reload:** ✅ COMPLETED - Config changes take effect on browser refresh without server restart
+*   **Fullscreen Mode Consistency:** ✅ COMPLETED - Image positioning remains identical between windowed and fullscreen modes
 *   **Advanced Audio Features:** Add multiple audio tracks, crossfading, and synchronization with visual patterns.
 *   **More Complex Animations:** Introduce more advanced animation effects, such as panning, zooming, and rotation.
 *   **Color Palette Customization:** Allow users to customize the color palette of the generative art.

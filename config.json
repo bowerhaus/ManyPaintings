@@ -38,8 +38,8 @@
     },
     "scale": {
       "enabled": true,
-      "min_factor": 0.5,
-      "max_factor": 1
+      "min_factor": 0.75,
+      "max_factor": 1.5
     },
     "translation": {
       "enabled": true,
@@ -62,21 +62,9 @@
     "enabled": true,
     "border_percent": 10,
     "color": "#F8F8F8",
-    "style": "classic",
+    "style": "medium",
     "image_area": {
-      "aspect_ratio": "16:9"
-    },
-    "shadow": {
-      "enabled": true,
-      "blur": 20,
-      "spread": 5,
-      "color": "rgba(0, 0, 0, 0.8)"
-    },
-    "bevel": {
-      "enabled": true,
-      "width": 1.5,
-      "inner_color": "rgba(255, 255, 255, 0.3)",
-      "outer_color": "rgba(0, 0, 0, 0.2)"
+      "aspect_ratio": "1:1"
     }
   },
   "environments": {

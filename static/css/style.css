@@ -55,7 +55,6 @@ body.white-background #canvas-container {
     overflow: hidden;
     background: #000;
     transition: background-color 0.5s ease;
-    /* Add some padding to prevent edge artifacts */
     box-sizing: border-box;
 }
 
@@ -137,10 +136,19 @@ body.white-background #canvas-container {
         1.5px 1.5px,
         0 0,
         20px 20px;
+    /* Fixed 3D Bevel Effect - 6px depth */
     box-shadow: 
-        inset 0 0 0 2px rgba(255, 255, 255, 0.4),
-        inset 0 0 0 4px rgba(0, 0, 0, 0.1),
-        0 0 20px 5px rgba(0, 0, 0, 0.2);
+        /* Outer bevel highlights (light from top-left) */
+        inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.15),
+        /* Inner bevel depth */
+        inset 4px 4px 8px rgba(255, 255, 255, 0.6),
+        inset -4px -4px 8px rgba(0, 0, 0, 0.1),
+        /* Subtle outer definition */
+        0 0 0 1px rgba(0, 0, 0, 0.05),
+        /* Drop shadow for frame depth */
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        0 4px 16px rgba(0, 0, 0, 0.05);
     transition: border-width 0.8s ease-out, border-color 0.3s ease;
     opacity: 1 !important;
     visibility: visible !important;
@@ -157,6 +165,21 @@ body.white-background #canvas-container {
 .matte-border.modern {
     border-style: solid;
     border-radius: 8px;
+    /* Modern 3D Bevel Effect - Clean and crisp */
+    box-shadow: 
+        /* Subtle modern bevel */
+        inset 1px 1px 3px rgba(255, 255, 255, 0.9),
+        inset -1px -1px 3px rgba(0, 0, 0, 0.12),
+        /* Secondary depth layer */
+        inset 3px 3px 6px rgba(255, 255, 255, 0.7),
+        inset -3px -3px 6px rgba(0, 0, 0, 0.08),
+        /* Crisp outer edge */
+        0 0 0 1px rgba(0, 0, 0, 0.06),
+        /* Modern drop shadow */
+        0 1px 6px rgba(0, 0, 0, 0.12),
+        0 3px 12px rgba(0, 0, 0, 0.06),
+        /* Corner highlight for rounded edges */
+        0 0 2px rgba(255, 255, 255, 0.4);
 }
 
 .matte-border.elegant {
@@ -190,10 +213,23 @@ body.white-background #canvas-container {
         1px 1px,
         90px 90px,
         70px 70px;
+    /* Elegant 3D Bevel Effect - Deep and sophisticated */
     box-shadow: 
-        inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-        inset 0 0 0 3px rgba(0, 0, 0, 0.1),
-        0 0 30px 10px rgba(0, 0, 0, 0.2);
+        /* Deep inner bevel highlights */
+        inset 3px 3px 6px rgba(255, 255, 255, 0.95),
+        inset -3px -3px 6px rgba(0, 0, 0, 0.2),
+        /* Secondary bevel layer */
+        inset 6px 6px 12px rgba(255, 255, 255, 0.75),
+        inset -6px -6px 12px rgba(0, 0, 0, 0.15),
+        /* Tertiary depth layer */
+        inset 1px 1px 2px rgba(255, 255, 255, 1.0),
+        inset -1px -1px 2px rgba(0, 0, 0, 0.25),
+        /* Outer definition and glow */
+        0 0 0 1px rgba(0, 0, 0, 0.08),
+        /* Enhanced drop shadows */
+        0 3px 15px rgba(0, 0, 0, 0.15),
+        0 6px 30px rgba(0, 0, 0, 0.08),
+        0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 /* Hide matte border when disabled */
@@ -217,6 +253,7 @@ body.white-background #image-layers {
     pointer-events: none;
     overflow: hidden;
     mix-blend-mode: normal;
+    z-index: 10;
 }
 
 body.white-background .image-layer {

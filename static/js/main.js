@@ -1087,6 +1087,7 @@ window.App = (function () {
         });
       }
 
+
       // Set initial values from config
       if (speedSlider) speedSlider.value = this.speedMultiplier;
       if (speedValue) speedValue.textContent = `${this.speedMultiplier.toFixed(1)}x`;
@@ -1517,18 +1518,6 @@ window.App = (function () {
         style: 'classic',
         image_area: {
           aspect_ratio: '1:1'
-        },
-        shadow: {
-          enabled: true,
-          blur: 20,
-          spread: 5,
-          color: 'rgba(0, 0, 0, 0.3)'
-        },
-        bevel: {
-          enabled: false,
-          width: 2,
-          inner_color: 'rgba(255, 255, 255, 0.3)',
-          outer_color: 'rgba(0, 0, 0, 0.2)'
         }
       };
       
@@ -1704,14 +1693,12 @@ window.App = (function () {
       // Remove any border since we're not using CSS border approach anymore
       this.borderElement.style.setProperty('border', 'none', 'important');
       
-      // Clear any existing box-shadow effects
-      this.borderElement.style.setProperty('box-shadow', 'none', 'important');
 
       // Create a transparent cutout for the image area using clip-path
       this.createImageAreaCutout(canvas);
       
-      // Create inner bevel frame effect around the image cutout
-      this.createInnerBevelFrame(canvas);
+      // Create 3D bevel frame around the image cutout
+      this.create3DBevelFrame(canvas);
       
       // Position the image layers container within the image cutout area
       this.positionImageLayers(canvas);
@@ -1756,79 +1743,71 @@ window.App = (function () {
       });
     },
 
-    createInnerBevelFrame(canvas) {
-      // Create or get the inner bevel frame element
-      let bevelFrame = document.getElementById('inner-bevel-frame');
+    create3DBevelFrame(canvas) {
+      // Create or get the 3D bevel frame element
+      let bevelFrame = document.getElementById('bevel-frame');
       if (!bevelFrame) {
         bevelFrame = document.createElement('div');
-        bevelFrame.id = 'inner-bevel-frame';
-        // Insert after the matte border element
-        this.borderElement.parentNode.insertBefore(bevelFrame, this.borderElement.nextSibling);
+        bevelFrame.id = 'bevel-frame';
+        bevelFrame.style.position = 'absolute';
+        bevelFrame.style.pointerEvents = 'none';
+        bevelFrame.style.zIndex = '51'; // Above the matte border
+        this.borderElement.parentNode.appendChild(bevelFrame);
       }
 
-      // Calculate the image area (center area without matte border)
+      // Calculate the image area (where the bevel frame should go)
       const imageLeft = canvas.canvasLeft + canvas.borderSize;
       const imageTop = canvas.canvasTop + canvas.borderSize;
       const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
       const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
 
-      // Position the bevel frame around the image cutout area
-      bevelFrame.style.setProperty('position', 'absolute', 'important');
-      bevelFrame.style.setProperty('left', `${imageLeft}px`, 'important');
-      bevelFrame.style.setProperty('top', `${imageTop}px`, 'important');
-      bevelFrame.style.setProperty('width', `${imageWidth}px`, 'important');
-      bevelFrame.style.setProperty('height', `${imageHeight}px`, 'important');
-      bevelFrame.style.setProperty('pointer-events', 'none', 'important');
-      bevelFrame.style.setProperty('z-index', '51', 'important'); // Above the matte border
-      bevelFrame.style.setProperty('box-sizing', 'border-box', 'important');
+      // Position the bevel frame around the image cutout area (slightly larger)
+      const bevelWidth = 16; // 16px for the bevel effect area
+      bevelFrame.style.left = `${imageLeft - bevelWidth}px`;
+      bevelFrame.style.top = `${imageTop - bevelWidth}px`;
+      bevelFrame.style.width = `${imageWidth + (bevelWidth * 2)}px`;
+      bevelFrame.style.height = `${imageHeight + (bevelWidth * 2)}px`;
       
-      // Make background transparent
-      bevelFrame.style.setProperty('background-color', 'transparent', 'important');
+      // Create transparent frame with border that matches matte color
+      bevelFrame.style.border = `${bevelWidth}px solid #F8F8F8`;
+      bevelFrame.style.background = 'transparent'; // Transparent so images show through
+      bevelFrame.style.boxSizing = 'border-box';
       
-      // Apply bevel effects if enabled
-      if (this.config.bevel && this.config.bevel.enabled) {
-        const bevelWidth = this.config.bevel.width || 2;
-        const innerColor = this.config.bevel.inner_color || 'rgba(255, 255, 255, 0.3)';
-        const outerColor = this.config.bevel.outer_color || 'rgba(0, 0, 0, 0.2)';
-        
-        const boxShadow = [
-          `inset 0 0 0 ${bevelWidth}px ${innerColor}`,
-          `inset 0 0 0 ${bevelWidth * 2}px ${outerColor}`
-        ];
-        
-        bevelFrame.style.setProperty('box-shadow', boxShadow.join(', '), 'important');
+      // Apply 3D bevel effect based on style
+      const style = this.config.style || 'classic';
+      if (style === 'thick') {
+        // Thick: Scale up shadow sizes by 2x
+        bevelFrame.style.boxShadow = `
+          inset 4px 4px 10px rgba(0, 0, 0, 0.15),
+          inset -6px -6px 16px rgba(255, 255, 255, 0.35),
+          inset 2px 2px 4px rgba(0, 0, 0, 0.2),
+          inset -3px -3px 8px rgba(255, 255, 255, 0.4)
+        `;
+      } else if (style === 'medium') {
+        // Medium: Scale up shadow sizes by 1.5x
+        bevelFrame.style.boxShadow = `
+          inset 3px 3px 7.5px rgba(0, 0, 0, 0.15),
+          inset -4.5px -4.5px 12px rgba(255, 255, 255, 0.35),
+          inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.2),
+          inset -2.25px -2.25px 6px rgba(255, 255, 255, 0.4)
+        `;
       } else {
-        bevelFrame.style.setProperty('box-shadow', 'none', 'important');
+        // Thin (classic): Keep original sizes
+        bevelFrame.style.boxShadow = `
+          inset 2px 2px 5px rgba(0, 0, 0, 0.15),
+          inset -3px -3px 8px rgba(255, 255, 255, 0.35),
+          inset 1px 1px 2px rgba(0, 0, 0, 0.2),
+          inset -1.5px -1.5px 4px rgba(255, 255, 255, 0.4)
+        `;
       }
 
-      console.log('MatteBorderManager: Created inner bevel frame:', {
-        left: imageLeft,
-        top: imageTop,
-        width: imageWidth,
-        height: imageHeight,
-        bevelEnabled: this.config.bevel && this.config.bevel.enabled
+      console.log(`MatteBorderManager: Created 3D bevel frame (${style} style) around image area:`, {
+        left: imageLeft - bevelWidth,
+        top: imageTop - bevelWidth,
+        width: imageWidth + (bevelWidth * 2),
+        height: imageHeight + (bevelWidth * 2),
+        bevelWidth
       });
-    },
-
-    applyBoxShadowEffects() {
-      let boxShadow = [];
-      
-      if (this.config.bevel && this.config.bevel.enabled) {
-        const bevelWidth = this.config.bevel.width || 2;
-        boxShadow.push(`inset 0 0 0 ${bevelWidth}px ${this.config.bevel.inner_color || 'rgba(255, 255, 255, 0.3)'}`);
-        boxShadow.push(`inset 0 0 0 ${bevelWidth * 2}px ${this.config.bevel.outer_color || 'rgba(0, 0, 0, 0.2)'}`);
-      }
-      
-      if (this.config.shadow && this.config.shadow.enabled) {
-        const blur = this.config.shadow.blur || 20;
-        const spread = this.config.shadow.spread || 5;
-        const color = this.config.shadow.color || 'rgba(0, 0, 0, 0.3)';
-        boxShadow.push(`0 0 ${blur}px ${spread}px ${color}`);
-      }
-      
-      if (boxShadow.length > 0) {
-        this.borderElement.style.setProperty('box-shadow', boxShadow.join(', '), 'important');
-      }
     },
 
     positionImageLayers(canvas) {
@@ -1838,25 +1817,28 @@ window.App = (function () {
         return;
       }
 
-      // Calculate the image area (center area without matte border)
-      const imageLeft = canvas.canvasLeft + canvas.borderSize;
-      const imageTop = canvas.canvasTop + canvas.borderSize;
-      const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
-      const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
+      // Calculate the inner area excluding bevel shadow space
+      const shadowInset = 4; // Maximum shadow depth (adjust based on style)
+      const innerLeft = canvas.canvasLeft + canvas.borderSize + shadowInset;
+      const innerTop = canvas.canvasTop + canvas.borderSize + shadowInset;
+      const innerWidth = canvas.canvasWidth - (canvas.borderSize * 2) - (shadowInset * 2);
+      const innerHeight = canvas.canvasHeight - (canvas.borderSize * 2) - (shadowInset * 2);
 
-      // Position image layers container to fill only the cutout image area
+      // Position image layers container to fill the inner area (excluding shadow space)
       imageLayersContainer.style.position = 'absolute';
-      imageLayersContainer.style.left = `${imageLeft}px`;
-      imageLayersContainer.style.top = `${imageTop}px`;
-      imageLayersContainer.style.width = `${imageWidth}px`;
-      imageLayersContainer.style.height = `${imageHeight}px`;
+      imageLayersContainer.style.left = `${innerLeft}px`;
+      imageLayersContainer.style.top = `${innerTop}px`;
+      imageLayersContainer.style.width = `${innerWidth}px`;
+      imageLayersContainer.style.height = `${innerHeight}px`;
       imageLayersContainer.style.boxSizing = 'border-box';
+      imageLayersContainer.style.overflow = 'hidden';
 
-      console.log('MatteBorderManager: Positioned image layers within cutout area:', {
-        left: imageLeft,
-        top: imageTop,
-        width: imageWidth,
-        height: imageHeight
+      console.log('MatteBorderManager: Positioned image layers within inner area (excluding shadow space):', {
+        left: innerLeft,
+        top: innerTop,
+        width: innerWidth,
+        height: innerHeight,
+        shadowInset
       });
     },
 

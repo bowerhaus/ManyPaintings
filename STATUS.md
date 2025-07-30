@@ -107,6 +107,14 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - [x] **Automatic Config Updates** - Main routes check for config changes and reload without server restart
 - [x] **Thread-Safe Config Reloading** - Thread-safe implementation with proper locking mechanisms
 
+### Matte Border 3D Bevel Enhancement ✅ COMPLETE  
+- [x] **Shadow System Removal** - Removed all shadow configuration and code from matte border system
+- [x] **Dynamic 3D Bevel Effect** - JavaScript-generated proportional bevel with light source simulation
+- [x] **Proper Image Clipping** - Images now properly constrained to inner bevel area without encroaching
+- [x] **Configurable Bevel Width** - Dynamic sizing based on configured bevel width (20px current)
+- [x] **Realistic 3D Appearance** - Top/left highlights, bottom/right shadows for depth perception
+- [x] **Dual-Layer Bevel** - Outer strong contrast, inner soft transition for professional appearance
+
 ### Core Architecture Implemented
 - **Browser-Centric Design** - Minimal server contact, client-side animations
 - **Image Management** - On-demand loading, intelligent preloading, memory cleanup
@@ -342,6 +350,7 @@ curl http://localhost:5000/health
 15. **Completed:** ✅ Documentation updates - Updated IMPLEMENTATION_PLAN.md, README.md, and STATUS.md with latest features
 16. **Completed:** ✅ Fullscreen positioning fix - Images maintain consistent positioning between windowed and fullscreen modes
 17. **Completed:** ✅ Configuration hot reload - Config changes take effect on browser refresh without server restart
+18. **Completed:** ✅ Matte border 3D bevel enhancement - Removed shadows, added dynamic 3D bevel with proper image clipping
 
 ---
 *This status file should be updated after each development session*

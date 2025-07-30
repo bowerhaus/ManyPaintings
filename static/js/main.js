@@ -900,12 +900,8 @@ window.App = (function () {
       this.maxLayers = config.maxConcurrentLayers || 4;
       console.log(`UI: Initialized with maxLayers: ${this.maxLayers}, config.maxConcurrentLayers: ${config.maxConcurrentLayers}`);
 
-      // Load background preference from localStorage
-      const savedBackground = localStorage.getItem('manypaintings-background');
-      if (savedBackground === 'white') {
-        this.isWhiteBackground = true;
-        document.body.classList.add('white-background');
-      }
+      // Background preference will default to black (no persistence)
+      this.isWhiteBackground = false;
       // Always update the background toggle button state
       this.updateBackgroundToggle();
 
@@ -1193,10 +1189,8 @@ window.App = (function () {
 
       if (this.isWhiteBackground) {
         document.body.classList.add('white-background');
-        localStorage.setItem('manypaintings-background', 'white');
       } else {
         document.body.classList.remove('white-background');
-        localStorage.setItem('manypaintings-background', 'black');
       }
 
       this.updateBackgroundToggle();

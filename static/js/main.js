@@ -395,16 +395,22 @@ window.App = (function () {
       const imgElement = img.cloneNode();
       imgElement.draggable = false;
 
+      // Get the image area dimensions (either from matte border or full viewport)
+      const imageArea = this.getImageAreaDimensions();
+      
+      // Apply best-fit scaling to the image area first
+      this.applyBestFitScaling(imgElement, img, imageArea);
+
       // Apply transformations in proper order: scale -> rotate -> translate
       if (transformations) {
         const transforms = [];
 
-        // Scale first (around center)
+        // Scale second (around center of fitted image)
         if (config.scaleEnabled && transformations.scale !== 1) {
           transforms.push(`scale(${transformations.scale})`);
         }
 
-        // Rotate second (around center of scaled image)
+        // Rotate third (around center of scaled image)
         if (config.rotationEnabled && transformations.rotation) {
           transforms.push(`rotate(${transformations.rotation}deg)`);
         }
@@ -415,13 +421,66 @@ window.App = (function () {
         }
 
         if (transforms.length > 0) {
-          imgElement.style.transform = transforms.join(' ');
+          const existingTransform = imgElement.style.transform || '';
+          imgElement.style.transform = existingTransform + ' ' + transforms.join(' ');
           imgElement.style.transformOrigin = 'center center';
         }
       }
 
       layer.appendChild(imgElement);
       return layer;
+    },
+
+    getImageAreaDimensions() {
+      const imageLayersContainer = document.getElementById('image-layers');
+      if (imageLayersContainer) {
+        const computedStyle = getComputedStyle(imageLayersContainer);
+        return {
+          width: parseFloat(computedStyle.width) || window.innerWidth,
+          height: parseFloat(computedStyle.height) || window.innerHeight
+        };
+      }
+      
+      // Fallback to viewport dimensions
+      return {
+        width: window.innerWidth,
+        height: window.innerHeight
+      };
+    },
+
+    applyBestFitScaling(imgElement, originalImg, imageArea) {
+      // Get original image dimensions
+      const originalWidth = originalImg.naturalWidth || originalImg.width;
+      const originalHeight = originalImg.naturalHeight || originalImg.height;
+      
+      if (!originalWidth || !originalHeight) {
+        console.warn('AnimationEngine: Unable to get image dimensions for best-fit scaling');
+        return;
+      }
+
+      // Calculate scale factors for both dimensions
+      const scaleX = imageArea.width / originalWidth;
+      const scaleY = imageArea.height / originalHeight;
+      
+      // Use the smaller scale factor to ensure image fits entirely within the area (best-fit)
+      const bestFitScale = Math.min(scaleX, scaleY);
+      
+      // Calculate final dimensions
+      const finalWidth = originalWidth * bestFitScale;
+      const finalHeight = originalHeight * bestFitScale;
+      
+      // Apply the best-fit scaling
+      imgElement.style.width = `${finalWidth}px`;
+      imgElement.style.height = `${finalHeight}px`;
+      
+      // Center the image within the image area
+      imgElement.style.position = 'absolute';
+      imgElement.style.left = '50%';
+      imgElement.style.top = '50%';
+      imgElement.style.transform = `translate(-50%, -50%)`;
+      imgElement.style.transformOrigin = 'center center';
+      
+      console.log(`AnimationEngine: Applied best-fit scaling - original: ${originalWidth}x${originalHeight}, area: ${imageArea.width}x${imageArea.height}, scale: ${bestFitScale.toFixed(3)}, final: ${finalWidth.toFixed(0)}x${finalHeight.toFixed(0)}`);
     },
 
     updateExistingLayerSpeeds(newSpeedMultiplier) {

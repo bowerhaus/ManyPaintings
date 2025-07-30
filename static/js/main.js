@@ -953,6 +953,13 @@ window.App = (function () {
         this.controlsTriggerArea.style.pointerEvents = 'auto';
       }
 
+      // Window resize listener for matte border
+      window.addEventListener('resize', () => {
+        if (window.App && window.App.MatteBorderManager) {
+          window.App.MatteBorderManager.handleResize();
+        }
+      });
+
     },
 
     setupOnscreenControls() {
@@ -1254,6 +1261,212 @@ window.App = (function () {
   };
 
   /**
+   * Matte Border Manager - Handles configurable frame border styling
+   */
+  const MatteBorderManager = {
+    borderElement: null,
+    config: null,
+
+    init() {
+      this.borderElement = document.getElementById('matte-border');
+      if (!this.borderElement) {
+        console.warn('MatteBorderManager: Border element not found');
+        return;
+      }
+      
+      console.log('MatteBorderManager: Border element found:', this.borderElement);
+      console.log('MatteBorderManager: Initial element styles:', {
+        display: getComputedStyle(this.borderElement).display,
+        visibility: getComputedStyle(this.borderElement).visibility,
+        opacity: getComputedStyle(this.borderElement).opacity,
+        border: getComputedStyle(this.borderElement).border
+      });
+      
+      // Force border to be visible immediately as a test
+      this.borderElement.style.border = '80px solid #F5F5DC';
+      this.borderElement.style.display = 'block';
+      this.borderElement.style.opacity = '1';
+      this.borderElement.style.visibility = 'visible';
+      this.borderElement.style.position = 'absolute';
+      this.borderElement.style.top = '0';
+      this.borderElement.style.left = '0';
+      this.borderElement.style.width = '100%';
+      this.borderElement.style.height = '100%';
+      this.borderElement.style.boxSizing = 'border-box';
+      this.borderElement.style.zIndex = '50';
+      this.borderElement.style.pointerEvents = 'none';
+      
+      console.log('MatteBorderManager: Forced border styles applied');
+      
+      // Set up mutation observer to track changes
+      this.setupMutationObserver();
+      
+      // For now, always use default configuration to bypass API issues
+      console.log('MatteBorderManager: Bypassing API, using default configuration');
+      this.setDefaultConfiguration();
+      
+      // Also try to load from API for debugging
+      this.loadConfiguration();
+    },
+    
+    setupMutationObserver() {
+      if (!this.borderElement) return;
+      
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes') {
+            console.log('MatteBorderManager: Border element attribute changed:', mutation.attributeName);
+            console.log('MatteBorderManager: Current computed styles:', {
+              display: getComputedStyle(this.borderElement).display,
+              visibility: getComputedStyle(this.borderElement).visibility,
+              opacity: getComputedStyle(this.borderElement).opacity,
+              borderWidth: getComputedStyle(this.borderElement).borderWidth
+            });
+          }
+        });
+      });
+      
+      observer.observe(this.borderElement, { 
+        attributes: true, 
+        attributeFilter: ['style', 'class'] 
+      });
+    },
+
+    async loadConfiguration() {
+      try {
+        const response = await fetch('/api/config');
+        const configData = await response.json();
+        
+        console.log('MatteBorderManager: Full API response:', configData);
+        console.log('MatteBorderManager: matte_border section:', configData.matte_border);
+        
+        this.config = configData.matte_border || {};
+        
+        // If config is empty, use default configuration
+        if (Object.keys(this.config).length === 0) {
+          console.warn('MatteBorderManager: No matte_border config found, using defaults');
+          this.setDefaultConfiguration();
+          return;
+        }
+        
+        console.log('MatteBorderManager: Configuration loaded', this.config);
+        
+        // Delay application to ensure DOM is ready
+        setTimeout(() => {
+          this.applyConfiguration();
+        }, 100);
+      } catch (error) {
+        console.error('MatteBorderManager: Failed to load configuration:', error);
+        this.setDefaultConfiguration();
+      }
+    },
+
+    setDefaultConfiguration() {
+      console.log('MatteBorderManager: Using default configuration');
+      this.config = {
+        enabled: true,
+        width_percent: 2,
+        color: '#F5F5DC',
+        style: 'classic',
+        shadow: {
+          enabled: true,
+          blur: 20,
+          spread: 5,
+          color: 'rgba(0, 0, 0, 0.3)'
+        },
+        bevel: {
+          enabled: false,
+          width: 2,
+          inner_color: 'rgba(255, 255, 255, 0.3)',
+          outer_color: 'rgba(0, 0, 0, 0.2)'
+        }
+      };
+      
+      // Delay application to ensure DOM is ready
+      setTimeout(() => {
+        this.applyConfiguration();
+      }, 100);
+    },
+
+    applyConfiguration() {
+      if (!this.borderElement || !this.config) {
+        console.warn('MatteBorderManager: Cannot apply configuration - missing element or config');
+        return;
+      }
+
+      console.log('MatteBorderManager: Applying configuration:', this.config);
+
+      if (!this.config.enabled) {
+        this.borderElement.classList.add('disabled');
+        console.log('MatteBorderManager: Border disabled');
+        return;
+      }
+
+      this.borderElement.classList.remove('disabled');
+      
+      // Apply style class
+      this.borderElement.className = `matte-border ${this.config.style || 'classic'}`;
+      
+      // Calculate border width based on viewport
+      const viewportMin = Math.min(window.innerWidth, window.innerHeight);
+      const widthPercent = this.config.width_percent || 15;
+      const calculatedWidth = Math.round((widthPercent / 100) * viewportMin);
+      const borderWidth = Math.max(5, calculatedWidth); // Minimum 5px to allow for very thin borders
+      
+      console.log('MatteBorderManager: Width calculation:', {
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        viewportMin: viewportMin,
+        widthPercent: widthPercent,
+        calculatedWidth: calculatedWidth,
+        finalBorderWidth: borderWidth
+      });
+      
+      // Build box-shadow for bevel and drop shadow effects
+      let boxShadow = [];
+      
+      if (this.config.bevel && this.config.bevel.enabled) {
+        const bevelWidth = this.config.bevel.width || 2;
+        boxShadow.push(`inset 0 0 0 ${bevelWidth}px ${this.config.bevel.inner_color || 'rgba(255, 255, 255, 0.3)'}`);
+        boxShadow.push(`inset 0 0 0 ${bevelWidth * 2}px ${this.config.bevel.outer_color || 'rgba(0, 0, 0, 0.2)'}`);
+      }
+      
+      if (this.config.shadow && this.config.shadow.enabled) {
+        const blur = this.config.shadow.blur || 20;
+        const spread = this.config.shadow.spread || 5;
+        const color = this.config.shadow.color || 'rgba(0, 0, 0, 0.3)';
+        boxShadow.push(`0 0 ${blur}px ${spread}px ${color}`);
+      }
+      
+      // Apply styles with fallback
+      const borderColor = this.config.color || '#F5F5DC';
+      
+      // Force border width with !important via setProperty
+      this.borderElement.style.setProperty('border-width', `${borderWidth}px`, 'important');
+      this.borderElement.style.setProperty('border-color', borderColor, 'important');
+      this.borderElement.style.setProperty('border-style', 'solid', 'important');
+      
+      if (boxShadow.length > 0) {
+        this.borderElement.style.setProperty('box-shadow', boxShadow.join(', '), 'important');
+      }
+      
+      // Ensure visibility
+      this.borderElement.style.opacity = '1';
+      this.borderElement.style.visibility = 'visible';
+      
+      console.log(`MatteBorderManager: Applied ${this.config.style} border (${borderWidth}px) with color ${borderColor}`);
+      console.log('MatteBorderManager: Final computed border-width:', getComputedStyle(this.borderElement).borderWidth);
+    },
+
+    // Handle window resize to recalculate border width
+    handleResize() {
+      if (this.config && this.config.enabled) {
+        this.applyConfiguration();
+      }
+    }
+  };
+
+  /**
    * Main Application Interface
    */
   return {
@@ -1276,6 +1489,10 @@ window.App = (function () {
         await ImageManager.init();
         AnimationEngine.init();
         AudioManager.init();
+        
+        // Initialize matte border after other modules are ready
+        MatteBorderManager.init();
+        
         await PatternManager.init();
 
         AnimationEngine.start();
@@ -1296,6 +1513,7 @@ window.App = (function () {
     AnimationEngine,
     PatternManager,
     AudioManager,
+    MatteBorderManager,
     UI
   };
 })();

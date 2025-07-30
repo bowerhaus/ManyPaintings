@@ -58,6 +58,24 @@
     "loop": true,
     "autoplay": true
   },
+  "matte_border": {
+    "enabled": true,
+    "width_percent": 10,
+    "color": "#F5F5DC",
+    "style": "classic",
+    "shadow": {
+      "enabled": true,
+      "blur": 20,
+      "spread": 5,
+      "color": "rgba(0, 0, 0, 0.3)"
+    },
+    "bevel": {
+      "enabled": false,
+      "width": 2,
+      "inner_color": "rgba(255, 255, 255, 0.3)",
+      "outer_color": "rgba(0, 0, 0, 0.2)"
+    }
+  },
   "environments": {
     "development": {
       "flask": {

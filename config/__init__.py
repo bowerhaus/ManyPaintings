@@ -21,7 +21,8 @@ def load_config_from_json(config_name='development'):
         'layer_management': config_data.get('layer_management', {}),
         'transformations': config_data.get('transformations', {}),
         'performance': config_data.get('performance', {}),
-        'audio': config_data.get('audio', {})
+        'audio': config_data.get('audio', {}),
+        'matte_border': config_data.get('matte_border', {})
     }
     
     # Apply environment-specific overrides
@@ -106,6 +107,10 @@ class Config:
         self.AUDIO_VOLUME = audio_config.get('volume', 0.5)
         self.AUDIO_LOOP = audio_config.get('loop', True)
         self.AUDIO_AUTOPLAY = audio_config.get('autoplay', True)
+        
+        # Matte border configuration
+        border_config = self._config_data.get('matte_border', {})
+        self.MATTE_BORDER = border_config
 
 class DevelopmentConfig(Config):
     def __init__(self):

@@ -89,7 +89,8 @@ def create_app(config_name=None):
             'animation_fps': app.config.get('ANIMATION_FPS', 30),
             'max_concurrent_images': app.config.get('MAX_CONCURRENT_IMAGES', 10),
             'preload_buffer_size': app.config.get('PRELOAD_BUFFER_SIZE', 5),
-            'lazy_loading': app.config.get('LAZY_LOADING', True)
+            'lazy_loading': app.config.get('LAZY_LOADING', True),
+            'matte_border': app.config.get('MATTE_BORDER', {})
         }
         
         response = jsonify(config_data)

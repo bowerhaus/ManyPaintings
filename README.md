@@ -80,6 +80,26 @@ The application should provide extensive configuration options to fine-tune the 
 *   `loop` - Enable seamless audio looping (default: true)
 *   `autoplay` - Attempt automatic playback on page load (default: true)
 
+#### Matte Border Frame System ✅ IMPLEMENTED
+*   **Samsung Frame TV-Style Presentation:** Professional matte border frame system with configurable aspect ratios
+*   **Aspect Ratio Control:** Support for multiple aspect ratios (1:1 square, 16:9 widescreen, 4:3 traditional, custom ratios)
+*   **Full-Viewport Matte Texture:** Paper fiber texture covers entire viewport with precise image area cutout
+*   **Configurable Border Size:** Border width as percentage of smaller canvas dimension for proportional scaling
+*   **Professional Frame Effects:** Inner bevel frame detail with configurable colors and depth
+*   **Cross-Mode Compatibility:** Consistent behavior in both main display and kiosk modes
+*   **Responsive Design:** Automatic recalculation on window resize with proper centering
+
+#### Matte Border Configuration ✅ IMPLEMENTED
+*   `enabled` - Enable/disable matte border system (default: true)
+*   `border_percent` - Border size as percentage of smaller canvas dimension (default: 10)
+*   `color` - Matte border color with paper texture (default: "#F8F8F8")
+*   `style` - Frame style variant: "classic", "modern", "elegant" (default: "classic")
+*   `image_area.aspect_ratio` - Canvas aspect ratio in format "width:height" (default: "1:1")
+*   `bevel.enabled` - Enable inner bevel frame detail (default: true)
+*   `bevel.width` - Bevel thickness in pixels (default: 1.5)
+*   `bevel.inner_color` - Light highlight color (default: "rgba(255, 255, 255, 0.3)")
+*   `bevel.outer_color` - Dark shadow color (default: "rgba(0, 0, 0, 0.2)")
+
 #### Performance Optimization Configuration
 *   `animation_quality` - Animation smoothness level (default: 'high', options: 'low', 'medium', 'high')
 *   `preload_transform_cache` - Pre-calculate transformations for performance (default: true)

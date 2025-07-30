@@ -3,6 +3,9 @@
 ## Overview
 This document outlines a step-by-step implementation plan for building the Flask-based generative art application. The implementation follows a browser-centric architecture optimized for handling 1000+ images with minimal server interaction.
 
+**Status: COMPLETE** - All major features implemented and tested
+**Latest Addition: Matte Border Aspect Ratio Enhancement** - Samsung Frame TV-style presentation with configurable aspect ratios
+
 ## Phase 1: Foundation Setup ✅ COMPLETE
 
 ### Step 1.1: Project Structure & Dependencies ✅
@@ -149,9 +152,45 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [x] Implement background theme system with localStorage persistence
 - [x] Add consolidated control panel with unified settings interface
 
-## Phase 4: Image Management System
+## Phase 4: Matte Border Frame System ✅ COMPLETE
 
-### Step 4.1: Client-Side Image Loader
+### Step 4.1: Samsung Frame TV-Style Matte Border ✅
+- [x] Create configurable matte border system with JSON configuration
+- [x] Implement multiple frame styles (classic, modern, elegant)
+- [x] Add paper fiber texture rendering with multiple gradient layers
+- [x] Configure dynamic border width based on viewport dimensions
+- [x] Add bevel effects with configurable inner/outer colors and widths
+- [x] Implement drop shadow system with blur, spread, and color controls
+- [x] Add real-time responsiveness for window resize events
+- [x] Create CSS priority protection to prevent style interference
+
+### Step 4.2: Aspect Ratio Canvas System ✅
+- [x] Implement configurable aspect ratio control (1:1, 16:9, 4:3, etc.)
+- [x] Create viewport-fitting canvas calculation with aspect ratio constraints
+- [x] Rename `width_percent` to `border_percent` for semantic clarity
+- [x] Calculate border size as percentage of smaller canvas dimension
+- [x] Implement proper canvas centering within viewport
+- [x] Add client-side and server-side configuration integration
+
+### Step 4.3: Advanced Matte Overlay System ✅
+- [x] Create full-viewport matte overlay with paper texture coverage
+- [x] Implement CSS clip-path for precise image area cutout
+- [x] Position image layers within cutout area only
+- [x] Add separate inner bevel frame element for edge detail
+- [x] Implement proper z-index layering (matte → bevel → images)
+- [x] Add element cleanup and reset functionality
+- [x] Test across multiple aspect ratios and display modes
+
+### Step 4.4: Cross-Mode Compatibility ✅
+- [x] Ensure consistent behavior in main display mode
+- [x] Verify functionality in kiosk mode
+- [x] Test responsive behavior across different viewport sizes
+- [x] Validate aspect ratio calculations for various configurations
+- [x] Confirm proper cleanup when matte border is disabled
+
+## Phase 5: Image Management System
+
+### Step 5.1: Client-Side Image Loader
 - [ ] Implement `ImageManager` class with:
   - Lazy loading queue system
   - Memory-based cache with size limits
@@ -160,21 +199,21 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Add image load error handling and retries
 - [ ] Implement progressive loading (show placeholder while loading)
 
-### Step 4.2: Intelligent Preloading
+### Step 5.2: Intelligent Preloading
 - [ ] Create prediction algorithm for next images in sequence
 - [ ] Implement preload buffer management (configurable size)
 - [ ] Add bandwidth detection for preload optimization
 - [ ] Create memory usage monitoring and cleanup
 
-### Step 4.3: Cache Management
+### Step 5.3: Cache Management
 - [ ] Implement LRU (Least Recently Used) cache eviction
 - [ ] Add cache statistics and monitoring
 - [ ] Create cache warming strategies
 - [ ] Implement storage quota management for browser limits
 
-## Phase 5: Animation Engine
+## Phase 6: Animation Engine
 
-### Step 5.1: Core Animation System
+### Step 6.1: Core Animation System
 - [ ] Create `AnimationEngine` class with:
   - Layer management for multiple simultaneous images (configurable max count)
   - Slow, contemplative fade in/out transitions with random duration between min/max values
@@ -189,7 +228,7 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Implement requestAnimationFrame-based rendering
 - [ ] Add performance monitoring and FPS tracking
 
-### Step 5.2: Pattern-Based Animation Control
+### Step 6.2: Pattern-Based Animation Control
 - [ ] Integrate with `PatternManager` for deterministic sequences
 - [ ] Implement layer spawn timing based on `LAYER_SPAWN_INTERVAL_SEC`
 - [ ] Add transformation calculation using deterministic seeds
@@ -197,7 +236,7 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Add animation pause/resume functionality
 - [ ] Create smooth transitions between pattern changes
 
-### Step 5.3: Performance Optimization
+### Step 6.3: Performance Optimization
 - [ ] Implement GPU-accelerated CSS transforms for rotation/scaling/translation
 - [ ] Add will-change CSS hints for optimized rendering
 - [ ] Optimize transformation calculations for multiple concurrent layers
@@ -205,9 +244,9 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Add memory usage optimization for continuous operation
 - [ ] Implement transformation caching when `PRELOAD_TRANSFORM_CACHE` enabled
 
-## Phase 6: Pattern Management
+## Phase 7: Pattern Management
 
-### Step 6.1: Pattern Generation Client
+### Step 7.1: Pattern Generation Client
 - [ ] Create `PatternManager` class to:
   - Fetch patterns from server API
   - Generate deterministic sequences locally with timing parameters
@@ -218,21 +257,21 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Implement pattern caching and prefetching
 - [ ] Add pattern validation and error recovery
 
-### Step 6.2: State Management
+### Step 7.2: State Management
 - [ ] Implement current pattern state tracking
 - [ ] Add URL-based pattern loading (bookmarkable states)
 - [ ] Create pattern history for navigation
 - [ ] Add pattern sharing functionality
 
-### Step 6.3: Reproducibility System
+### Step 7.3: Reproducibility System
 - [ ] Display current pattern code on screen
 - [ ] Implement pattern code input for reproduction
 - [ ] Add pattern export/import functionality
 - [ ] Create pattern bookmark system
 
-## Phase 7: User Interface
+## Phase 8: User Interface
 
-### Step 7.1: Main Interface
+### Step 8.1: Main Interface
 - [ ] Implement minimal UI overlay with:
   - Current pattern code display
   - Basic controls (hidden by default)
@@ -241,21 +280,21 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Add fade-in/out controls for UI elements
 - [ ] Implement touch/click handlers for mobile
 
-### Step 7.2: Kiosk Mode
+### Step 8.2: Kiosk Mode
 - [ ] Create full-screen kiosk interface
 - [ ] Disable browser context menus and shortcuts
 - [ ] Add screensaver prevention
 - [ ] Implement minimal touch interaction for Raspberry Pi
 
-### Step 7.3: Responsive Design
+### Step 8.3: Responsive Design
 - [ ] Optimize for different screen sizes
 - [ ] Add orientation change handling
 - [ ] Implement mobile-specific optimizations
 - [ ] Create tablet-optimized layouts
 
-## Phase 8: Integration & Testing
+## Phase 9: Integration & Testing
 
-### Step 8.1: Integration Testing
+### Step 9.1: Integration Testing
 - [ ] Test Flask backend with frontend integration
 - [ ] Verify API endpoints with real frontend calls
 - [ ] Test image loading performance with large datasets
@@ -264,7 +303,7 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Verify image transformations work with all configuration combinations
 - [ ] Test layer management with different `MAX_CONCURRENT_LAYERS` values
 
-### Step 8.2: Performance Testing
+### Step 9.2: Performance Testing
 - [ ] Test with 1000+ images in catalog
 - [ ] Measure memory usage during long operations with multiple concurrent layers
 - [ ] Verify 30+ FPS performance on Raspberry Pi with transformations enabled
@@ -273,27 +312,27 @@ This document outlines a step-by-step implementation plan for building the Flask
 - [ ] Test slow transition timing under various system loads
 - [ ] Validate animation quality settings (low/medium/high) performance impact
 
-### Step 8.3: Cross-Platform Testing
+### Step 9.3: Cross-Platform Testing
 - [ ] Test on Windows development environment
 - [ ] Test on Raspberry Pi OS
 - [ ] Verify browser compatibility (Chrome, Firefox, Edge)
 - [ ] Test mobile browser performance
 
-## Phase 9: Production Optimization
+## Phase 10: Production Optimization
 
-### Step 9.1: Production Configuration
+### Step 10.1: Production Configuration
 - [ ] Configure production Flask settings
 - [ ] Set up Gunicorn deployment configuration
 - [ ] Add security headers and HTTPS support
 - [ ] Implement logging and monitoring
 
-### Step 9.2: Raspberry Pi Optimization
+### Step 10.2: Raspberry Pi Optimization
 - [ ] Create Raspberry Pi specific optimizations
 - [ ] Add systemd service configuration
 - [ ] Implement auto-start on boot
 - [ ] Add hardware-specific performance tuning
 
-### Step 9.3: Deployment Documentation
+### Step 10.3: Deployment Documentation
 - [ ] Create deployment guides for different platforms
 - [ ] Add troubleshooting documentation
 - [ ] Create performance monitoring guides

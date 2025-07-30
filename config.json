@@ -60,9 +60,12 @@
   },
   "matte_border": {
     "enabled": true,
-    "width_percent": 10,
+    "border_percent": 10,
     "color": "#F8F8F8",
     "style": "classic",
+    "image_area": {
+      "aspect_ratio": "1:1"
+    },
     "shadow": {
       "enabled": true,
       "blur": 20,

@@ -111,6 +111,14 @@ class Config:
         # Matte border configuration
         border_config = self._config_data.get('matte_border', {})
         self.MATTE_BORDER = border_config
+        self.MATTE_BORDER_ENABLED = border_config.get('enabled', False)
+        self.MATTE_BORDER_BORDER_PERCENT = border_config.get('border_percent', 10)
+        self.MATTE_BORDER_COLOR = border_config.get('color', '#F8F8F8')
+        self.MATTE_BORDER_STYLE = border_config.get('style', 'classic')
+        
+        # Matte border image area configuration
+        image_area_config = border_config.get('image_area', {})
+        self.MATTE_BORDER_IMAGE_AREA_ASPECT_RATIO = image_area_config.get('aspect_ratio', '1:1')
 
 class DevelopmentConfig(Config):
     def __init__(self):

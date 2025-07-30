@@ -1453,9 +1453,12 @@ window.App = (function () {
       console.log('MatteBorderManager: Using default configuration');
       this.config = {
         enabled: true,
-        width_percent: 10,
+        border_percent: 10,
         color: '#F8F8F8',
         style: 'classic',
+        image_area: {
+          aspect_ratio: '1:1'
+        },
         shadow: {
           enabled: true,
           blur: 20,
@@ -1487,6 +1490,7 @@ window.App = (function () {
       if (!this.config.enabled) {
         this.borderElement.classList.add('disabled');
         console.log('MatteBorderManager: Border disabled');
+        this.resetMatteCanvas();
         return;
       }
 
@@ -1495,24 +1499,259 @@ window.App = (function () {
       // Apply style class
       this.borderElement.className = `matte-border ${this.config.style || 'classic'}`;
       
-      // Calculate border width based on viewport with consistent sizing
+      // Calculate and apply the matte canvas with proper aspect ratio
+      const matteCanvas = this.calculateMatteCanvas();
+      this.applyMatteCanvas(matteCanvas);
+    },
+
+    calculateMatteCanvas() {
+      // Get viewport dimensions
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const widthPercent = this.config.width_percent || 10;
       
-      // Use a consistent calculation based on viewport width for horizontal stability
-      const calculatedWidth = Math.round((widthPercent / 100) * viewportWidth * 0.8); // 0.8 factor for more reasonable sizing
-      const borderWidth = Math.max(30, Math.min(150, calculatedWidth)); // Clamp between 30px and 150px
+      // Get aspect ratio from config
+      let aspectRatio = '1:1'; // Default to square
       
-      console.log('MatteBorderManager: Width calculation:', {
-        viewportWidth: viewportWidth,
-        viewportHeight: viewportHeight,
-        widthPercent: widthPercent,
-        calculatedWidth: calculatedWidth,
-        finalBorderWidth: borderWidth
+      // Check for aspect ratio in client-side config first
+      if (window.APP_CONFIG && window.APP_CONFIG.matteBorder && window.APP_CONFIG.matteBorder.imageArea) {
+        aspectRatio = window.APP_CONFIG.matteBorder.imageArea.aspectRatio;
+      }
+      // Fallback to server config if available
+      else if (this.config && this.config.image_area && this.config.image_area.aspect_ratio) {
+        aspectRatio = this.config.image_area.aspect_ratio;
+      }
+
+      // Parse aspect ratio (e.g., "16:9", "4:3", "1:1")
+      const [widthRatio, heightRatio] = aspectRatio.split(':').map(n => parseFloat(n));
+      if (!widthRatio || !heightRatio) {
+        console.warn('MatteBorderManager: Invalid aspect ratio format:', aspectRatio);
+        return this.getFallbackCanvas();
+      }
+
+      const targetAspectRatio = widthRatio / heightRatio;
+      const viewportAspectRatio = viewportWidth / viewportHeight;
+
+      // Calculate maximum canvas size that fits in viewport while maintaining aspect ratio
+      let canvasWidth, canvasHeight;
+
+      if (viewportAspectRatio > targetAspectRatio) {
+        // Viewport is wider than target - constrain by height
+        canvasHeight = viewportHeight;
+        canvasWidth = canvasHeight * targetAspectRatio;
+      } else {
+        // Viewport is taller than target - constrain by width
+        canvasWidth = viewportWidth;
+        canvasHeight = canvasWidth / targetAspectRatio;
+      }
+
+      // Get border percentage from config
+      let borderPercent = 10; // Default
+      
+      // Check client-side config first
+      if (window.APP_CONFIG && window.APP_CONFIG.matteBorder && window.APP_CONFIG.matteBorder.borderPercent) {
+        borderPercent = window.APP_CONFIG.matteBorder.borderPercent;
+      }
+      // Fallback to server config if available
+      else if (this.config && this.config.border_percent) {
+        borderPercent = this.config.border_percent;
+      }
+      
+      // Calculate border size as percentage of the smaller canvas dimension
+      const smallerCanvasDimension = Math.min(canvasWidth, canvasHeight);
+      const borderSize = Math.round((borderPercent / 100) * smallerCanvasDimension);
+      
+      // Ensure minimum and maximum border sizes
+      const finalBorderSize = Math.max(20, Math.min(200, borderSize));
+
+      // Calculate canvas position (centered in viewport)
+      const canvasLeft = (viewportWidth - canvasWidth) / 2;
+      const canvasTop = (viewportHeight - canvasHeight) / 2;
+
+      // Calculate image area (canvas minus borders)
+      const imageAreaWidth = canvasWidth - (finalBorderSize * 2);
+      const imageAreaHeight = canvasHeight - (finalBorderSize * 2);
+      const imageAreaLeft = canvasLeft + finalBorderSize;
+      const imageAreaTop = canvasTop + finalBorderSize;
+
+      const result = {
+        // Viewport info
+        viewportWidth,
+        viewportHeight,
+        
+        // Aspect ratio info
+        aspectRatio,
+        targetAspectRatio,
+        
+        // Canvas dimensions and position
+        canvasWidth,
+        canvasHeight,
+        canvasLeft,
+        canvasTop,
+        
+        // Border info
+        borderPercent,
+        borderSize: finalBorderSize,
+        
+        // Image area dimensions and position
+        imageAreaWidth,
+        imageAreaHeight,
+        imageAreaLeft,
+        imageAreaTop
+      };
+
+      console.log('MatteBorderManager: Calculated matte canvas:', result);
+      return result;
+    },
+
+    getFallbackCanvas() {
+      // Fallback for invalid configurations
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const borderSize = 50; // Fixed fallback border
+      
+      return {
+        viewportWidth,
+        viewportHeight,
+        aspectRatio: '1:1',
+        targetAspectRatio: 1.0,
+        canvasWidth: Math.min(viewportWidth, viewportHeight),
+        canvasHeight: Math.min(viewportWidth, viewportHeight),
+        canvasLeft: (viewportWidth - Math.min(viewportWidth, viewportHeight)) / 2,
+        canvasTop: (viewportHeight - Math.min(viewportWidth, viewportHeight)) / 2,
+        borderPercent: 10,
+        borderSize,
+        imageAreaWidth: Math.min(viewportWidth, viewportHeight) - (borderSize * 2),
+        imageAreaHeight: Math.min(viewportWidth, viewportHeight) - (borderSize * 2),
+        imageAreaLeft: (viewportWidth - Math.min(viewportWidth, viewportHeight)) / 2 + borderSize,
+        imageAreaTop: (viewportHeight - Math.min(viewportWidth, viewportHeight)) / 2 + borderSize
+      };
+    },
+
+    applyMatteCanvas(canvas) {
+      const borderColor = this.config.color || '#F8F8F8';
+      
+      // Position and size the matte border element to fill the entire viewport
+      // The matte paper texture should cover everything except the image area
+      this.borderElement.style.setProperty('position', 'absolute', 'important');
+      this.borderElement.style.setProperty('left', '0px', 'important');
+      this.borderElement.style.setProperty('top', '0px', 'important');
+      this.borderElement.style.setProperty('width', '100vw', 'important');
+      this.borderElement.style.setProperty('height', '100vh', 'important');
+      this.borderElement.style.setProperty('box-sizing', 'border-box', 'important');
+      
+      // Set background to matte color with paper texture (from CSS)
+      this.borderElement.style.setProperty('background-color', borderColor, 'important');
+      
+      // Remove any border since we're not using CSS border approach anymore
+      this.borderElement.style.setProperty('border', 'none', 'important');
+      
+      // Clear any existing box-shadow effects
+      this.borderElement.style.setProperty('box-shadow', 'none', 'important');
+
+      // Create a transparent cutout for the image area using clip-path
+      this.createImageAreaCutout(canvas);
+      
+      // Create inner bevel frame effect around the image cutout
+      this.createInnerBevelFrame(canvas);
+      
+      // Position the image layers container within the image cutout area
+      this.positionImageLayers(canvas);
+      
+      // Ensure visibility
+      this.borderElement.style.opacity = '1';
+      this.borderElement.style.visibility = 'visible';
+      
+      console.log(`MatteBorderManager: Applied ${this.config.style} matte overlay with image cutout: ${canvas.imageAreaWidth}x${canvas.imageAreaHeight}`);
+    },
+
+    createImageAreaCutout(canvas) {
+      // Calculate the image area (center area without border)
+      const imageLeft = canvas.canvasLeft + canvas.borderSize;
+      const imageTop = canvas.canvasTop + canvas.borderSize;
+      const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
+      const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
+      
+      // Create a clip-path that cuts out the image area from the matte overlay
+      // This creates a "window" in the matte where images can show through
+      const clipPath = `polygon(
+        0% 0%, 
+        0% 100%, 
+        ${imageLeft}px 100%, 
+        ${imageLeft}px ${imageTop}px, 
+        ${imageLeft + imageWidth}px ${imageTop}px, 
+        ${imageLeft + imageWidth}px ${imageTop + imageHeight}px, 
+        ${imageLeft}px ${imageTop + imageHeight}px, 
+        ${imageLeft}px 100%, 
+        100% 100%, 
+        100% 0%
+      )`;
+      
+      this.borderElement.style.setProperty('clip-path', clipPath, 'important');
+      
+      console.log('MatteBorderManager: Created image area cutout:', {
+        imageLeft,
+        imageTop,
+        imageWidth,
+        imageHeight,
+        clipPath
       });
+    },
+
+    createInnerBevelFrame(canvas) {
+      // Create or get the inner bevel frame element
+      let bevelFrame = document.getElementById('inner-bevel-frame');
+      if (!bevelFrame) {
+        bevelFrame = document.createElement('div');
+        bevelFrame.id = 'inner-bevel-frame';
+        // Insert after the matte border element
+        this.borderElement.parentNode.insertBefore(bevelFrame, this.borderElement.nextSibling);
+      }
+
+      // Calculate the image area (center area without matte border)
+      const imageLeft = canvas.canvasLeft + canvas.borderSize;
+      const imageTop = canvas.canvasTop + canvas.borderSize;
+      const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
+      const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
+
+      // Position the bevel frame around the image cutout area
+      bevelFrame.style.setProperty('position', 'absolute', 'important');
+      bevelFrame.style.setProperty('left', `${imageLeft}px`, 'important');
+      bevelFrame.style.setProperty('top', `${imageTop}px`, 'important');
+      bevelFrame.style.setProperty('width', `${imageWidth}px`, 'important');
+      bevelFrame.style.setProperty('height', `${imageHeight}px`, 'important');
+      bevelFrame.style.setProperty('pointer-events', 'none', 'important');
+      bevelFrame.style.setProperty('z-index', '51', 'important'); // Above the matte border
+      bevelFrame.style.setProperty('box-sizing', 'border-box', 'important');
       
-      // Build box-shadow for bevel and drop shadow effects
+      // Make background transparent
+      bevelFrame.style.setProperty('background-color', 'transparent', 'important');
+      
+      // Apply bevel effects if enabled
+      if (this.config.bevel && this.config.bevel.enabled) {
+        const bevelWidth = this.config.bevel.width || 2;
+        const innerColor = this.config.bevel.inner_color || 'rgba(255, 255, 255, 0.3)';
+        const outerColor = this.config.bevel.outer_color || 'rgba(0, 0, 0, 0.2)';
+        
+        const boxShadow = [
+          `inset 0 0 0 ${bevelWidth}px ${innerColor}`,
+          `inset 0 0 0 ${bevelWidth * 2}px ${outerColor}`
+        ];
+        
+        bevelFrame.style.setProperty('box-shadow', boxShadow.join(', '), 'important');
+      } else {
+        bevelFrame.style.setProperty('box-shadow', 'none', 'important');
+      }
+
+      console.log('MatteBorderManager: Created inner bevel frame:', {
+        left: imageLeft,
+        top: imageTop,
+        width: imageWidth,
+        height: imageHeight,
+        bevelEnabled: this.config.bevel && this.config.bevel.enabled
+      });
+    },
+
+    applyBoxShadowEffects() {
       let boxShadow = [];
       
       if (this.config.bevel && this.config.bevel.enabled) {
@@ -1528,28 +1767,44 @@ window.App = (function () {
         boxShadow.push(`0 0 ${blur}px ${spread}px ${color}`);
       }
       
-      // Apply styles with fallback
-      const borderColor = this.config.color || '#F8F8F8';
-      
-      // Apply border color and style immediately
-      this.borderElement.style.setProperty('border-color', borderColor, 'important');
-      this.borderElement.style.setProperty('border-style', 'solid', 'important');
-      
-      // Apply border width with a small delay to trigger smooth animation from 0px
-      requestAnimationFrame(() => {
-        this.borderElement.style.setProperty('border-width', `${borderWidth}px`, 'important');
-      });
-      
       if (boxShadow.length > 0) {
         this.borderElement.style.setProperty('box-shadow', boxShadow.join(', '), 'important');
       }
-      
-      // Ensure visibility
-      this.borderElement.style.opacity = '1';
-      this.borderElement.style.visibility = 'visible';
-      
-      console.log(`MatteBorderManager: Applied ${this.config.style} border (${borderWidth}px) with color ${borderColor}`);
-      console.log('MatteBorderManager: Final computed border-width:', getComputedStyle(this.borderElement).borderWidth);
+    },
+
+    positionImageLayers(canvas) {
+      const imageLayersContainer = document.getElementById('image-layers');
+      if (!imageLayersContainer) {
+        console.warn('MatteBorderManager: Image layers container not found');
+        return;
+      }
+
+      // Calculate the image area (center area without matte border)
+      const imageLeft = canvas.canvasLeft + canvas.borderSize;
+      const imageTop = canvas.canvasTop + canvas.borderSize;
+      const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
+      const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
+
+      // Position image layers container to fill only the cutout image area
+      imageLayersContainer.style.position = 'absolute';
+      imageLayersContainer.style.left = `${imageLeft}px`;
+      imageLayersContainer.style.top = `${imageTop}px`;
+      imageLayersContainer.style.width = `${imageWidth}px`;
+      imageLayersContainer.style.height = `${imageHeight}px`;
+      imageLayersContainer.style.boxSizing = 'border-box';
+
+      console.log('MatteBorderManager: Positioned image layers within cutout area:', {
+        left: imageLeft,
+        top: imageTop,
+        width: imageWidth,
+        height: imageHeight
+      });
+    },
+
+    setViewportBackground(color) {
+      // No longer needed since matte overlay covers entire viewport
+      // Keeping method for backward compatibility but making it a no-op
+      console.log('MatteBorderManager: Viewport background handled by matte overlay');
     },
 
     // Handle window resize to recalculate border width
@@ -1557,6 +1812,58 @@ window.App = (function () {
       if (this.config && this.config.enabled) {
         this.applyConfiguration();
       }
+    },
+
+    // Reset matte canvas (restore to full viewport)
+    resetMatteCanvas() {
+      const imageLayersContainer = document.getElementById('image-layers');
+      if (imageLayersContainer) {
+        // Reset image layers container to full viewport
+        imageLayersContainer.style.position = 'relative';
+        imageLayersContainer.style.left = '';
+        imageLayersContainer.style.top = '';
+        imageLayersContainer.style.width = '100%';
+        imageLayersContainer.style.height = '100%';
+      }
+
+      // Reset matte border element
+      if (this.borderElement) {
+        this.borderElement.style.setProperty('position', 'absolute', 'important');
+        this.borderElement.style.setProperty('left', '0px', 'important');
+        this.borderElement.style.setProperty('top', '0px', 'important');
+        this.borderElement.style.setProperty('width', '100%', 'important');
+        this.borderElement.style.setProperty('height', '100%', 'important');
+        this.borderElement.style.setProperty('border', 'none', 'important');
+        this.borderElement.style.setProperty('clip-path', 'none', 'important');
+        this.borderElement.style.setProperty('background-color', 'transparent', 'important');
+      }
+
+      // Remove the inner bevel frame element
+      const bevelFrame = document.getElementById('inner-bevel-frame');
+      if (bevelFrame) {
+        bevelFrame.remove();
+      }
+
+      // Reset viewport background to original (black)
+      this.resetViewportBackground();
+
+      console.log('MatteBorderManager: Reset matte canvas to full viewport');
+    },
+
+    resetViewportBackground() {
+      // Reset body and canvas container backgrounds to original colors
+      const body = document.body;
+      const canvasContainer = document.getElementById('canvas-container');
+      
+      if (body) {
+        body.style.backgroundColor = ''; // Remove inline style, let CSS take over
+      }
+      
+      if (canvasContainer) {
+        canvasContainer.style.backgroundColor = ''; // Remove inline style, let CSS take over
+      }
+      
+      console.log('MatteBorderManager: Reset viewport background to original');
     }
   };
 

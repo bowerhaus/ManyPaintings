@@ -152,6 +152,17 @@
                 volume: {{ config.AUDIO_VOLUME }},
                 loop: {{ config.AUDIO_LOOP|tojson }},
                 autoplay: {{ config.AUDIO_AUTOPLAY|tojson }}
+            },
+            
+            // Matte Border
+            matteBorder: {
+                enabled: {{ config.MATTE_BORDER_ENABLED|tojson }},
+                borderPercent: {{ config.MATTE_BORDER_BORDER_PERCENT }},
+                color: "{{ config.MATTE_BORDER_COLOR }}",
+                style: "{{ config.MATTE_BORDER_STYLE }}",
+                imageArea: {
+                    aspectRatio: "{{ config.MATTE_BORDER_IMAGE_AREA_ASPECT_RATIO }}"
+                }
             }
         };
     </script>

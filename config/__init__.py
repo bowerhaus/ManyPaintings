@@ -1,5 +1,7 @@
 import os
 import json
+import time
+from threading import Lock
 
 def load_config_from_json(config_name='development'):
     """Load configuration from config.json file"""
@@ -21,7 +23,8 @@ def load_config_from_json(config_name='development'):
         'layer_management': config_data.get('layer_management', {}),
         'transformations': config_data.get('transformations', {}),
         'performance': config_data.get('performance', {}),
-        'audio': config_data.get('audio', {})
+        'audio': config_data.get('audio', {}),
+        'matte_border': config_data.get('matte_border', {})
     }
     
     # Apply environment-specific overrides
@@ -38,6 +41,10 @@ def load_config_from_json(config_name='development'):
 
 class Config:
     def __init__(self, config_name='development'):
+        self._config_name = config_name
+        self._config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
+        self._last_modified = 0
+        self._lock = Lock()
         self._config_data = load_config_from_json(config_name)
         self._load_configuration()
     
@@ -106,6 +113,38 @@ class Config:
         self.AUDIO_VOLUME = audio_config.get('volume', 0.5)
         self.AUDIO_LOOP = audio_config.get('loop', True)
         self.AUDIO_AUTOPLAY = audio_config.get('autoplay', True)
+        
+        # Matte border configuration
+        border_config = self._config_data.get('matte_border', {})
+        self.MATTE_BORDER = border_config
+        self.MATTE_BORDER_ENABLED = border_config.get('enabled', False)
+        self.MATTE_BORDER_BORDER_PERCENT = border_config.get('border_percent', 10)
+        self.MATTE_BORDER_COLOR = border_config.get('color', '#F8F8F8')
+        self.MATTE_BORDER_STYLE = border_config.get('style', 'classic')
+        
+        # Matte border image area configuration
+        image_area_config = border_config.get('image_area', {})
+        self.MATTE_BORDER_IMAGE_AREA_ASPECT_RATIO = image_area_config.get('aspect_ratio', '1:1')
+    
+    def check_and_reload(self):
+        """Check if config file has changed and reload if necessary"""
+        try:
+            current_modified = os.path.getmtime(self._config_path)
+            if current_modified > self._last_modified:
+                with self._lock:
+                    # Double-check after acquiring lock
+                    current_modified = os.path.getmtime(self._config_path)
+                    if current_modified > self._last_modified:
+                        print(f"Config file changed, reloading...")
+                        self._config_data = load_config_from_json(self._config_name)
+                        self._load_configuration()
+                        self._last_modified = current_modified
+                        print(f"Config reloaded successfully")
+                        return True
+        except Exception as e:
+            print(f"Error checking/reloading config: {e}")
+        return False
+    
 
 class DevelopmentConfig(Config):
     def __init__(self):

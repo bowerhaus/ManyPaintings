@@ -6,7 +6,109 @@
     <meta name="description" content="Generative Art Application - Continuous Visual Experience">
     <title>{% block title %}Many Paintings{% endblock %}</title>
     
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin': 'spin 1s linear infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in',
+                        'fade-out': 'fadeOut 0.5s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        fadeOut: {
+                            '0%': { opacity: '1' },
+                            '100%': { opacity: '0' }
+                        }
+                    },
+                    backdropBlur: {
+                        '15': '15px'
+                    },
+                    transitionDuration: {
+                        '400': '400ms'
+                    },
+                    transitionTimingFunction: {
+                        'out': 'cubic-bezier(0.4, 0, 0.2, 1)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Range slider styling */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        /* White background mode adjustments */
+        body.white-background #canvas-container {
+            @apply bg-white;
+        }
+        
+        body.white-background #image-layers {
+            @apply bg-white;
+        }
+        
+        body.white-background .image-layer {
+            mix-blend-mode: multiply;
+        }
+        
+        body.white-background #loading-indicator {
+            @apply bg-white/90 text-black;
+        }
+        
+        body.white-background .loading-spinner {
+            @apply border-black/20 border-t-black;
+        }
+        
+        body.white-background #fullscreen-btn {
+            @apply bg-white/90 border-black/20 text-black;
+        }
+        
+        body.white-background #fullscreen-btn:hover {
+            @apply bg-black/10 border-black/30;
+        }
+        
+        body.white-background #error-message {
+            @apply bg-pink-600;
+        }
+        
+        body.white-background #fullscreen-btn {
+            @apply bg-black/10 border-black/20 text-black;
+        }
+        
+        body.white-background #fullscreen-btn:hover {
+            @apply bg-black/20 border-black/40;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind-overrides.css') }}">
     
     <script>
         window.APP_CONFIG = {
@@ -50,6 +152,17 @@
                 volume: {{ config.AUDIO_VOLUME }},
                 loop: {{ config.AUDIO_LOOP|tojson }},
                 autoplay: {{ config.AUDIO_AUTOPLAY|tojson }}
+            },
+            
+            // Matte Border
+            matteBorder: {
+                enabled: {{ config.MATTE_BORDER_ENABLED|tojson }},
+                borderPercent: {{ config.MATTE_BORDER_BORDER_PERCENT }},
+                color: "{{ config.MATTE_BORDER_COLOR }}",
+                style: "{{ config.MATTE_BORDER_STYLE }}",
+                imageArea: {
+                    aspectRatio: "{{ config.MATTE_BORDER_IMAGE_AREA_ASPECT_RATIO }}"
+                }
             }
         };
     </script>

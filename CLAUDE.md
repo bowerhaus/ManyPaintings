@@ -184,6 +184,7 @@ The application uses a JSON-based configuration system with environment-specific
 - JSON config loader in `config/__init__.py`
 - Deep merge of base config with environment overrides
 - Per-image configs override base settings for specific images
+- **Hot Reload Support**: Configuration changes detected automatically on browser refresh
 
 ### Deployment Configurations
 - **Development**: Debug enabled, verbose logging, hot reload
@@ -199,7 +200,7 @@ The application uses a JSON-based configuration system with environment-specific
 - **API Endpoints**: Complete REST API with `/api/images`, `/api/config`, `/api/pattern/<seed>`
 - **Animation Engine**: JavaScript-based animation system with deterministic patterns
 - **Audio System**: MP3 background audio with volume control and browser autoplay handling
-- **Configuration System**: JSON-based config with per-image overrides
+- **Configuration System**: JSON-based config with per-image overrides and hot reload support
 - **Image Management**: Discovery, metadata extraction, and intelligent preloading
 - **Pattern System**: Deterministic sequences with initial pattern code support
 - **UI Controls**: Real-time speed, layer, audio, and background controls
@@ -214,6 +215,8 @@ The application uses a JSON-based configuration system with environment-specific
 6. **Opacity Control**: Configurable min/max opacity ranges for layered images
 7. **Memory Management**: Dynamic layer cleanup and intelligent preloading
 8. **Clean Startup**: No loading popups, immediate animation start
+9. **Configuration Hot Reload**: Config changes take effect on browser refresh without server restart
+10. **Fullscreen Consistency**: Image positioning remains consistent between windowed and fullscreen modes
 
 ### Architecture Highlights
 - **Browser-Centric**: Minimal server contact, all animations client-side
@@ -282,6 +285,13 @@ curl http://localhost:5000/api/pattern/MP-2024-001
 # Health check
 curl http://localhost:5000/health
 ```
+
+### Configuration Hot Reload
+- **Edit Config**: Modify `config.json` with any changes
+- **Apply Changes**: Refresh browser (F5 or Ctrl+R) to reload configuration
+- **No Server Restart**: Changes take effect immediately without restarting Flask
+- **Thread-Safe**: Multiple requests can safely trigger config reloads
+- **Automatic Detection**: File modification timestamps automatically detected
 
 ### Testing Guidelines
 - **Server Startup**: Don't start the server yourself when testing. Ask the developer to do it

@@ -3,18 +3,21 @@
 {% block title %}Many Paintings - Generative Art{% endblock %}
 
 {% block content %}
-<div id="app-container">
-    <div id="canvas-container">
-        <div id="image-layers"></div>
-        <div id="loading-indicator" class="hidden">
-            <div class="loading-spinner"></div>
+<div id="app-container" class="w-screen h-screen relative overflow-hidden">
+    <div id="canvas-container" class="w-full h-full relative bg-black transition-colors duration-500">
+        <div id="image-layers" class="w-full h-full relative overflow-hidden bg-black transition-colors duration-500 box-border"></div>
+        <div class="matte-border-container absolute top-0 left-0 w-full h-full pointer-events-none z-50">
+            <div id="matte-border" class="matte-border classic"></div>
+        </div>
+        <div id="loading-indicator" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center bg-black/80 text-white p-8 rounded-2xl backdrop-blur-lg transition-colors duration-500">
+            <div class="loading-spinner w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
             <p>Loading images...</p>
         </div>
     </div>
     
-    <div id="ui-overlay" class="ui-overlay">
-        <div id="controls" class="controls hidden">
-            <button id="fullscreen-btn" class="control-btn" title="Enter Fullscreen">
+    <div id="ui-overlay" class="absolute top-0 left-0 w-full h-full pointer-events-none z-[100]">
+        <div id="controls" class="hidden absolute top-8 right-8 flex gap-2 pointer-events-auto">
+            <button id="fullscreen-btn" class="bg-black/70 border border-white/20 text-white p-3 rounded-lg cursor-pointer text-xl transition-all duration-200 backdrop-blur-lg hover:bg-white/10 hover:border-white/30 active:scale-95" title="Enter Fullscreen">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
                 </svg>
@@ -22,63 +25,63 @@
         </div>
         
         <!-- Bottom overlay control panel -->
-        <div id="controls-trigger-area" class="bottom-controls-trigger">
-            <div id="onscreen-controls" class="bottom-overlay-panel">
-                <div class="overlay-content">
+        <div id="controls-trigger-area" class="fixed bottom-0 left-0 right-0 h-[18.75vh] md:h-[22.5vh] sm:h-[26.25vh] z-[200] pointer-events-auto">
+            <div id="onscreen-controls" class="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-white/95 via-white/80 to-transparent backdrop-blur-lg opacity-0 translate-y-full transition-all duration-[400ms] ease-out pointer-events-none shadow-[0_-2px_12px_rgba(0,0,0,0.2),0_-1px_4px_rgba(0,0,0,0.1)]">
+                <div class="absolute bottom-8 md:bottom-6 sm:bottom-4 left-1/2 transform -translate-x-1/2 w-[90%] md:w-[95%] sm:w-full max-w-6xl flex flex-col gap-8 md:gap-6 sm:gap-4 items-center">
                     <!-- Quick Actions -->
-                    <div class="quick-actions">
-                        <button id="play-pause-btn" class="control-btn primary" title="Play/Pause (Spacebar)">
-                            <svg viewBox="0 0 24 24">
+                    <div class="flex gap-4 md:gap-3 sm:gap-2 justify-center sm:flex-wrap">
+                        <button id="play-pause-btn" class="flex items-center justify-center w-12 h-12 md:w-11 md:h-11 sm:w-10 sm:h-10 bg-black/90 text-white/90 rounded-full cursor-pointer transition-all duration-300 hover:bg-black hover:shadow-[0_5px_20px_rgba(0,0,0,0.3)] hover:-translate-y-0.5" title="Play/Pause (Spacebar)">
+                            <svg viewBox="0 0 24 24" class="w-6 h-6 md:w-5 md:h-5 sm:w-4 sm:h-4 fill-current">
                                 <path d="M8 5v14l11-7z"/>
                             </svg>
                         </button>
-                        <button id="new-pattern-btn" class="control-btn" title="New Pattern (N)">
-                            <svg viewBox="0 0 24 24">
+                        <button id="new-pattern-btn" class="flex items-center justify-center w-12 h-12 md:w-11 md:h-11 sm:w-10 sm:h-10 bg-black/10 border border-black/20 rounded-full cursor-pointer transition-all duration-300 text-black/90 hover:bg-black/20 hover:-translate-y-0.5 hover:shadow-[0_5px_15px_rgba(0,0,0,0.1)]" title="New Pattern (N)">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-[18px] md:h-[18px] sm:w-4 sm:h-4 fill-current">
                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                             </svg>
                         </button>
-                        <button id="background-toggle-btn" class="control-btn" title="Toggle Background (B)">
-                            <svg viewBox="0 0 24 24">
+                        <button id="background-toggle-btn" class="flex items-center justify-center w-12 h-12 md:w-11 md:h-11 sm:w-10 sm:h-10 bg-black/10 border border-black/20 rounded-full cursor-pointer transition-all duration-300 text-black/90 hover:bg-black/20 hover:-translate-y-0.5 hover:shadow-[0_5px_15px_rgba(0,0,0,0.1)]" title="Toggle Background (B)">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-[18px] md:h-[18px] sm:w-4 sm:h-4 fill-current">
                                 <path d="M12,18.5A6.5,6.5 0 0,1 5.5,12A6.5,6.5 0 0,1 12,5.5A6.5,6.5 0 0,1 18.5,12A6.5,6.5 0 0,1 12,18.5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
                             </svg>
                         </button>
-                        <button id="audio-toggle-btn" class="control-btn" title="Toggle Audio (A)">
-                            <svg viewBox="0 0 24 24">
+                        <button id="audio-toggle-btn" class="flex items-center justify-center w-12 h-12 md:w-11 md:h-11 sm:w-10 sm:h-10 bg-black/10 border border-black/20 rounded-full cursor-pointer transition-all duration-300 text-black/90 hover:bg-black/20 hover:-translate-y-0.5 hover:shadow-[0_5px_15px_rgba(0,0,0,0.1)]" title="Toggle Audio (A)">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-[18px] md:h-[18px] sm:w-4 sm:h-4 fill-current">
                                 <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.03C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
                             </svg>
                         </button>
                     </div>
 
                     <!-- Controls Grid -->
-                    <div class="controls-grid">
-                        <div class="control-group">
-                            <label>Speed</label>
-                            <div class="control-input">
-                                <input type="range" id="speed-slider" min="0.1" max="20.0" step="0.1" value="1.0">
-                                <span id="speed-value">1.0x</span>
+                    <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] sm:grid-cols-2 gap-8 md:gap-6 sm:gap-4 w-full">
+                        <div class="flex flex-col gap-3 sm:gap-2 items-center">
+                            <label class="text-black/80 text-sm sm:text-xs font-medium uppercase tracking-wider">Speed</label>
+                            <div class="flex items-center gap-4 w-full">
+                                <input type="range" id="speed-slider" min="0.1" max="20.0" step="0.1" value="1.0" class="flex-1 h-1 bg-black/20 rounded-sm outline-none appearance-none cursor-pointer slider">
+                                <span id="speed-value" class="text-black/90 text-sm sm:text-xs font-semibold font-mono min-w-12 sm:min-w-10 text-center py-1 px-2 sm:py-0.5 sm:px-1.5 bg-black/10 rounded">1.0x</span>
                             </div>
                         </div>
                         
-                        <div class="control-group">
-                            <label>Layers</label>
-                            <div class="control-input">
-                                <input type="range" id="layers-slider" min="1" max="8" step="1" value="4">
-                                <span id="layers-value">4</span>
+                        <div class="flex flex-col gap-3 sm:gap-2 items-center">
+                            <label class="text-black/80 text-sm sm:text-xs font-medium uppercase tracking-wider">Layers</label>
+                            <div class="flex items-center gap-4 w-full">
+                                <input type="range" id="layers-slider" min="1" max="8" step="1" value="4" class="flex-1 h-1 bg-black/20 rounded-sm outline-none appearance-none cursor-pointer slider">
+                                <span id="layers-value" class="text-black/90 text-sm sm:text-xs font-semibold font-mono min-w-12 sm:min-w-10 text-center py-1 px-2 sm:py-0.5 sm:px-1.5 bg-black/10 rounded">4</span>
                             </div>
                         </div>
                         
-                        <div class="control-group">
-                            <label>Volume</label>
-                            <div class="control-input">
-                                <input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.5">
-                                <span id="audio-volume-value">50%</span>
+                        <div class="flex flex-col gap-3 sm:gap-2 items-center">
+                            <label class="text-black/80 text-sm sm:text-xs font-medium uppercase tracking-wider">Volume</label>
+                            <div class="flex items-center gap-4 w-full">
+                                <input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="0.5" class="flex-1 h-1 bg-black/20 rounded-sm outline-none appearance-none cursor-pointer slider">
+                                <span id="audio-volume-value" class="text-black/90 text-sm sm:text-xs font-semibold font-mono min-w-12 sm:min-w-10 text-center py-1 px-2 sm:py-0.5 sm:px-1.5 bg-black/10 rounded">50%</span>
                             </div>
                         </div>
                         
-                        <div class="control-group">
-                            <label>Pattern</label>
-                            <div class="pattern-display">
-                                <span id="current-pattern">Loading...</span>
+                        <div class="flex flex-col gap-3 sm:gap-2 items-center">
+                            <label class="text-black/80 text-sm sm:text-xs font-medium uppercase tracking-wider">Pattern</label>
+                            <div class="flex items-center justify-center py-2 px-4 bg-black/10 rounded w-full">
+                                <span id="current-pattern" class="font-mono text-sm sm:text-xs text-black/90">Loading...</span>
                             </div>
                         </div>
                     </div>
@@ -86,9 +89,9 @@
             </div>
         </div>
         
-        <div id="error-message" class="error-message hidden">
+        <div id="error-message" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-600/90 text-white p-6 rounded-xl text-center max-w-sm backdrop-blur-lg pointer-events-auto transition-colors duration-500">
             <p id="error-text"></p>
-            <button id="retry-btn" class="retry-btn">Retry</button>
+            <button id="retry-btn" class="bg-white/20 border border-white/30 text-white py-2 px-4 rounded-md cursor-pointer mt-4 transition-colors duration-200 hover:bg-white/30">Retry</button>
         </div>
     </div>
 </div>

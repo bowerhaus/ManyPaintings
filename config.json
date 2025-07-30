@@ -38,8 +38,8 @@
     },
     "scale": {
       "enabled": true,
-      "min_factor": 0.5,
-      "max_factor": 1
+      "min_factor": 0.75,
+      "max_factor": 1.5
     },
     "translation": {
       "enabled": true,
@@ -56,7 +56,16 @@
     "file_path": "static/audio/Ethereal Strokes Loop.mp3",
     "volume": 0.5,
     "loop": true,
-    "autoplay": true
+    "autoplay": false
+  },
+  "matte_border": {
+    "enabled": true,
+    "border_percent": 10,
+    "color": "#F8F8F8",
+    "style": "medium",
+    "image_area": {
+      "aspect_ratio": "1:1"
+    }
   },
   "environments": {
     "development": {

@@ -1,7 +1,8 @@
 # Development Status - ManyPaintings
 
-**Last Updated:** 2025-07-29  
-**Current Phase:** Audio Integration & UI Enhancement - Complete  
+**Last Updated:** 2025-07-30  
+**Current Phase:** Fullscreen Positioning & Config Hot Reload - Complete  
+**Previous Phase:** Documentation Updates - Complete  
 **Next Phase:** Performance Testing & Optimization
 
 ## 🎯 Project Overview
@@ -55,6 +56,65 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - [x] **Responsive Design Enhancement** - Better mobile/tablet layouts with control wrapping
 - [x] **Keyboard Shortcuts** - Added 'A' key for audio toggle functionality
 
+### Matte Border Frame System ✅ COMPLETE
+- [x] **Samsung Frame TV-Style Borders** - Configurable matte border frames around artwork
+- [x] **JSON Configuration** - Full border customization via config.json settings
+- [x] **Dynamic Border Width** - Responsive sizing based on viewport dimensions (15% default)
+- [x] **Multiple Frame Styles** - Classic, modern, and elegant border variants
+- [x] **Bevel Effects** - Configurable inner/outer bevel with custom colors
+- [x] **Drop Shadow System** - Realistic depth with blur, spread, and color controls
+- [x] **Real-time Responsiveness** - Border automatically adjusts on window resize
+- [x] **CSS Priority Protection** - Important rules prevent other styles from interfering
+- [x] **Debug Monitoring** - Mutation observer tracks border element changes
+- [x] **Forced Visibility System** - Multiple fallbacks ensure border remains visible
+- [x] **Smooth Border Animation** - Border animates from 0px to target size on startup
+- [x] **Image Area Aspect Ratio Control** - Configurable aspect ratios (1:1, 16:9, 4:3, etc.) for image display area within matte border
+
+### UI Polish & User Experience ✅ COMPLETE
+- [x] **Background Toggle Fix** - Fixed initialization issue where first click didn't work
+- [x] **Control Panel Optimization** - Reduced height by 25% for better screen space usage
+- [x] **Unified White Panel Design** - Control panel always white regardless of background color
+- [x] **Click-Outside Dismiss** - Control panel retracts when clicking outside the panel
+- [x] **Enhanced Panel Shadows** - Added top-edge shadows for better visibility on all backgrounds
+- [x] **Consistent Typography** - All panel text and controls use dark colors for optimal readability
+- [x] **Responsive Panel Sizing** - Maintained 25% height reduction across all screen sizes
+
+### Tailwind CSS Migration & UI Modernization ✅ COMPLETE
+- [x] **Tailwind CSS Integration** - Added Tailwind CDN with custom configuration for app-specific needs
+- [x] **Complete UI Conversion** - Converted all controls and layouts to modern Tailwind utility classes
+- [x] **Responsive Design Enhancement** - Mobile-first approach with sm/md/lg breakpoints for optimal experience
+- [x] **Control Panel Modernization** - Rebuilt bottom overlay panel with Tailwind grid and flexbox
+- [x] **Button System Redesign** - Modern circular buttons with hover states and proper accessibility
+- [x] **Range Slider Styling** - Custom slider styling with consistent thumb design across browsers
+- [x] **Missing JavaScript Functions** - Fixed control panel visibility by adding missing showOnscreenControls/scheduleHideControls methods
+- [x] **White Background Mode** - Complete CSS implementation for light theme with proper contrast and blending
+- [x] **Animation Transitions** - Enhanced transitions using Tailwind's duration and easing utilities
+- [x] **Gradient Backgrounds** - Modern gradient overlays for control panel visibility on all backgrounds
+
+### Matte Border Aspect Ratio Enhancement ✅ COMPLETE
+- [x] **Aspect Ratio Configuration** - Added configurable aspect ratio for image area within matte border (default 1:1 square)
+- [x] **Frontend Configuration Integration** - Added matte border config to client-side APP_CONFIG in templates
+- [x] **Backend Configuration Support** - Enhanced config loader with specific matte border properties
+- [x] **Dynamic Image Area Constraints** - JavaScript logic to constrain image layers to maintain aspect ratio
+- [x] **Responsive Aspect Ratio Handling** - Automatic recalculation on window resize with proper centering
+- [x] **Multiple Aspect Ratio Support** - Framework supports any ratio format (1:1, 16:9, 4:3, 3:2, etc.)
+- [x] **Fallback Configuration** - Graceful handling when aspect ratio config is missing or invalid
+
+### Fullscreen Positioning & Config Hot Reload ✅ COMPLETE
+- [x] **Fullscreen Positioning Fix** - Fixed image layer positioning to maintain consistent appearance between windowed and fullscreen modes
+- [x] **Container-Relative Transformations** - Changed translations from viewport units (vw/vh) to percentage units for consistent positioning
+- [x] **Configuration Hot Reload** - File modification detection for config.json with automatic reload on browser refresh
+- [x] **Automatic Config Updates** - Main routes check for config changes and reload without server restart
+- [x] **Thread-Safe Config Reloading** - Thread-safe implementation with proper locking mechanisms
+
+### Matte Border 3D Bevel Enhancement ✅ COMPLETE  
+- [x] **Shadow System Removal** - Removed all shadow configuration and code from matte border system
+- [x] **Dynamic 3D Bevel Effect** - JavaScript-generated proportional bevel with light source simulation
+- [x] **Proper Image Clipping** - Images now properly constrained to inner bevel area without encroaching
+- [x] **Configurable Bevel Width** - Dynamic sizing based on configured bevel width (20px current)
+- [x] **Realistic 3D Appearance** - Top/left highlights, bottom/right shadows for depth perception
+- [x] **Dual-Layer Bevel** - Outer strong contrast, inner soft transition for professional appearance
+
 ### Core Architecture Implemented
 - **Browser-Centric Design** - Minimal server contact, client-side animations
 - **Image Management** - On-demand loading, intelligent preloading, memory cleanup
@@ -66,18 +126,20 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 ## 🔧 Current Technical Status
 
 ### Backend (Flask)
-- ✅ App factory pattern with config loading
+- ✅ App factory pattern with config loading and hot reload support
 - ✅ Image discovery and metadata extraction with per-image config support
 - ✅ API endpoints: `/`, `/kiosk`, `/health`, `/api/images`, `/api/config`, `/api/pattern/<seed>`
 - ✅ Error handling and caching headers
 - ✅ Deterministic pattern generation API with server-side seeded random
 - ✅ JSON serialization handling for all config data types
+- ✅ Configuration hot reload with file modification detection and thread-safe reloading
 
 ### Frontend (JavaScript)
 - ✅ **ImageManager** - Catalog loading, image preloading, memory management
 - ✅ **AnimationEngine** - Advanced layer animation with deterministic timing and duplicate prevention
 - ✅ **PatternManager** - Deterministic sequence generation with initial pattern code support
 - ✅ **AudioManager** - MP3 playback, volume control, browser autoplay handling, user interaction detection
+- ✅ **MatteBorderManager** - Configurable frame borders with Samsung Frame TV-style styling and aspect ratio control
 - ✅ **UI Controls** - Consolidated mouse-activated control panel with audio, speed, layer, background controls
 - ✅ **Real-time Control** - Immediate response to speed, layer, audio, and background changes
 - ✅ **Background System** - Dynamic black/white switching with adaptive blending modes
@@ -96,8 +158,13 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - ✅ **Performance Optimization** - Speed affects all timings, not just spawn rate
 - ✅ **Enhanced Responsive UI** - Enlarged 85% width control panel accommodating 5 control groups
 - ✅ **Background Themes** - Black/white backgrounds with adaptive UI and blend modes
+- ✅ **Matte Border Frames** - Samsung Frame TV-style configurable borders with bevel, shadow effects, and aspect ratio control
 - ✅ **Keyboard Shortcuts** - Space (play/pause), N (new pattern), B (background toggle), A (audio toggle)
 - ✅ **Clean Startup** - No loading popups, immediate animation start
+- ✅ **Optimized Control Panel** - 25% smaller with unified white design and click-outside dismiss
+- ✅ **Polished User Experience** - Fixed background toggle initialization and enhanced panel visibility
+- ✅ **Fullscreen Consistency** - Image positioning remains consistent between windowed and fullscreen modes
+- ✅ **Configuration Hot Reload** - Config changes take effect on browser refresh without server restart
 
 ## 🚧 Known Limitations & TODOs
 
@@ -165,9 +232,10 @@ ManyPaintings/
 │   └── kiosk.html                # Full-screen kiosk mode
 ├── static/ ✅                    # Static assets
 │   ├── css/
-│   │   └── style.css             # Complete responsive styling
+│   │   ├── style.css             # Legacy CSS (preserved for complex matte border textures)
+│   │   └── tailwind-overrides.css # Tailwind overrides for app-specific styles
 │   ├── js/
-│   │   └── main.js               # Modular JavaScript architecture with AudioManager
+│   │   └── main.js               # Modular JavaScript architecture with complete UI system
 │   ├── audio/ ✅                 # Audio assets
 │   │   └── *.mp3                 # Background ambient audio files
 │   └── images/ ✅                # Art images (17 files)
@@ -194,11 +262,18 @@ ManyPaintings/
 - ✅ **Background toggle system** - Black/white switching with proper blend modes
 - ✅ **Enhanced control panel** - All controls accessible in enlarged unified interface
 - ✅ **Audio system** - MP3 playback, volume control, autoplay handling fully functional
+- ✅ **Matte border system** - Samsung Frame TV-style borders with configuration support
 - ✅ **Deterministic behavior** - Same pattern codes produce identical sequences
 - ✅ **Per-image configuration** - JSON config overrides work correctly
 - ✅ **Duplicate prevention** - No images appear on multiple layers
 - ✅ **Opacity control** - Min/max opacity ranges working as configured
 - ✅ **API endpoints** - All backend APIs functional and tested
+- ✅ **UI Polish** - Background toggle fix, optimized control panel, click-outside dismiss
+- ✅ **Enhanced Visibility** - Consistent white panel design with proper shadows
+- ✅ **Tailwind CSS Migration** - Complete UI modernization with responsive design and missing JavaScript functions
+- ✅ **Matte Border Aspect Ratio** - Configurable aspect ratios for image display area within matte border frames
+- ✅ **Fullscreen Positioning Fix** - Consistent image positioning between windowed and fullscreen modes
+- ✅ **Configuration Hot Reload** - Automatic config.json reload on browser refresh without server restart
 
 ### Testing Needed
 - [ ] Memory usage with large image sets (1000+ images)
@@ -268,6 +343,14 @@ curl http://localhost:5000/health
 8. **Completed:** ✅ Complete API implementation with pattern generation
 9. **Completed:** ✅ Audio integration with MP3 playback and volume control
 10. **Completed:** ✅ Enhanced UI with enlarged control panel and opacity control
+11. **Completed:** ✅ Matte border frame system with Samsung Frame TV-style styling
+12. **Completed:** ✅ UI polish with background toggle fixes and optimized control panel design
+13. **Completed:** ✅ Tailwind CSS migration with modern responsive design and complete UI modernization
+14. **Completed:** ✅ Matte border aspect ratio enhancement with configurable image area constraints
+15. **Completed:** ✅ Documentation updates - Updated IMPLEMENTATION_PLAN.md, README.md, and STATUS.md with latest features
+16. **Completed:** ✅ Fullscreen positioning fix - Images maintain consistent positioning between windowed and fullscreen modes
+17. **Completed:** ✅ Configuration hot reload - Config changes take effect on browser refresh without server restart
+18. **Completed:** ✅ Matte border 3D bevel enhancement - Removed shadows, added dynamic 3D bevel with proper image clipping
 
 ---
 *This status file should be updated after each development session*

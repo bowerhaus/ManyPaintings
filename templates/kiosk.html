@@ -5,37 +5,69 @@
 {% block body_class %}kiosk-mode{% endblock %}
 
 {% block content %}
-<div id="kiosk-container">
-    <div id="canvas-container">
-        <div id="image-layers"></div>
-        <div id="loading-indicator" class="hidden">
-            <div class="loading-spinner"></div>
+<div id="kiosk-container" class="w-screen h-screen relative overflow-hidden">
+    <div id="canvas-container" class="w-full h-full relative bg-black transition-colors duration-500">
+        <div id="image-layers" class="w-full h-full relative overflow-hidden bg-black transition-colors duration-500 box-border">
+            <!-- Kiosk controls positioned inside the actual image viewing area -->
+            <div id="kiosk-controls" class="absolute top-8 right-8 md:top-4 md:right-4 z-[100] flex gap-3 md:gap-2">
+        <button id="audio-toggle-btn" class="bg-black/70 border border-white/30 rounded-lg p-3 md:p-2 text-white cursor-pointer transition-all duration-300 backdrop-blur-lg flex items-center justify-center w-12 h-12 md:w-10 md:h-10 hover:bg-black/80 hover:border-white/50 hover:scale-105 active:scale-95 shadow-lg" title="Toggle Audio (A)">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-4 md:h-4 fill-current">
+                <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.03C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
+            </svg>
+        </button>
+        <button id="background-toggle-btn" class="bg-black/70 border border-white/30 rounded-lg p-3 md:p-2 text-white cursor-pointer transition-all duration-300 backdrop-blur-lg flex items-center justify-center w-12 h-12 md:w-10 md:h-10 hover:bg-black/80 hover:border-white/50 hover:scale-105 active:scale-95 shadow-lg" title="Toggle Background (B)">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-4 md:h-4 fill-current">
+                <path d="M12,18.5A6.5,6.5 0 0,1 5.5,12A6.5,6.5 0 0,1 12,5.5A6.5,6.5 0 0,1 18.5,12A6.5,6.5 0 0,1 12,18.5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+            </svg>
+        </button>
+        <button id="fullscreen-btn" class="bg-black/70 border border-white/30 rounded-lg p-3 md:p-2 text-white cursor-pointer transition-all duration-300 backdrop-blur-lg flex items-center justify-center w-12 h-12 md:w-10 md:h-10 hover:bg-black/80 hover:border-white/50 hover:scale-105 active:scale-95 shadow-lg" title="Enter Fullscreen">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 md:w-4 md:h-4">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+            </svg>
+        </button>
+            </div>
+        </div>
+        <div class="matte-border-container absolute top-0 left-0 w-full h-full pointer-events-none z-50">
+            <div id="matte-border" class="matte-border classic"></div>
+        </div>
+        <div id="loading-indicator" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center bg-black/80 text-white p-8 rounded-2xl backdrop-blur-lg transition-colors duration-500">
+            <div class="loading-spinner w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
         </div>
     </div>
     
-    <button id="fullscreen-btn" class="fullscreen-button" title="Enter Fullscreen">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-        </svg>
-    </button>
     
-    
-    <div id="error-message" class="error-message hidden">
+    <div id="error-message" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-600/90 text-white p-6 rounded-xl text-center max-w-sm backdrop-blur-lg pointer-events-auto transition-colors duration-500">
         <p id="error-text">Connection lost</p>
-        <div class="retry-spinner"></div>
+        <div class="retry-spinner w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mt-4"></div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         if (window.App) {
-            window.App.init({ kioskMode: true });
+            await window.App.init({ kioskMode: true });
         }
         
-        // Fullscreen functionality
+        // Kiosk controls
         const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const audioToggleBtn = document.getElementById('audio-toggle-btn');
+        const backgroundToggleBtn = document.getElementById('background-toggle-btn');
+        const kioskControls = document.getElementById('kiosk-controls');
+        
+        console.log('Kiosk: Controls found:', {
+            fullscreen: !!fullscreenBtn,
+            audio: !!audioToggleBtn,
+            background: !!backgroundToggleBtn,
+            container: !!kioskControls
+        });
+        
+        console.log('Kiosk: App availability:', {
+            app: !!window.App,
+            ui: !!(window.App && window.App.UI),
+            audioManager: !!(window.App && window.App.AudioManager)
+        });
         
         function enterFullscreen() {
             const elem = document.documentElement;
@@ -58,35 +90,91 @@
             }
         }
         
-        function updateFullscreenButton() {
+        function updateKioskControls() {
             const isFullscreen = document.fullscreenElement || 
                                 document.webkitFullscreenElement || 
                                 document.msFullscreenElement;
             
+            console.log('Kiosk: updateKioskControls called, isFullscreen:', !!isFullscreen);
+            
             if (isFullscreen) {
-                fullscreenBtn.style.display = 'none';
+                console.log('Kiosk: Hiding all kiosk controls');
+                if (kioskControls) {
+                    kioskControls.style.display = 'none';
+                }
             } else {
-                fullscreenBtn.style.display = 'block';
-                fullscreenBtn.innerHTML = `
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-                    </svg>
-                `;
-                fullscreenBtn.title = "Enter Fullscreen";
+                console.log('Kiosk: Showing all kiosk controls');
+                if (kioskControls) {
+                    kioskControls.style.display = 'flex';
+                }
+                
+                // Reset fullscreen button content
+                if (fullscreenBtn) {
+                    fullscreenBtn.innerHTML = `
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 md:w-4 md:h-4">
+                            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                        </svg>
+                    `;
+                    fullscreenBtn.title = "Enter Fullscreen";
+                }
             }
         }
         
-        fullscreenBtn.addEventListener('click', function() {
-            enterFullscreen();
-        });
+        // Event listeners for kiosk controls
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', function() {
+                enterFullscreen();
+            });
+        }
+        
+        if (audioToggleBtn) {
+            audioToggleBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (window.App && window.App.UI) {
+                    window.App.UI.toggleAudio();
+                }
+            }, true);
+        }
+        
+        if (backgroundToggleBtn) {
+            backgroundToggleBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (window.App && window.App.UI) {
+                    window.App.UI.toggleBackground();
+                }
+            }, true);
+        }
         
         // Listen for fullscreen changes
-        document.addEventListener('fullscreenchange', updateFullscreenButton);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+        document.addEventListener('fullscreenchange', updateKioskControls);
+        document.addEventListener('webkitfullscreenchange', updateKioskControls);
+        document.addEventListener('msfullscreenchange', updateKioskControls);
         
-        // Initial button state
-        updateFullscreenButton();
+        // Initial controls state
+        updateKioskControls();
+        
+        // Add keyboard shortcuts for kiosk mode
+        document.addEventListener('keydown', function(event) {
+            switch (event.code) {
+                case 'KeyA':
+                    event.preventDefault();
+                    console.log('Kiosk: A key pressed - toggling audio');
+                    if (window.App && window.App.UI) {
+                        window.App.UI.toggleAudio();
+                    }
+                    break;
+                // Temporarily removed KeyB to test button conflict
+                // case 'KeyB':
+                //     event.preventDefault();
+                //     console.log('Kiosk: B key pressed - toggling background');
+                //     if (window.App && window.App.UI) {
+                //         window.App.UI.toggleBackground();
+                //     }
+                //     break;
+            }
+        });
     });
     
     // Prevent context menu and selection in kiosk mode

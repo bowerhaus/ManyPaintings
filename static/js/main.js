@@ -907,6 +907,13 @@ window.App = (function () {
 
       this.setupEventListeners();
       this.setupOnscreenControls();
+      
+      // Ensure onscreen controls start hidden
+      if (this.onscreenControls && !kioskMode) {
+        this.onscreenControls.classList.remove('visible');
+        console.log('UI: Onscreen controls initialized as hidden');
+      }
+      
       this.showMainControls();
       this.hideLoading();
     },
@@ -950,11 +957,22 @@ window.App = (function () {
 
       // Mouse movement detection for onscreen controls (non-kiosk mode)
       if (!kioskMode && this.controlsTriggerArea) {
+        console.log('UI: Setting up mouse events for control trigger area');
         this.controlsTriggerArea.addEventListener('mouseenter', this.showOnscreenControls.bind(this));
         this.controlsTriggerArea.addEventListener('mouseleave', this.scheduleHideControls.bind(this));
         
         // Also add pointer events to ensure trigger works
         this.controlsTriggerArea.style.pointerEvents = 'auto';
+        
+        // Add debugging
+        this.controlsTriggerArea.addEventListener('mouseenter', () => {
+          console.log('UI: Mouse entered trigger area');
+        });
+        this.controlsTriggerArea.addEventListener('mouseleave', () => {
+          console.log('UI: Mouse left trigger area');
+        });
+      } else {
+        console.log('UI: Not setting up mouse events. kioskMode:', kioskMode, 'controlsTriggerArea:', !!this.controlsTriggerArea);
       }
 
       // Window resize listener for matte border
@@ -1154,6 +1172,45 @@ window.App = (function () {
       }
     },
 
+    showOnscreenControls() {
+      if (!this.onscreenControls || kioskMode) {
+        console.log('UI: Cannot show onscreen controls - missing element or kiosk mode', {
+          onscreenControls: !!this.onscreenControls,
+          kioskMode: kioskMode
+        });
+        return;
+      }
+      
+      console.log('UI: Showing onscreen controls');
+      this.onscreenControls.classList.add('visible');
+      
+      // Clear any existing timer
+      if (this.mouseTimer) {
+        clearTimeout(this.mouseTimer);
+        this.mouseTimer = null;
+      }
+    },
+
+    scheduleHideControls() {
+      if (!this.onscreenControls || kioskMode) {
+        console.log('UI: Cannot schedule hide controls - missing element or kiosk mode');
+        return;
+      }
+      
+      console.log('UI: Scheduling hide controls in 3 seconds');
+      
+      // Clear any existing timer
+      if (this.mouseTimer) {
+        clearTimeout(this.mouseTimer);
+      }
+      
+      // Set a timer to hide controls after 3 seconds
+      this.mouseTimer = setTimeout(() => {
+        console.log('UI: Auto-hiding onscreen controls after timeout');
+        this.hideOnscreenControls();
+      }, 3000);
+    },
+
     togglePlayPause() {
       if (AnimationEngine.isPlaying) {
         AnimationEngine.stop();
@@ -1185,16 +1242,20 @@ window.App = (function () {
     },
 
     toggleBackground() {
+      console.log('UI: toggleBackground called, current state:', this.isWhiteBackground);
       this.isWhiteBackground = !this.isWhiteBackground;
 
       if (this.isWhiteBackground) {
         document.body.classList.add('white-background');
+        console.log('UI: Added white-background class to body');
       } else {
         document.body.classList.remove('white-background');
+        console.log('UI: Removed white-background class from body');
       }
 
       this.updateBackgroundToggle();
       console.log(`UI: Background switched to ${this.isWhiteBackground ? 'white' : 'black'}`);
+      console.log('UI: Body classes:', document.body.className);
     },
 
     updateBackgroundToggle() {

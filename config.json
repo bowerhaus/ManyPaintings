@@ -62,7 +62,7 @@
     "enabled": true,
     "border_percent": 10,
     "color": "#F8F8F8",
-    "style": "medium",
+    "style": "thin",
     "image_area": {
       "aspect_ratio": "1:1"
     }

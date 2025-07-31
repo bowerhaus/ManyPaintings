@@ -50,6 +50,11 @@
                                 <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.03C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
                             </svg>
                         </button>
+                        <button id="favorite-btn" class="flex items-center justify-center w-12 h-12 md:w-11 md:h-11 sm:w-10 sm:h-10 bg-black/10 border border-black/20 rounded-full cursor-pointer transition-all duration-300 text-black/90 hover:bg-black/20 hover:-translate-y-0.5 hover:shadow-[0_5px_15px_rgba(0,0,0,0.1)] hover:text-red-500" title="Save Favorite (F)">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-[18px] md:h-[18px] sm:w-4 sm:h-4 fill-current">
+                                <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+                            </svg>
+                        </button>
                     </div>
 
                     <!-- Controls Grid -->
@@ -106,6 +111,7 @@
         
         // Fullscreen functionality
         const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const favoriteBtn = document.getElementById('favorite-btn');
         
         function enterFullscreen() {
             const elem = document.documentElement;
@@ -149,6 +155,15 @@
         fullscreenBtn.addEventListener('click', function() {
             enterFullscreen();
         });
+        
+        // Favorite functionality
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', function() {
+                if (window.App && window.App.UI) {
+                    window.App.UI.saveFavorite();
+                }
+            });
+        }
         
         // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', updateFullscreenButton);

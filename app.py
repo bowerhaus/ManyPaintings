@@ -1,5 +1,8 @@
 import os
-from flask import Flask, render_template, jsonify, send_from_directory
+import json
+import uuid
+from datetime import datetime
+from flask import Flask, render_template, jsonify, send_from_directory, request
 from config import config
 
 def create_app(config_name=None):
@@ -110,6 +113,117 @@ def create_app(config_name=None):
             response.headers['Cache-Control'] = f'public, max-age={app.config["CACHE_MAX_AGE"]}'
         
         return response
+    
+    @app.route('/api/favorites', methods=['POST'])
+    def save_favorite():
+        """Save a painting state as a favorite."""
+        try:
+            # Get the painting state from request
+            state_data = request.get_json()
+            
+            if not state_data:
+                return jsonify({'error': 'No state data provided'}), 400
+            
+            if not state_data.get('layers'):
+                return jsonify({'error': 'No layers in state data'}), 400
+            
+            # Generate a unique ID for this favorite
+            favorite_id = str(uuid.uuid4())
+            
+            # Add metadata
+            favorite_data = {
+                'id': favorite_id,
+                'created_at': datetime.utcnow().isoformat(),
+                'state': state_data
+            }
+            
+            # Load existing favorites or create new file
+            favorites_file = 'favorites.json'
+            favorites = {}
+            
+            if os.path.exists(favorites_file):
+                try:
+                    with open(favorites_file, 'r') as f:
+                        favorites = json.load(f)
+                except (json.JSONDecodeError, IOError) as e:
+                    print(f"Warning: Could not load existing favorites: {e}")
+                    favorites = {}
+            
+            # Add new favorite
+            favorites[favorite_id] = favorite_data
+            
+            # Save back to file
+            try:
+                with open(favorites_file, 'w') as f:
+                    json.dump(favorites, f, indent=2)
+            except IOError as e:
+                return jsonify({'error': f'Failed to save favorite: {str(e)}'}), 500
+            
+            return jsonify({
+                'success': True,
+                'id': favorite_id,
+                'created_at': favorite_data['created_at']
+            })
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/favorites/<favorite_id>', methods=['GET'])
+    def get_favorite(favorite_id):
+        """Retrieve a saved favorite by ID."""
+        try:
+            favorites_file = 'favorites.json'
+            
+            if not os.path.exists(favorites_file):
+                return jsonify({'error': 'No favorites found'}), 404
+            
+            with open(favorites_file, 'r') as f:
+                favorites = json.load(f)
+            
+            if favorite_id not in favorites:
+                return jsonify({'error': 'Favorite not found'}), 404
+            
+            favorite_data = favorites[favorite_id]
+            
+            # Return just the state data (not the metadata)
+            return jsonify(favorite_data['state'])
+            
+        except (json.JSONDecodeError, IOError) as e:
+            return jsonify({'error': f'Failed to load favorite: {str(e)}'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/favorites/<favorite_id>', methods=['DELETE'])
+    def delete_favorite(favorite_id):
+        """Delete a saved favorite by ID."""
+        try:
+            favorites_file = 'favorites.json'
+            
+            if not os.path.exists(favorites_file):
+                return jsonify({'error': 'No favorites found'}), 404
+            
+            with open(favorites_file, 'r') as f:
+                favorites = json.load(f)
+            
+            if favorite_id not in favorites:
+                return jsonify({'error': 'Favorite not found'}), 404
+            
+            # Remove the favorite
+            del favorites[favorite_id]
+            
+            # Save back to file
+            with open(favorites_file, 'w') as f:
+                json.dump(favorites, f, indent=2)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Favorite deleted successfully'
+            })
+            
+        except (json.JSONDecodeError, IOError) as e:
+            return jsonify({'error': f'Failed to delete favorite: {str(e)}'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
     
     @app.errorhandler(404)
     def not_found_error(error):

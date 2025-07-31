@@ -160,6 +160,63 @@ window.App = (function () {
     start() {
       if (!this.isPlaying) {
         this.isPlaying = true;
+        
+        // Resume all layer animations
+        this.activeLayers.forEach((layerInfo, imageId) => {
+          if (layerInfo.layer) {
+            // Update start time to account for pause duration
+            if (layerInfo.pausedAt) {
+              const pauseDuration = Date.now() - layerInfo.pausedAt;
+              layerInfo.startTime += pauseDuration;
+              delete layerInfo.pausedAt;
+            }
+            
+            // Only resume layers that were actually paused
+            if (layerInfo.pausedOpacity !== undefined) {
+              console.log(`AnimationEngine: Resuming layer ${imageId} from opacity ${layerInfo.pausedOpacity}`);
+              
+              // Resume based on paused phase
+              if (layerInfo.pausedPhase === 'fade-in') {
+                // Continue fade-in from current opacity to target opacity
+                layerInfo.layer.style.transition = `opacity ${layerInfo.pausedTimeRemaining}ms ease-in-out`;
+                layerInfo.layer.style.opacity = layerInfo.opacity;
+                
+                layerInfo.holdTimeout = setTimeout(() => {
+                  layerInfo.phase = 'hold';
+                  layerInfo.holdTimeout = setTimeout(() => {
+                    if (layerInfo.phase === 'hold') {
+                      this.startFadeOut(layerInfo);
+                    }
+                  }, layerInfo.holdTime);
+                }, layerInfo.pausedTimeRemaining);
+                
+              } else if (layerInfo.pausedPhase === 'hold') {
+                // Resume hold phase - just wait for remaining time
+                layerInfo.holdTimeout = setTimeout(() => {
+                  if (layerInfo.phase === 'hold') {
+                    this.startFadeOut(layerInfo);
+                  }
+                }, layerInfo.pausedTimeRemaining);
+                
+              } else if (layerInfo.pausedPhase === 'fade-out') {
+                // Resume fade-out
+                layerInfo.layer.style.transition = `opacity ${layerInfo.fadeOutDuration}ms ease-in-out`;
+                layerInfo.layer.style.opacity = '0';
+                
+                setTimeout(() => {
+                  this.removeLayer(layerInfo);
+                }, layerInfo.fadeOutDuration);
+              }
+              
+              // Clean up pause data
+              delete layerInfo.pausedOpacity;
+              delete layerInfo.pausedTimeRemaining;
+              delete layerInfo.pausedPhase;
+            }
+          }
+        });
+        
+        console.log(`AnimationEngine: Started and resumed ${this.activeLayers.size} layer animations`);
         this.animate();
       }
     },
@@ -170,6 +227,46 @@ window.App = (function () {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
       }
+      
+      // Pause all layer animations by freezing their current state
+      this.activeLayers.forEach((layerInfo, imageId) => {
+        if (layerInfo.layer) {
+          // Store current computed opacity BEFORE removing transitions
+          const currentOpacity = getComputedStyle(layerInfo.layer).opacity;
+          layerInfo.pausedOpacity = parseFloat(currentOpacity);
+          
+          // Remove transitions and immediately set to current computed opacity
+          layerInfo.layer.style.transition = 'none';
+          layerInfo.layer.style.opacity = currentOpacity;
+          
+          console.log(`AnimationEngine: Paused layer ${imageId} at opacity ${layerInfo.pausedOpacity}`);
+        }
+        
+        // Clear any pending timeouts and calculate remaining time
+        if (layerInfo.holdTimeout) {
+          clearTimeout(layerInfo.holdTimeout);
+          layerInfo.holdTimeout = null;
+          
+          const elapsed = Date.now() - layerInfo.startTime;
+          
+          if (layerInfo.phase === 'fade-in') {
+            layerInfo.pausedTimeRemaining = Math.max(0, layerInfo.fadeInDuration - elapsed);
+            layerInfo.pausedPhase = 'fade-in';
+          } else if (layerInfo.phase === 'hold') {
+            const holdElapsed = elapsed - layerInfo.fadeInDuration;
+            layerInfo.pausedTimeRemaining = Math.max(0, layerInfo.holdTime - holdElapsed);
+            layerInfo.pausedPhase = 'hold';
+          } else if (layerInfo.phase === 'fade-out') {
+            // If already fading out, just note it
+            layerInfo.pausedPhase = 'fade-out';
+          }
+          
+          // Store when we paused for accurate resume timing
+          layerInfo.pausedAt = Date.now();
+        }
+      });
+      
+      console.log(`AnimationEngine: Stopped and paused ${this.activeLayers.size} layer animations`);
     },
 
     animate(currentTime = 0) {
@@ -548,6 +645,88 @@ window.App = (function () {
       this.activeLayers.forEach((layerInfo, imageId) => {
         this.hideImage(imageId);
       });
+    },
+
+    async showImageFromFavorite(imageId, options = {}) {
+      // Special method for restoring images from favorites with exact state
+      try {
+        const img = await ImageManager.loadImage(imageId);
+        const favoriteData = options.favoriteData;
+
+        if (!favoriteData) {
+          throw new Error('No favorite data provided');
+        }
+
+        // Use saved transformations directly instead of generating new ones
+        const transformations = favoriteData.transformations;
+        const layer = this.createLayer(imageId, img, transformations);
+
+        this.layersContainer.appendChild(layer);
+
+        // Create layer info with saved opacity and staggered timing for restored favorites
+        const speedMultiplier = UI.speedMultiplier || 1.0;
+        const layerIndex = options.layerIndex || 0;
+        const totalLayers = options.totalLayers || 1;
+        
+        // Stagger the hold times so layers fade out at different intervals
+        const baseHoldTime = (3 + (layerIndex * 2)) * 1000; // 3s, 5s, 7s, 9s, etc.
+        const baseFadeOutDuration = this.seededRandomBetween(() => Math.random(), 2, 4) * 1000; // 2-4 seconds
+        
+        const fadeOutDuration = baseFadeOutDuration / speedMultiplier;
+        const holdTime = baseHoldTime / speedMultiplier;
+        
+        console.log(`AnimationEngine: Favorite restore layer ${layerIndex}/${totalLayers} with speed ${speedMultiplier}x - hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms (staggered timing)`);
+
+        const layerInfo = {
+          layer,
+          startTime: Date.now(),
+          fadeInDuration: 200, // Very quick fade in for restored layers
+          fadeOutDuration,
+          holdTime,
+          opacity: favoriteData.opacity,
+          transformations,
+          phase: 'hold', // Start directly in hold phase
+          originalSpeed: speedMultiplier,
+          holdTimeout: null
+        };
+
+        this.activeLayers.set(imageId, layerInfo);
+
+        // Start with opacity 0 and fade in to the saved opacity quickly
+        layer.style.opacity = '0';
+        layer.style.transition = 'opacity 200ms ease-in-out';
+        
+        // Force reflow and then animate to saved opacity
+        layer.offsetHeight;
+        
+        requestAnimationFrame(() => {
+          const opacityToSet = favoriteData.opacity.toString();
+          layer.style.opacity = opacityToSet;
+          
+          console.log(`AnimationEngine: Setting layer ${imageId} opacity to ${opacityToSet}, element opacity after setting:`, layer.style.opacity);
+          
+          // After transition completes, remove transition to prevent interference
+          setTimeout(() => {
+            layer.style.transition = 'none';
+            layer.style.opacity = opacityToSet; // Ensure it stays at the right value
+            console.log(`AnimationEngine: Removed transition from layer ${imageId}, final opacity:`, layer.style.opacity);
+          }, 600); // Slightly after the 500ms transition
+          
+          // Schedule the hold phase to end and start fade out
+          layerInfo.holdTimeout = setTimeout(() => {
+            if (layerInfo.phase === 'hold') {
+              this.startFadeOut(layerInfo);
+            }
+          }, holdTime);
+        });
+
+        console.log(`AnimationEngine: Restored favorite layer ${imageId} with target opacity ${favoriteData.opacity}, will hold for ${holdTime}ms then fade out`);
+        return layer;
+
+      } catch (error) {
+        console.error(`AnimationEngine: Failed to show image from favorite ${imageId}:`, error);
+        throw error;
+      }
     }
   };
 
@@ -1016,6 +1195,137 @@ window.App = (function () {
   };
 
   /**
+   * Favorites Manager - Handles saving and loading painting states
+   */
+  const FavoritesManager = {
+    async captureCurrentState() {
+      // Capture only visible layers from AnimationEngine
+      const layers = [];
+      
+      AnimationEngine.activeLayers.forEach((layerInfo, imageId) => {
+        // Get the actual current opacity from the DOM element
+        const actualOpacity = layerInfo.layer.style.opacity || getComputedStyle(layerInfo.layer).opacity;
+        
+        const layerData = {
+          imageId: imageId,
+          opacity: parseFloat(actualOpacity), // Use actual displayed opacity
+          transformations: {
+            rotation: layerInfo.transformations.rotation,
+            scale: layerInfo.transformations.scale,
+            translateX: layerInfo.transformations.translateX,
+            translateY: layerInfo.transformations.translateY,
+            hueShift: layerInfo.transformations.hueShift
+          },
+          animationPhase: layerInfo.phase
+        };
+        
+        console.log(`FavoritesManager: Capturing layer ${imageId} - stored opacity: ${layerInfo.opacity}, actual opacity: ${actualOpacity}, using: ${layerData.opacity}`);
+        layers.push(layerData);
+      });
+
+      if (layers.length === 0) {
+        throw new Error('No active layers to save');
+      }
+
+      const state = {
+        timestamp: new Date().toISOString(),
+        layers: layers
+      };
+
+      console.log('FavoritesManager: Captured state:', state);
+      return state;
+    },
+
+    async saveFavorite() {
+      try {
+        const state = await this.captureCurrentState();
+        
+        const response = await fetch('/api/favorites', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(state)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to save favorite: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log('FavoritesManager: Favorite saved with ID:', result.id);
+        
+        // Show success feedback
+        UI.showFavoriteSuccess(result.id);
+        
+        return result.id;
+      } catch (error) {
+        console.error('FavoritesManager: Failed to save favorite:', error);
+        UI.showError('Failed to save favorite: ' + error.message);
+        throw error;
+      }
+    },
+
+    async loadFavorite(favoriteId) {
+      try {
+        const response = await fetch(`/api/favorites/${favoriteId}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Favorite not found');
+          }
+          throw new Error(`Failed to load favorite: ${response.statusText}`);
+        }
+
+        const state = await response.json();
+        console.log('FavoritesManager: Loading favorite state:', state);
+        
+        await this.restoreState(state);
+        console.log('FavoritesManager: Favorite restored successfully');
+        
+      } catch (error) {
+        console.error('FavoritesManager: Failed to load favorite:', error);
+        UI.showError('Failed to load favorite: ' + error.message);
+        throw error;
+      }
+    },
+
+    async restoreState(state) {
+      // Clear all current layers first
+      AnimationEngine.clearAllLayers();
+      
+      // Wait a moment for clearing to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Restore each layer from the saved state with staggered timing
+      for (let i = 0; i < state.layers.length; i++) {
+        const layerData = state.layers[i];
+        try {
+          // Create layer with saved transformations and staggered timing
+          const options = {
+            seed: `favorite-${Date.now()}-${layerData.imageId}`,
+            favoriteData: layerData,
+            layerIndex: i, // Pass the index for staggered timing
+            totalLayers: state.layers.length
+          };
+
+          await AnimationEngine.showImageFromFavorite(layerData.imageId, options);
+          
+        } catch (error) {
+          console.warn(`FavoritesManager: Failed to restore layer ${layerData.imageId}:`, error);
+          // Continue with other layers even if one fails
+        }
+      }
+
+      // Wait a shorter time for favorite layers to be established, then restart normal pattern sequence
+      setTimeout(() => {
+        console.log('FavoritesManager: Restarting pattern sequence after favorite restoration');
+        PatternManager.startPatternSequence();
+      }, 500); // Reduced from 1000ms to 500ms
+    }
+  };
+
+  /**
    * UI Manager - Handles user interface and interactions
    */
   const UI = {
@@ -1282,6 +1592,10 @@ window.App = (function () {
           event.preventDefault();
           this.toggleAudio();
           break;
+        case 'KeyF':
+          event.preventDefault();
+          this.saveFavorite();
+          break;
       }
     },
 
@@ -1356,10 +1670,12 @@ window.App = (function () {
 
     togglePlayPause() {
       if (AnimationEngine.isPlaying) {
+        console.log('UI: Pausing animations and pattern sequence');
         AnimationEngine.stop();
         PatternManager.stopPatternSequence();
         this.updatePlayPauseButton(false);
       } else {
+        console.log('UI: Resuming animations and pattern sequence');
         AnimationEngine.start();
         PatternManager.startPatternSequence();
         this.updatePlayPauseButton(true);
@@ -1496,6 +1812,95 @@ window.App = (function () {
         await App.init();
       } catch (error) {
         this.showError('Retry failed');
+      }
+    },
+
+    showFavoriteSuccess(favoriteId) {
+      // Generate shareable URL
+      const currentUrl = new URL(window.location);
+      currentUrl.searchParams.set('favorite', favoriteId);
+      const shareUrl = currentUrl.toString();
+      
+      // Create a temporary toast notification
+      const toast = document.createElement('div');
+      toast.className = 'favorite-toast';
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+        font-family: monospace;
+        font-size: 14px;
+        z-index: 1000;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        max-width: 400px;
+        word-break: break-all;
+        cursor: pointer;
+      `;
+      
+      toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: #ff6b6b;">♥</span>
+          <div>
+            <div style="font-weight: bold;">Favorite Saved!</div>
+            <div style="font-size: 12px; opacity: 0.8; margin: 4px 0;">ID: ${favoriteId}</div>
+            <div style="font-size: 11px; opacity: 0.6; color: #4CAF50;">Click to copy URL</div>
+          </div>
+        </div>
+      `;
+      
+      // Add click handler to copy URL to clipboard
+      toast.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #4CAF50;">✓</span>
+              <div>
+                <div style="font-weight: bold;">URL Copied!</div>
+                <div style="font-size: 12px; opacity: 0.8;">Share this URL to load the favorite</div>
+              </div>
+            </div>
+          `;
+        } catch (error) {
+          console.warn('Failed to copy to clipboard:', error);
+        }
+      });
+      
+      document.body.appendChild(toast);
+      
+      // Animate in
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+      });
+      
+      // Auto-remove after 4 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
+      }, 4000);
+      
+      console.log(`UI: Showed favorite success toast for ${favoriteId}`);
+    },
+
+    async saveFavorite() {
+      try {
+        const favoriteId = await FavoritesManager.saveFavorite();
+        console.log(`UI: Favorite saved with ID: ${favoriteId}`);
+      } catch (error) {
+        console.error('UI: Failed to save favorite:', error);
       }
     }
   };
@@ -2026,10 +2431,40 @@ window.App = (function () {
         console.log('App initialization complete');
         console.log(`ImageManager loaded ${ImageManager.images.size} images`);
 
+        // Check for favorite parameter in URL
+        this.checkForFavoriteParameter();
+
       } catch (error) {
         console.error('App initialization failed:', error);
         UI.showError('Application failed to start');
         throw error;
+      }
+    },
+
+    checkForFavoriteParameter() {
+      // Check URL parameters for favorite ID
+      const urlParams = new URLSearchParams(window.location.search);
+      const favoriteId = urlParams.get('favorite');
+      
+      if (favoriteId) {
+        console.log(`App: Found favorite parameter in URL: ${favoriteId}`);
+        
+        // Wait a shorter time for initialization, then load favorite
+        setTimeout(async () => {
+          try {
+            await FavoritesManager.loadFavorite(favoriteId);
+            console.log(`App: Successfully loaded favorite from URL: ${favoriteId}`);
+            
+            // Optionally clean the URL (remove the parameter)
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.delete('favorite');
+            window.history.replaceState({}, document.title, newUrl);
+            
+          } catch (error) {
+            console.error(`App: Failed to load favorite from URL: ${favoriteId}`, error);
+            UI.showError(`Failed to load favorite: ${error.message}`);
+          }
+        }, 500); // Reduced from 2000ms to 500ms
       }
     },
 
@@ -2039,6 +2474,7 @@ window.App = (function () {
     PatternManager,
     AudioManager,
     MatteBorderManager,
+    FavoritesManager,
     UI
   };
 })();

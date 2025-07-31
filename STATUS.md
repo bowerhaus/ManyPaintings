@@ -1,8 +1,8 @@
 # Development Status - ManyPaintings
 
-**Last Updated:** 2025-07-30  
-**Current Phase:** Fullscreen Positioning & Config Hot Reload - Complete  
-**Previous Phase:** Documentation Updates - Complete  
+**Last Updated:** 2025-07-31  
+**Current Phase:** Random Distribution Enhancement - Complete  
+**Previous Phase:** Fullscreen Positioning & Config Hot Reload - Complete  
 **Next Phase:** Performance Testing & Optimization
 
 ## 🎯 Project Overview
@@ -115,6 +115,16 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - [x] **Realistic 3D Appearance** - Top/left highlights, bottom/right shadows for depth perception
 - [x] **Dual-Layer Bevel** - Outer strong contrast, inner soft transition for professional appearance
 
+### Random Distribution Enhancement ✅ COMPLETE
+- [x] **Fixed Biased Shuffle Algorithm** - Replaced `sort(() => 0.5 - Math.random())` with proper Fisher-Yates shuffle
+- [x] **Weighted Random Selection** - Implemented usage tracking with gentle bias toward less-used images
+- [x] **Natural Clustering Support** - Images can now appear consecutively or in natural clusters
+- [x] **Deterministic Behavior Maintained** - Same pattern codes still produce identical sequences
+- [x] **Configurable Bias Strength** - Adjustable weight multiplier for balancing vs randomness (0.5x current)
+- [x] **Usage Tracking System** - Per-pattern tracking of image appearance frequency
+- [x] **Debug Logging Enhanced** - Added sequence checksums and distribution statistics for testing
+- [x] **Equitable Long-term Distribution** - Balanced appearance frequency over longer sequences
+
 ### Core Architecture Implemented
 - **Browser-Centric Design** - Minimal server contact, client-side animations
 - **Image Management** - On-demand loading, intelligent preloading, memory cleanup
@@ -135,9 +145,9 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 - ✅ Configuration hot reload with file modification detection and thread-safe reloading
 
 ### Frontend (JavaScript)
-- ✅ **ImageManager** - Catalog loading, image preloading, memory management
+- ✅ **ImageManager** - Catalog loading, image preloading, memory management with Fisher-Yates shuffle
 - ✅ **AnimationEngine** - Advanced layer animation with deterministic timing and duplicate prevention
-- ✅ **PatternManager** - Deterministic sequence generation with initial pattern code support
+- ✅ **PatternManager** - Deterministic sequence generation with weighted random distribution
 - ✅ **AudioManager** - MP3 playback, volume control, browser autoplay handling, user interaction detection
 - ✅ **MatteBorderManager** - Configurable frame borders with Samsung Frame TV-style styling and aspect ratio control
 - ✅ **UI Controls** - Consolidated mouse-activated control panel with audio, speed, layer, background controls
@@ -147,6 +157,7 @@ Generative art application inspired by Brian Eno's "77 Million Paintings" - crea
 
 ### Current Capabilities
 - ✅ **Fully Deterministic System** - Same pattern code produces identical visual sequences
+- ✅ **Equitable Random Distribution** - Weighted selection ensures fair image distribution while allowing natural clustering
 - ✅ **Per-Image Customization** - JSON config files override timing and transformations per image
 - ✅ **Duplicate Prevention** - No image appears on multiple layers simultaneously
 - ✅ **Real-time Controls** - Speed (0.1x-20x), layers (1-8), audio volume/toggle, and background toggle
@@ -274,6 +285,7 @@ ManyPaintings/
 - ✅ **Matte Border Aspect Ratio** - Configurable aspect ratios for image display area within matte border frames
 - ✅ **Fullscreen Positioning Fix** - Consistent image positioning between windowed and fullscreen modes
 - ✅ **Configuration Hot Reload** - Automatic config.json reload on browser refresh without server restart
+- ✅ **Random Distribution Enhancement** - Fixed biased shuffle, implemented weighted selection for equitable distribution
 
 ### Testing Needed
 - [ ] Memory usage with large image sets (1000+ images)
@@ -351,6 +363,7 @@ curl http://localhost:5000/health
 16. **Completed:** ✅ Fullscreen positioning fix - Images maintain consistent positioning between windowed and fullscreen modes
 17. **Completed:** ✅ Configuration hot reload - Config changes take effect on browser refresh without server restart
 18. **Completed:** ✅ Matte border 3D bevel enhancement - Removed shadows, added dynamic 3D bevel with proper image clipping
+19. **Completed:** ✅ Random distribution enhancement - Fixed biased shuffle algorithm and implemented weighted selection for equitable image distribution while maintaining natural randomness
 
 ---
 *This status file should be updated after each development session*

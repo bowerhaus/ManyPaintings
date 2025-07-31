@@ -114,8 +114,16 @@ window.App = (function () {
 
     getRandomImageIds(count) {
       const allIds = Array.from(this.images.keys());
-      const shuffled = allIds.sort(() => 0.5 - Math.random());
+      const shuffled = this.fisherYatesShuffle([...allIds]);
       return shuffled.slice(0, count);
+    },
+
+    fisherYatesShuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
     }
   };
 
@@ -621,15 +629,69 @@ window.App = (function () {
       }
 
       const sequence = [];
+      
+      // Track usage count for each image to create gentle bias toward less-used images
+      const usageCounts = {};
+      allImageIds.forEach(id => usageCounts[id] = 0);
 
       for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(seededRandom() * allImageIds.length);
-        sequence.push(allImageIds[randomIndex]);
+        // Select image using weighted random selection
+        const selectedImage = this.selectWeightedRandom(allImageIds, usageCounts, seededRandom);
+        sequence.push(selectedImage);
+        usageCounts[selectedImage]++;
       }
 
-      console.log(`PatternManager: Generated sequence with ${allImageIds.length} available images, first few IDs: ${allImageIds.slice(0, 5).join(', ')}`);
+      // Log distribution info for debugging
+      const counts = Object.values(usageCounts);
+      const minCount = Math.min(...counts);
+      const maxCount = Math.max(...counts);
+      console.log(`PatternManager: Generated weighted sequence - min appearances: ${minCount}, max appearances: ${maxCount}, range: ${maxCount - minCount}`);
+      console.log(`PatternManager: First 10 images in sequence: ${sequence.slice(0, 10).join(', ')}`);
+      
+      // Test deterministic behavior - log a checksum of the first 20 items for reproducibility testing
+      const checksumData = sequence.slice(0, Math.min(20, sequence.length)).join('|');
+      const checksum = this.simpleChecksum(checksumData);
+      console.log(`PatternManager: Sequence checksum (first 20): ${checksum} - should be identical for same seed`);
 
       return sequence;
+    },
+
+    selectWeightedRandom(imageIds, usageCounts, seededRandom) {
+      // Calculate weights for each image - less used images get higher weight
+      const totalUsage = Object.values(usageCounts).reduce((sum, count) => sum + count, 0);
+      const avgUsage = totalUsage / imageIds.length;
+      
+      // Calculate weights: images with below-average usage get bonus weight
+      const weights = imageIds.map(id => {
+        const usage = usageCounts[id];
+        // Base weight of 1.0, with bonus for less-used images
+        // This creates gentle bias without eliminating randomness
+        const usageDiff = Math.max(0, avgUsage - usage);
+        return 1.0 + (usageDiff * 0.5); // 0.5 is the bias strength
+      });
+      
+      // Select based on weighted probability
+      const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+      let random = seededRandom() * totalWeight;
+      
+      for (let i = 0; i < imageIds.length; i++) {
+        random -= weights[i];
+        if (random <= 0) {
+          return imageIds[i];
+        }
+      }
+      
+      // Fallback (shouldn't happen)
+      return imageIds[imageIds.length - 1];
+    },
+
+    seededShuffle(array, seededRandom) {
+      // Fisher-Yates shuffle using seeded random
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
     },
 
     createSeededRandom(seed) {
@@ -654,6 +716,17 @@ window.App = (function () {
 
     generateSeed() {
       return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    },
+
+    simpleChecksum(str) {
+      // Simple checksum for testing deterministic behavior
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+      }
+      return Math.abs(hash).toString(16);
     },
 
     startPatternSequence() {

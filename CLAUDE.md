@@ -202,7 +202,8 @@ The application uses a JSON-based configuration system with environment-specific
 - **Audio System**: MP3 background audio with volume control and browser autoplay handling
 - **Configuration System**: JSON-based config with per-image overrides and hot reload support
 - **Image Management**: Discovery, metadata extraction, and intelligent preloading
-- **Pattern System**: Deterministic sequences with initial pattern code support
+- **Pattern System**: Deterministic sequences with initial pattern code support and equitable distribution
+- **Weighted Random Selection**: Balanced image distribution that allows natural clustering while ensuring fairness
 - **UI Controls**: Real-time speed, layer, audio, and background controls
 - **Duplicate Prevention**: No image appears on multiple layers simultaneously
 
@@ -241,6 +242,25 @@ The application uses a JSON-based configuration system with environment-specific
 - **Purpose**: Deterministic sequence generation and management
 - **Key Features**: Seeded pattern generation, sequence management, preloading
 - **API**: `generateNewPattern()`, `startPatternSequence()`
+
+#### Random Distribution System
+- **Purpose**: Equitable image selection with natural randomness
+- **Key Features**: Weighted random selection, usage tracking, allows consecutive appearances
+- **Algorithm**: 
+  - Tracks usage count for each image within pattern sequence
+  - Calculates dynamic weights based on usage (less-used images get bonus weight)
+  - Base weight of 1.0 with up to +0.5 bonus for below-average usage images
+  - Uses proper Fisher-Yates shuffle instead of biased `sort()` method
+  - Maintains seeded randomness for deterministic pattern reproduction
+- **Benefits**:
+  - **Natural Feel**: Images can appear consecutively or cluster naturally
+  - **Long-term Balance**: Less-used images gradually get higher selection probability
+  - **Deterministic**: Same pattern code always produces identical sequences
+  - **Configurable**: Bias strength can be adjusted (currently 0.5x multiplier)
+- **Previous Issues Fixed**:
+  - Replaced biased `sort(() => 0.5 - Math.random())` with Fisher-Yates shuffle
+  - Removed rigid cycle-based approach that prevented consecutive appearances
+  - Added gentle bias toward less-used images without eliminating randomness
 
 #### AudioManager
 - **Purpose**: Background audio playback and control

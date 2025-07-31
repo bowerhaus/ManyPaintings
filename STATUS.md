@@ -16,6 +16,9 @@
 ### Favouriting System 🆕
 - **State Capture**: Saves exact painting moments with all layer properties
 - **Server-Side Storage**: Persistent favorites in JSON database
+- **Favorites Gallery Modal**: Visual grid interface with thumbnails and metadata
+- **Thumbnail Previews**: Shows actual image layers with transformations applied
+- **Delete Functionality**: Remove unwanted favorites with confirmation dialogs
 - **URL Sharing**: Generate shareable links to recreate favorite paintings
 - **Cross-Viewport Compatibility**: Favorites adapt to different browser sizes
 - **Staggered Restoration**: Natural fade-out timing when loading favorites
@@ -23,13 +26,13 @@
 ### User Interface
 - **Main Interface**: Full control panel with sliders and buttons
 - **Kiosk Mode**: Immersive fullscreen experience with minimal controls
-- **Keyboard Shortcuts**: F (favorite), Space (play/pause), N (new pattern), A (audio), B (background)
+- **Keyboard Shortcuts**: F (favorite), G (gallery), Space (play/pause), N (new pattern), A (audio), B (background)
 - **Visual Feedback**: Toast notifications for favorites with copy-to-clipboard URLs
 - **Play/Pause System**: Working animation pause/resume with state preservation
 
 ### Technical Architecture
 - **Flask Backend**: REST API with hot-reload configuration system
-- **Modular JavaScript**: ImageManager, AnimationEngine, PatternManager, FavoritesManager, AudioManager, UI
+- **Modular JavaScript**: ImageManager, AnimationEngine, PatternManager, FavoritesManager, FavoritesGallery, AudioManager, UI
 - **Deterministic Patterns**: Same seed produces identical visual sequences
 - **Weighted Random Selection**: Balanced image distribution with natural clustering
 - **Memory Management**: Intelligent image loading and cleanup
@@ -39,8 +42,11 @@
 
 ### Favouriting System Implementation
 - **Complete API**: POST/GET/DELETE endpoints for favorite management
+- **Favorites Gallery**: Full-featured modal interface with grid layout
+- **Visual Thumbnails**: Actual image previews with layer transformations
+- **Delete Management**: Confirmation dialogs and proper event handling
 - **UUID Generation**: Unique identifiers for each saved painting state
-- **Toast Notifications**: Success feedback with shareable URLs
+- **Toast Notifications**: Success feedback with improved visual design
 - **Opacity Restoration**: Accurate recreation of saved opacity levels
 - **Animation Continuation**: Smooth transition back to generative flow
 - **Performance Optimization**: Reduced loading delays from 5s to ~1s
@@ -80,8 +86,10 @@
 ```
 Client (JavaScript)          Server (Flask)              Storage
 ├── FavoritesManager         ├── POST /api/favorites     ├── favorites.json
-├── State Capture            ├── GET /api/favorites/<id> └── UUID mappings
-├── URL Generation           └── DELETE /api/favorites
+├── FavoritesGallery         ├── GET /api/favorites      └── UUID mappings
+├── State Capture            ├── GET /api/favorites/<id>
+├── Visual Thumbnails        └── DELETE /api/favorites/<id>
+├── URL Generation           
 └── Toast Notifications
 ```
 
@@ -118,8 +126,15 @@ Client (JavaScript)          Server (Flask)              Storage
 ### Save Workflow
 1. Click heart button (♥) or press F key
 2. System captures current painting state
-3. Toast appears with UUID and "Click to copy URL"
-4. URL copied to clipboard for sharing
+3. Success toast appears with confirmation
+4. Favorite is saved to server with UUID
+
+### Gallery Workflow
+1. Click gallery button (📋) or press G key
+2. Modal opens showing all saved favorites with thumbnails
+3. Click any favorite to load it instantly
+4. Click red × button to delete (with confirmation)
+5. Close modal with X or click outside
 
 ### Load Workflow
 1. Open URL with `?favorite=<uuid>` parameter
@@ -189,11 +204,68 @@ Client (JavaScript)          Server (Flask)              Storage
 
 ## 🎉 Key Achievements
 
-1. **Complete Favouriting System**: From concept to working implementation
-2. **Cross-Viewport Compatibility**: Favorites work on any screen size
-3. **Performance Optimization**: Sub-second loading times
-4. **Natural User Experience**: Intuitive save/share/load workflow
-5. **Robust Animation Control**: Proper pause/resume functionality
-6. **Staggered Timing**: Smooth transition from favorites back to generation
+1. **Complete Favouriting System**: From concept to working implementation with visual gallery
+2. **Visual Thumbnail Interface**: Actual image previews showing layer compositions
+3. **Cross-Viewport Compatibility**: Favorites work on any screen size
+4. **Background Color Persistence**: Complete visual fidelity including background state
+5. **Config-Based Timing System**: Customizable fade-out timing using configuration values
+6. **Overlapping Transitions**: Beautiful 15-60+ second crossfades between favorites and new generation
+7. **Immediate Layer Clearing**: Clean transitions with no visual artifacts
+8. **Smart Pattern Timing**: Optimal overlap between favorite fade-outs and new layer generation
+9. **Performance Optimization**: Sub-second loading times with smooth transitions
+10. **Intuitive Gallery Experience**: Click-to-load and delete with confirmations
+11. **Robust Animation Control**: Proper pause/resume functionality
+12. **Enhanced User Feedback**: Polished notifications and keyboard shortcuts
 
-The system is now feature-complete and production-ready for both casual viewing and kiosk installations.
+## 🆕 Latest Updates (Enhanced Favorites & Timing System)
+
+### Major Improvements
+- **Background Color Persistence**: Favorites now save and restore background color (black/white)
+  - Captures current background state when saving favorites
+  - Automatically switches to correct background when loading favorites
+  - Ensures complete visual fidelity of saved painting moments
+
+- **Improved Favorite Loading Experience**: Fixed visual glitches during favorite restoration
+  - **Immediate Layer Clearing**: No more brief visibility of old images during loading
+  - **Smart Pattern Timing**: New layers start appearing at 1.5s while favorites are still fading
+  - **Config-Based Fade Timing**: Uses configuration values for natural, customizable transitions
+
+### Enhanced Fade-Out System
+- **Config-Driven Timing**: Favorite layers now use configuration values for realistic fade-outs
+  - Hold time: Random between `minHoldTimeSec` and `maxHoldTimeSec`, then divided by 2
+  - Fade-out time: Random between `fadeOutMinSec` and `fadeOutMaxSec` (full duration)
+  - Example: 2.5-6s hold, 15-60s fade-out (with default config)
+
+- **Overlapping Transitions**: Extended fade-out times create rich layering effects
+  - New generative layers appear while favorites are still fading
+  - Creates beautiful compositional overlaps lasting 15-60+ seconds
+  - Much more natural transition back to normal generation
+
+### Bug Fixes
+- **Favorites Opacity Fix**: Fixed critical issue where favorites were saving final opacity (100%) instead of current animated opacity values
+  - Now uses `getComputedStyle()` to capture real-time animated opacity during fade-in/fade-out transitions
+  - Ensures saved favorites accurately reproduce the exact visual state at moment of saving
+
+### UI Polish
+- **Toast Message Cleanup**: Removed "successfully" from all notifications for cleaner feedback
+- **ESC Key Support**: Added ESC key to close favorites modal for better accessibility
+
+### Previous Updates (Favorites Gallery Enhancement)
+
+#### Features Added
+- **Favorites Gallery Modal**: Complete visual interface for browsing saved favorites
+- **Thumbnail System**: Shows actual layered image previews with transformations
+- **Enhanced API**: Added GET `/api/favorites` endpoint for listing all favorites
+- **Delete Functionality**: Red × buttons with confirmation dialogs
+- **Keyboard Navigation**: G key opens the gallery modal
+- **Responsive Grid**: 2-5 column layout adapting to screen size
+- **Loading States**: Proper feedback during gallery operations
+
+#### Technical Improvements
+- **Event Handling**: Resolved delete button conflicts with load actions
+- **Image Preview System**: Accesses ImageManager data for actual thumbnails
+- **Modular Architecture**: Separate FavoritesGallery manager component
+- **Memory Efficient**: Thumbnails use scaled-down transforms and cached images
+- **Error Boundaries**: Graceful handling of missing or corrupted favorites
+
+The system is now feature-complete and production-ready for both casual viewing and kiosk installations, with accurate state capture and a polished user experience.

@@ -278,7 +278,9 @@ body.white-background #play-pause-btn:hover {
 
 body.white-background #new-pattern-btn,
 body.white-background #background-toggle-btn,
-body.white-background #audio-toggle-btn {
+body.white-background #audio-toggle-btn,
+body.white-background #favorite-btn,
+body.white-background #favorites-gallery-btn {
     background: rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     color: rgba(255, 255, 255, 0.9) !important;
@@ -286,7 +288,9 @@ body.white-background #audio-toggle-btn {
 
 body.white-background #new-pattern-btn:hover,
 body.white-background #background-toggle-btn:hover,
-body.white-background #audio-toggle-btn:hover {
+body.white-background #audio-toggle-btn:hover,
+body.white-background #favorite-btn:hover,
+body.white-background #favorites-gallery-btn:hover {
     background: rgba(255, 255, 255, 0.2) !important;
     box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1) !important;
 }

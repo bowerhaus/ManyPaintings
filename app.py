@@ -225,6 +225,41 @@ def create_app(config_name=None):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/api/favorites', methods=['GET'])
+    def list_favorites():
+        """List all saved favorites with metadata."""
+        try:
+            favorites_file = 'favorites.json'
+            
+            if not os.path.exists(favorites_file):
+                return jsonify([])
+            
+            with open(favorites_file, 'r') as f:
+                favorites = json.load(f)
+            
+            # Convert to list format with metadata
+            favorites_list = []
+            for favorite_id, favorite_data in favorites.items():
+                favorites_list.append({
+                    'id': favorite_id,
+                    'created_at': favorite_data.get('created_at'),
+                    'layer_count': len(favorite_data.get('state', {}).get('layers', [])),
+                    # Generate a simple thumbnail description based on layers
+                    'preview': {
+                        'layers': favorite_data.get('state', {}).get('layers', [])[:4]  # First 4 layers for preview
+                    }
+                })
+            
+            # Sort by creation date (newest first)
+            favorites_list.sort(key=lambda x: x['created_at'], reverse=True)
+            
+            return jsonify(favorites_list)
+            
+        except (json.JSONDecodeError, IOError) as e:
+            return jsonify({'error': f'Failed to load favorites: {str(e)}'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
     @app.errorhandler(404)
     def not_found_error(error):
         return jsonify({'error': 'Not found'}), 404

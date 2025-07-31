@@ -567,6 +567,11 @@ The matte border system provides sophisticated image framing with configurable b
 ### Overview
 The favorites system allows users to save and reload specific pattern configurations for future viewing. Each favorite captures the complete state needed to reproduce a visual experience.
 
+### Recent Fixes and Improvements ✅
+- **Opacity Capture Fix**: Fixed favorites saving to capture current animated opacity values using `getComputedStyle()` instead of just CSS property values. This ensures favorites save the exact opacity of layers during fade-in/fade-out transitions.
+- **UI Polish**: Removed "successfully" from all toast messages for cleaner feedback
+- **ESC Key Support**: Added ESC key functionality to close the favorites modal for better UX
+
 ### Features
 - **Save Current Pattern**: Capture the current animation state as a favorite
 - **Load Saved Patterns**: Restore previously saved favorites with identical visual reproduction

@@ -696,6 +696,8 @@ The project includes comprehensive VS Code support:
 *   **Favouriting System:** ✅ COMPLETED - Save and share specific painting moments with server-side storage and URL sharing
 *   **Play/Pause Control:** ✅ COMPLETED - Working animation pause/resume with proper state preservation
 *   **API Endpoints:** ✅ COMPLETED - REST API endpoints for favorites management
+*   **Favorites Opacity Fix:** ✅ COMPLETED - Fixed favorites saving to capture current animated opacity values instead of target opacity
+*   **UI Polish:** ✅ COMPLETED - Removed "successfully" from toast messages and added ESC key support to close favorites modal
 
 ### 🚀 Potential Future Features
 *   **User-Provided Content:** Allow users to upload their own images to be used in the generative art.

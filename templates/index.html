@@ -55,6 +55,11 @@
                                 <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
                             </svg>
                         </button>
+                        <button id="favorites-gallery-btn" class="flex items-center justify-center w-12 h-12 md:w-11 md:h-11 sm:w-10 sm:h-10 bg-black/10 border border-black/20 rounded-full cursor-pointer transition-all duration-300 text-black/90 hover:bg-black/20 hover:-translate-y-0.5 hover:shadow-[0_5px_15px_rgba(0,0,0,0.1)]" title="View Favorites (G)">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-[18px] md:h-[18px] sm:w-4 sm:h-4 fill-current">
+                                <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
+                            </svg>
+                        </button>
                     </div>
 
                     <!-- Controls Grid -->
@@ -97,6 +102,43 @@
         <div id="error-message" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-600/90 text-white p-6 rounded-xl text-center max-w-sm backdrop-blur-lg pointer-events-auto transition-colors duration-500">
             <p id="error-text"></p>
             <button id="retry-btn" class="bg-white/20 border border-white/30 text-white py-2 px-4 rounded-md cursor-pointer mt-4 transition-colors duration-200 hover:bg-white/30">Retry</button>
+        </div>
+        
+        <!-- Favorites Gallery Modal -->
+        <div id="favorites-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-lg z-[300] pointer-events-auto">
+            <div class="absolute inset-0 p-4 sm:p-6 md:p-8 flex items-center justify-center">
+                <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between p-6 border-b border-black/10">
+                        <h2 class="text-2xl font-bold text-black/90">Saved Favorites</h2>
+                        <button id="favorites-modal-close" class="flex items-center justify-center w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 transition-colors">
+                            <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current text-black/70">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Content -->
+                    <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                        <div id="favorites-loading" class="hidden text-center py-12">
+                            <div class="loading-spinner w-8 h-8 border-2 border-black/20 border-t-black/60 rounded-full animate-spin mx-auto mb-4"></div>
+                            <p class="text-black/70">Loading favorites...</p>
+                        </div>
+                        
+                        <div id="favorites-empty" class="hidden text-center py-12">
+                            <svg viewBox="0 0 24 24" class="w-16 h-16 fill-current text-black/30 mx-auto mb-4">
+                                <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+                            </svg>
+                            <p class="text-black/70 text-lg mb-2">No favorites saved yet</p>
+                            <p class="text-black/50 text-sm">Press F to save your current painting as a favorite</p>
+                        </div>
+                        
+                        <div id="favorites-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            <!-- Favorites will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -161,6 +203,16 @@
             favoriteBtn.addEventListener('click', function() {
                 if (window.App && window.App.UI) {
                     window.App.UI.saveFavorite();
+                }
+            });
+        }
+        
+        // Favorites Gallery functionality
+        const favoritesGalleryBtn = document.getElementById('favorites-gallery-btn');
+        if (favoritesGalleryBtn) {
+            favoritesGalleryBtn.addEventListener('click', function() {
+                if (window.App && window.App.UI) {
+                    window.App.UI.showFavoritesGallery();
                 }
             });
         }

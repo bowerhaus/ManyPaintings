@@ -189,49 +189,185 @@ The application should provide extensive configuration options to fine-tune the 
 
 ## 6. Installation and Setup
 
-### 6.1. Prerequisites
+### 6.1. Easy Installation: Pre-Built Executables
 
-*   Python 3.9 or higher
-*   pip (Python package installer)
+For the simplest installation, download the pre-built executables that include everything needed:
 
-### 6.2. Installation
+#### Windows
+1. Download `ManyPaintings-Windows.exe`
+2. Double-click to run - no Python installation required!
+3. The app will automatically start a server and open your browser
 
-1. Navigate to the project directory:
+#### Raspberry Pi
+1. Download `ManyPaintings-RaspberryPi` to your Pi
+2. Make executable: `chmod +x ManyPaintings-RaspberryPi`
+3. Run: `./ManyPaintings-RaspberryPi`
+4. The app will automatically start and open Chromium
+
+**Note:** Executables are completely self-contained and include all dependencies.
+
+### 6.2. Fresh Install on Virgin Systems
+
+#### Fresh Windows Installation
+
+**Prerequisites:**
+- Windows 10/11
+- Google Chrome (recommended) or Microsoft Edge
+
+**Installation Steps:**
+1. **Install Python 3.9+** (if building from source):
+   - Download from [python.org](https://python.org)
+   - During installation, check "Add Python to PATH"
+   - Verify: Open Command Prompt, type `python --version`
+
+2. **Install Git** (optional, for cloning):
+   - Download from [git-scm.com](https://git-scm.com)
+   - Use default installation options
+
+3. **Get ManyPaintings:**
    ```bash
+   # Option 1: Clone repository
+   git clone https://github.com/your-repo/ManyPaintings.git
+   cd ManyPaintings
+   
+   # Option 2: Download and extract ZIP file
+   # Then navigate to the extracted folder
+   ```
+
+4. **Quick Setup:**
+   ```bash
+   # Automated build (creates executable)
+   build-windows.bat
+   
+   # OR manual development setup
+   python -m venv venv
+   venv\Scripts\activate
+   pip install -r requirements.txt
+   python app.py
+   ```
+
+#### Fresh Raspberry Pi Installation
+
+**Prerequisites:**
+- Raspberry Pi 4B+ (2GB RAM minimum, 4GB+ recommended)
+- Raspberry Pi OS (32-bit or 64-bit)
+- Internet connection for initial setup
+
+**Fresh Pi OS Setup:**
+1. **Install Raspberry Pi OS:**
+   - Use Raspberry Pi Imager
+   - Enable SSH and set username/password if needed
+   - Boot and complete initial setup
+
+2. **System Update:**
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
+
+3. **Install Required Packages:**
+   ```bash
+   # Essential development tools
+   sudo apt install -y python3 python3-pip python3-venv python3-dev
+   
+   # Image processing libraries (for Pillow)
+   sudo apt install -y libjpeg-dev zlib1g-dev libfreetype6-dev
+   
+   # Browser for display
+   sudo apt install -y chromium-browser
+   
+   # Git for cloning (optional)
+   sudo apt install -y git
+   ```
+
+4. **Get ManyPaintings:**
+   ```bash
+   # Clone repository
+   git clone https://github.com/your-repo/ManyPaintings.git
+   cd ManyPaintings
+   
+   # OR download via wget/curl if available
+   ```
+
+5. **Build Executable:**
+   ```bash
+   # Automated build (recommended)
+   chmod +x build-pi.sh
+   ./build-pi.sh
+   
+   # This creates: ManyPaintings-RaspberryPi executable
+   # Plus desktop launcher for easy access
+   ```
+
+### 6.3. Development Installation (Source Code)
+
+For developers who want to modify the code:
+
+#### Prerequisites
+*   **Windows:** Python 3.9+, Git (optional)
+*   **Raspberry Pi:** Python 3.9+, development libraries (see above)
+*   **macOS:** Python 3.9+, Xcode command line tools
+
+#### Installation Steps
+
+1. **Clone/Download the project:**
+   ```bash
+   git clone https://github.com/your-repo/ManyPaintings.git
    cd ManyPaintings
    ```
 
-2. Create a virtual environment (recommended):
+2. **Create virtual environment:**
    ```bash
    python -m venv venv
-   ```
-
-3. Activate the virtual environment:
-   ```bash
-   # Windows
+   
+   # Activate virtual environment
+   # Windows:
    venv\Scripts\activate
    
-   # Linux/macOS
+   # Linux/macOS/Pi:
    source venv/bin/activate
    ```
 
-4. Install dependencies:
+3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-### 6.3. Running the Application
-
-1. Start the Flask development server:
+4. **Run development server:**
    ```bash
    python app.py
    ```
 
-2. Open your web browser and navigate to `http://localhost:5000`
+5. **Access the application:**
+   - Main interface: `http://localhost:5000`
+   - Kiosk mode: `http://localhost:5000/kiosk`
 
-3. For kiosk mode, navigate to `http://localhost:5000/kiosk`
+### 6.4. Running the Application
 
-### 6.4. Using the Application
+#### Option 1: Pre-Built Executable (Recommended)
+```bash
+# Windows
+ManyPaintings-Windows.exe
+
+# Raspberry Pi
+./ManyPaintings-RaspberryPi
+```
+
+#### Option 2: Development Server
+```bash
+# Activate virtual environment first
+python app.py
+```
+
+#### Option 3: Production Deployment
+```bash
+# Install Gunicorn
+pip install gunicorn
+
+# Run with Gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
+
+### 6.5. Using the Application
 
 #### Interactive Controls
 - **Mouse hover** over the bottom area to reveal the control panel
@@ -253,7 +389,21 @@ The application should provide extensive configuration options to fine-tune the 
 - **Persistent settings:** Background preference is saved automatically
 - **Adaptive UI:** Interface colors adjust based on background theme
 
-### 6.5. Configuration
+### 6.6. Building Executables (Advanced)
+
+For creating your own executables or modifying the build process, see [BUILD-INSTRUCTIONS.md](BUILD-INSTRUCTIONS.md) for detailed instructions.
+
+**Quick Build Commands:**
+```bash
+# Windows
+build-windows.bat
+
+# Raspberry Pi (must run on actual Pi)
+chmod +x build-pi.sh
+./build-pi.sh
+```
+
+### 6.7. Configuration
 
 The application is configured using a **JSON-based configuration system** (`config.json`) with **hot reload support**. The configuration supports different environment profiles (development, production, raspberry_pi).
 
@@ -366,7 +516,7 @@ The application now supports **hot reloading** of configuration changes without 
 - Matte border settings
 - Performance settings
 
-### 6.6. Production Deployment
+### 6.8. Production Deployment
 
 For production deployment on Raspberry Pi or other systems:
 
@@ -382,72 +532,106 @@ For production deployment on Raspberry Pi or other systems:
 
 ```
 ManyPaintings/
-├── app.py                 # Main Flask application
-├── requirements.txt       # Python dependencies
-├── config.py             # Configuration settings
+├── app.py                      # Main Flask application
+├── launcher.py                 # Universal launcher for executables
+├── requirements.txt            # Python dependencies
+├── config.json                 # Main configuration file
+├── config.example.json         # Configuration template
+├── BUILD-INSTRUCTIONS.md       # Detailed build instructions
+├── build-windows.bat           # Windows executable build script
+├── build-pi.sh                 # Raspberry Pi executable build script
+├── windows.spec                # PyInstaller config for Windows
+├── raspberry-pi.spec           # PyInstaller config for Raspberry Pi
+├── config/                     # Configuration system
+│   └── __init__.py             # JSON config loader
 ├── static/
 │   ├── css/
-│   │   └── style.css     # CSS styles
+│   │   └── style.css           # CSS styles
 │   ├── js/
-│   │   └── main.js       # JavaScript for animations
-│   ├── audio/            # Audio assets  
-│   │   └── *.mp3         # Background ambient audio files
-│   └── images/           # Art images (image_0.png to image_9.png)
+│   │   └── main.js             # JavaScript for animations
+│   ├── audio/                  # Audio assets  
+│   │   └── *.mp3               # Background ambient audio files
+│   └── images/                 # Art images and per-image configs
+│       ├── *.png               # Art image files
+│       └── *.json              # Optional per-image configurations
 ├── templates/
-│   ├── base.html         # Base template
-│   ├── index.html        # Main page
-│   └── kiosk.html        # Kiosk mode template
-└── utils/
-    └── pattern_generator.py  # Pattern identification code generator
+│   ├── base.html               # Base template
+│   ├── index.html              # Main page
+│   └── kiosk.html              # Kiosk mode template
+├── utils/
+│   ├── __init__.py
+│   └── image_manager.py        # Image discovery and metadata
+├── dist/                       # Generated executables (after build)
+│   ├── ManyPaintings-Windows.exe     # Windows executable
+│   └── ManyPaintings-RaspberryPi     # Raspberry Pi executable
+└── .vscode/                    # VS Code configuration
+    ├── launch.json             # Debug and run configurations
+    ├── settings.json           # Project settings
+    └── tasks.json              # Build tasks
 ```
 
-## 9. Future Enhancements
+## 8. Troubleshooting
 
-### Launch Configurations
+### Common Issues
 
-The project includes several VS Code launch configurations in `.vscode/launch.json`:
+#### Windows
+- **"Python not found"**: Install Python from python.org and check "Add to PATH"
+- **Executable won't start**: Run from command prompt to see error messages
+- **Browser doesn't open**: Check if Chrome or Edge is installed
+- **Port 5000 in use**: Close other applications using port 5000
 
-1. **Flask: Many Paintings** - Main development server with debugging
-2. **Flask: Many Paintings (Production)** - Production mode server
-3. **Flask: Run Script** - Alternative launcher using `run.py`
-4. **Python: Setup Script** - Run the setup script
+#### Raspberry Pi  
+- **Build fails**: Install development packages: `sudo apt install python3-dev libjpeg-dev zlib1g-dev`
+- **Executable won't run**: Check permissions: `chmod +x ManyPaintings-RaspberryPi`
+- **Browser won't open**: Install Chromium: `sudo apt install chromium-browser`
+- **Performance issues**: Use Raspberry Pi configuration environment
 
-### Tasks
+#### General
+- **Server won't start**: Check console output for detailed error messages
+- **Images don't load**: Verify `static/images/` contains PNG files
+- **Config changes ignored**: Refresh browser (F5) after editing `config.json`
 
-Available tasks in VS Code (Ctrl+Shift+P → "Tasks: Run Task"):
+### Getting Help
 
-- **Flask: Start Development Server** - Start Flask in development mode
-- **Flask: Start Production Server** - Start Flask in production mode
-- **Python: Install Dependencies** - Install requirements.txt
-- **Python: Setup Project** - Run the setup script
-- **Flask: Run with Gunicorn** - Production server with Gunicorn
+1. Check console output for detailed error messages
+2. Verify all prerequisites are installed
+3. Try running `python launcher.py` directly for debugging
+4. Review [BUILD-INSTRUCTIONS.md](BUILD-INSTRUCTIONS.md) for build issues
 
-### Debugging
+## 9. Development
+
+### VS Code Integration
+
+The project includes comprehensive VS Code support:
+
+#### Launch Configurations (`.vscode/launch.json`)
+1. **Flask: Many Paintings (Development)** - Development server with debugging
+2. **Flask: Many Paintings (Production)** - Production mode server  
+3. **Flask: Many Paintings (Raspberry Pi Config)** - Pi-optimized settings
+4. **Python: Test Image Manager** - Test image discovery system
+5. **Python: Launcher Script** - Debug the launcher directly
+
+#### Build Tasks (`.vscode/tasks.json`)
+- **Build Windows Executable** - Automated Windows build
+- **Build Raspberry Pi Executable** - Automated Pi build (on Pi only)
+- **Install Dependencies** - Install requirements.txt
+- **Run Development Server** - Start Flask in development mode
+
+#### Debugging
 
 1. Set breakpoints in Python code
-2. Press F5 or use "Run and Debug" panel
-3. Select "Flask: Many Paintings" configuration
-4. Server will start with debugger attached
+2. Press F5 or use "Run and Debug" panel  
+3. Select appropriate configuration
+4. Server starts with debugger attached
 
-### Extensions Recommended
-
-For the best development experience, install these VS Code extensions:
+#### Recommended Extensions
 
 - **Python** - Microsoft's Python extension
-- **Python Debugger** - Enhanced debugging capabilities
+- **Python Debugger** - Enhanced debugging capabilities  
 - **Jinja** - Template syntax highlighting
 - **HTML CSS Support** - Enhanced HTML/CSS editing
-- **Auto Rename Tag** - Automatically rename HTML tags
-- **Prettier** - Code formatter
 
-### Settings
-
-The project includes VS Code settings in `.vscode/settings.json`:
-
-- Python interpreter set to virtual environment
-- Jinja template support
-- File associations for templates
-- Debugging configuration
+## 10. Future Enhancements
 
 *   **User-Provided Content:** Allow users to upload their own images to be used in the generative art.
 *   **Enhanced Audio Integration:** ✅ COMPLETED - Background ambient audio with volume control and browser autoplay handling

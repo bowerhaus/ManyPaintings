@@ -345,7 +345,8 @@ window.App = (function () {
         rotation: 0,
         scale: 1,
         translateX: 0,
-        translateY: 0
+        translateY: 0,
+        hueShift: 0
       };
 
       if (config.rotationEnabled) {
@@ -360,6 +361,10 @@ window.App = (function () {
         // Translation as percentage of viewport
         transformations.translateX = (random() - 0.5) * 2 * config.translationXRange;
         transformations.translateY = (random() - 0.5) * 2 * config.translationYRange;
+      }
+
+      if (config.colorRemappingEnabled && random() < config.colorRemappingProbability) {
+        transformations.hueShift = random() * (config.colorRemappingHueMaxDegrees - config.colorRemappingHueMinDegrees) + config.colorRemappingHueMinDegrees;
       }
 
       if (config.preloadTransformCache) {
@@ -432,6 +437,11 @@ window.App = (function () {
           const existingTransform = imgElement.style.transform || '';
           imgElement.style.transform = existingTransform + ' ' + transforms.join(' ');
           imgElement.style.transformOrigin = 'center center';
+        }
+
+        // Apply hue shift filter if enabled
+        if (config.colorRemappingEnabled && transformations.hueShift !== 0) {
+          imgElement.style.filter = `hue-rotate(${transformations.hueShift}deg)`;
         }
       }
 

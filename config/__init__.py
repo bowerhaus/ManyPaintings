@@ -22,6 +22,7 @@ def load_config_from_json(config_name='development'):
         'animation_timing': config_data.get('animation_timing', {}),
         'layer_management': config_data.get('layer_management', {}),
         'transformations': config_data.get('transformations', {}),
+        'color_remapping': config_data.get('color_remapping', {}),
         'performance': config_data.get('performance', {}),
         'audio': config_data.get('audio', {}),
         'matte_border': config_data.get('matte_border', {})
@@ -100,6 +101,14 @@ class Config:
         self.TRANSLATION_ENABLED = translation_config.get('enabled', True)
         self.TRANSLATION_X_RANGE = translation_config.get('x_range_percent', 20)
         self.TRANSLATION_Y_RANGE = translation_config.get('y_range_percent', 15)
+        
+        # Color remapping configuration
+        color_remapping_config = self._config_data.get('color_remapping', {})
+        self.COLOR_REMAPPING_ENABLED = color_remapping_config.get('enabled', False)
+        self.COLOR_REMAPPING_PROBABILITY = color_remapping_config.get('probability', 0.3)
+        hue_shift_range = color_remapping_config.get('hue_shift_range', {})
+        self.COLOR_REMAPPING_HUE_MIN_DEGREES = hue_shift_range.get('min_degrees', 0)
+        self.COLOR_REMAPPING_HUE_MAX_DEGREES = hue_shift_range.get('max_degrees', 360)
         
         # Performance configuration
         perf_config = self._config_data.get('performance', {})

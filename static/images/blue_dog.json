@@ -16,5 +16,9 @@
   },
   "layer_management": {
     "max_opacity": 0.7
+  },
+  "color_remapping": {
+    "enabled": true,
+    "probability": 0.8
   }
 }

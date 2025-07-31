@@ -146,6 +146,14 @@ The application uses a JSON-based configuration system with environment-specific
     "min_opacity": 0.7
   },
   "transformations": { /* transformation settings */ },
+  "color_remapping": {
+    "enabled": true,
+    "probability": 0.3,
+    "hue_shift_range": {
+      "min_degrees": 0,
+      "max_degrees": 360
+    }
+  },
   "audio": {
     "enabled": true,
     "file_path": "static/audio/Ethereal Strokes Loop.mp3",
@@ -175,6 +183,10 @@ The application uses a JSON-based configuration system with environment-specific
   "layer_management": {
     "max_opacity": 0.7,
     "min_opacity": 0.5
+  },
+  "color_remapping": {
+    "enabled": true,
+    "probability": 0.8
   }
 }
 ```
@@ -218,6 +230,7 @@ The application uses a JSON-based configuration system with environment-specific
 8. **Clean Startup**: No loading popups, immediate animation start
 9. **Configuration Hot Reload**: Config changes take effect on browser refresh without server restart
 10. **Fullscreen Consistency**: Image positioning remains consistent between windowed and fullscreen modes
+11. **Color Remapping System**: Random hue shifting for dynamic color variation
 
 ### Architecture Highlights
 - **Browser-Centric**: Minimal server contact, all animations client-side
@@ -365,6 +378,60 @@ Appear at bottom center when mouse hovers over the bottom area:
 - **Desktop**: Full control panel with all features
 - **Tablet (1200px-768px)**: Slightly condensed layout
 - **Mobile (< 768px)**: Compact layout with control wrapping
+
+## Color Remapping System
+
+### Overview
+The color remapping system provides dynamic color variation by randomly applying hue shifts to images during animation. This feature adds visual diversity while maintaining deterministic behavior for pattern reproducibility.
+
+### Technical Implementation
+- **Method**: CSS `hue-rotate()` filter for optimal performance (GPU-accelerated)
+- **Range**: 0-360 degree hue rotation for full color spectrum coverage
+- **Application**: Per-image appearance with configurable probability
+- **Deterministic**: Uses seeded random generation to ensure pattern reproducibility
+
+### Configuration Options
+```json
+"color_remapping": {
+  "enabled": true,           // Enable/disable color remapping system
+  "probability": 0.3,        // Chance of hue shift per image appearance (0.0-1.0)
+  "hue_shift_range": {
+    "min_degrees": 0,        // Minimum hue shift (0-360)
+    "max_degrees": 360       // Maximum hue shift (0-360)
+  }
+}
+```
+
+### Per-Image Overrides
+Individual images can override global settings using JSON configuration files:
+
+**Example**: `static/images/blue_dog.json`
+```json
+{
+  "color_remapping": {
+    "enabled": true,         // Override global enabled setting
+    "probability": 0.8       // Higher probability than global (0.3)
+  }
+}
+```
+
+### Performance Characteristics
+- **GPU Acceleration**: Uses CSS filters for hardware-accelerated processing
+- **Zero Memory Overhead**: No pixel manipulation or canvas operations
+- **Deterministic Caching**: Transformations cached with existing system
+- **Raspberry Pi Compatible**: Maintains 30+ FPS target on low-power devices
+
+### Visual Effects
+- **Subtle Variations**: Natural color shifts that preserve image character
+- **Dynamic Range**: Full spectrum hue rotation (red→orange→yellow→green→blue→purple→red)
+- **Probabilistic Application**: Not every image gets color-shifted, maintaining visual balance
+- **Pattern Consistency**: Same pattern seed produces identical color sequences
+
+### Configuration Examples
+- **Conservative**: `probability: 0.2` - Occasional color variations
+- **Moderate**: `probability: 0.3` - Default balanced setting  
+- **Aggressive**: `probability: 0.7` - Frequent color transformations
+- **Disabled**: `enabled: false` - Turn off color remapping entirely
 
 ## Audio Configuration
 

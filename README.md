@@ -39,6 +39,7 @@ This document outlines the Product Requirements for a generative art application
     *   **Rotation:** Images may be rotated by random angles
     *   **Scaling:** Images may be scaled up or down within defined limits
     *   **Translation:** Images may be positioned at different locations on the canvas
+    *   **Color Remapping:** Images may have their colors dynamically shifted for visual variety
 
 *   **Configurable Animation Parameters:** The animation system should support fine-tuned control through configuration:
     *   **Fade In/Out Duration:** Time taken for images to gradually appear and disappear
@@ -72,6 +73,12 @@ The application should provide extensive configuration options to fine-tune the 
 *   `translation.enabled` - Enable random positioning (default: true)
 *   `translation.x_range_percent` - Horizontal variance as % of viewport (default: 30%)
 *   `translation.y_range_percent` - Vertical variance as % of viewport (default: 30%)
+
+#### Color Remapping Configuration ✅ NEW FEATURE
+*   `enabled` - Enable/disable dynamic color remapping system (default: true)
+*   `probability` - Chance of hue shift per image appearance (default: 0.3, range: 0.0-1.0)
+*   `hue_shift_range.min_degrees` - Minimum hue rotation angle (default: 0, range: 0-360)
+*   `hue_shift_range.max_degrees` - Maximum hue rotation angle (default: 360, range: 0-360)
 
 #### Audio Configuration ✅ IMPLEMENTED
 *   `enabled` - Enable/disable background audio system (default: true)
@@ -452,6 +459,14 @@ The application is configured using a **JSON-based configuration system** (`conf
       "enabled": true,
       "x_range_percent": 30,
       "y_range_percent": 30
+    }
+  },
+  "color_remapping": {
+    "enabled": true,
+    "probability": 0.3,
+    "hue_shift_range": {
+      "min_degrees": 0,
+      "max_degrees": 360
     }
   }
 }

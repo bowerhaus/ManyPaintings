@@ -47,6 +47,14 @@
       "y_range_percent": 30
     }
   },
+  "color_remapping": {
+    "enabled": true,
+    "probability": 0.3,
+    "hue_shift_range": {
+      "min_degrees": 0,
+      "max_degrees": 360
+    }
+  },
   "performance": {
     "animation_quality": "high",
     "preload_transform_cache": true

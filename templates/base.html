@@ -141,6 +141,12 @@
             translationXRange: {{ config.TRANSLATION_X_RANGE }},
             translationYRange: {{ config.TRANSLATION_Y_RANGE }},
             
+            // Color remapping
+            colorRemappingEnabled: {{ config.COLOR_REMAPPING_ENABLED|tojson }},
+            colorRemappingProbability: {{ config.COLOR_REMAPPING_PROBABILITY }},
+            colorRemappingHueMinDegrees: {{ config.COLOR_REMAPPING_HUE_MIN_DEGREES }},
+            colorRemappingHueMaxDegrees: {{ config.COLOR_REMAPPING_HUE_MAX_DEGREES }},
+            
             // Performance
             animationQuality: "{{ config.ANIMATION_QUALITY }}",
             preloadTransformCache: {{ config.PRELOAD_TRANSFORM_CACHE|tojson }},

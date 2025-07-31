@@ -28,6 +28,7 @@ This document outlines the Product Requirements for a generative art application
 *   **Background Audio:** Continuous ambient MP3 audio playback with volume control, play/pause functionality, and browser autoplay handling for an immersive audiovisual experience.
 *   **Kiosk Mode:** The application will have a kiosk mode that displays the generative art in full-screen, hiding all browser UI elements. On Raspberry Pi, this mode will also disable user input to prevent accidental interruption.
 *   **Pattern Identification Code:** The sequence should be deterministic being derived from a random seed. A unique code will be displayed on the screen, representing the current sequence of images and their current animation state. This code can be used to restart the application with the same visual pattern if required.
+*   **Favouriting System:** ✅ **NEW FEATURE** - Save and share specific painting moments with exact layer states, transformations, and opacity values. Generate shareable URLs that recreate favorite paintings across different devices and screen sizes.
 
 ### 3.2. Animation System
 
@@ -106,6 +107,42 @@ The application should provide extensive configuration options to fine-tune the 
 *   `bevel.width` - Bevel thickness in pixels (default: 1.5)
 *   `bevel.inner_color` - Light highlight color (default: "rgba(255, 255, 255, 0.3)")
 *   `bevel.outer_color` - Dark shadow color (default: "rgba(0, 0, 0, 0.2)")
+
+#### Favouriting System ✅ NEW FEATURE
+The application now includes a comprehensive favouriting system that allows users to save and share specific painting moments:
+
+**Core Features:**
+*   **State Capture:** Saves exact painting moments with all visible layer properties including image IDs, opacity levels, transformations (rotation, scale, translation, hue shift), and animation phases
+*   **Server-Side Storage:** Persistent JSON database storage with UUID identifiers for reliable retrieval across browser sessions
+*   **URL Sharing:** Generate shareable links that recreate favorite paintings exactly, enabling easy sharing via email, social media, or bookmarks
+*   **Cross-Viewport Compatibility:** Favorites automatically adapt to different screen sizes and aspect ratios using responsive positioning
+*   **Staggered Restoration:** Natural fade-out timing when loading favorites, with layers disappearing at different intervals for smooth transition back to normal generation
+
+**User Interface:**
+*   **Heart Button (♥):** Added to both main interface and kiosk mode action groups for easy access
+*   **Keyboard Shortcut:** F key for quick favoriting without interrupting the viewing experience
+*   **Toast Notifications:** Success feedback with UUID display and clickable URL copying to clipboard
+*   **Visual Feedback:** Heart button changes color on hover for clear interaction cues
+
+**Technical Implementation:**
+*   **REST API Endpoints:** 
+    - `POST /api/favorites` - Save current painting state, returns UUID
+    - `GET /api/favorites/<uuid>` - Load saved painting state
+    - `DELETE /api/favorites/<uuid>` - Remove favorite (for future management features)
+*   **State Data Structure:** Comprehensive JSON format capturing all layer properties and metadata
+*   **Performance Optimized:** Sub-second loading times with intelligent image preloading
+*   **Error Handling:** Graceful fallbacks for missing images or invalid favorite IDs
+
+**Usage Workflow:**
+1. **Save:** Click heart button (♥) or press F key during any interesting moment
+2. **Share:** Toast notification appears with UUID and "Click to copy URL" instruction
+3. **Load:** Open URL with `?favorite=<uuid>` parameter to recreate exact painting state
+4. **Experience:** Favorite loads quickly with correct opacity/transformations, then transitions naturally back to live generation
+
+**Cross-Platform Support:**
+*   **Responsive Design:** Favorites work identically across desktop, tablet, and mobile devices
+*   **Viewport Adaptation:** Automatic scaling and positioning adjustment for different screen sizes
+*   **Browser Compatibility:** Works with all modern browsers supporting Fetch API and Clipboard API
 
 #### Fullscreen Mode Support ✅ IMPLEMENTED
 *   **Consistent Positioning:** Image layers maintain identical visual positioning between windowed and fullscreen modes
@@ -383,6 +420,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 - **Audio slider:** Control volume from 0% to 100%
 - **Audio toggle:** Play/pause background music (🔊/🔇)
 - **Background toggle:** Switch between black and white backgrounds (⚫⚪)
+- **Favorite button:** Save current painting as shareable favorite (♥)
 - **Pattern display:** View current pattern code
 
 #### Keyboard Shortcuts
@@ -390,6 +428,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 - **N:** Generate new pattern
 - **B:** Toggle background (black/white)
 - **A:** Toggle audio playback
+- **F:** Save current painting as favorite
 
 #### Control Panel Features
 - **Real-time adjustments:** All changes take effect immediately
@@ -552,6 +591,8 @@ ManyPaintings/
 ├── requirements.txt            # Python dependencies
 ├── config.json                 # Main configuration file
 ├── config.example.json         # Configuration template
+├── favorites.json              # Favorites database (auto-generated)
+├── STATUS.md                   # Current project status and features
 ├── BUILD-INSTRUCTIONS.md       # Detailed build instructions
 ├── build-windows.bat           # Windows executable build script
 ├── build-pi.sh                 # Raspberry Pi executable build script
@@ -563,7 +604,7 @@ ManyPaintings/
 │   ├── css/
 │   │   └── style.css           # CSS styles
 │   ├── js/
-│   │   └── main.js             # JavaScript for animations
+│   │   └── main.js             # JavaScript with FavoritesManager
 │   ├── audio/                  # Audio assets  
 │   │   └── *.mp3               # Background ambient audio files
 │   └── images/                 # Art images and per-image configs
@@ -571,8 +612,8 @@ ManyPaintings/
 │       └── *.json              # Optional per-image configurations
 ├── templates/
 │   ├── base.html               # Base template
-│   ├── index.html              # Main page
-│   └── kiosk.html              # Kiosk mode template
+│   ├── index.html              # Main page with favorite button
+│   └── kiosk.html              # Kiosk mode with favorite button
 ├── utils/
 │   ├── __init__.py
 │   └── image_manager.py        # Image discovery and metadata
@@ -648,13 +689,25 @@ The project includes comprehensive VS Code support:
 
 ## 10. Future Enhancements
 
-*   **User-Provided Content:** Allow users to upload their own images to be used in the generative art.
+### ✅ Recently Completed
 *   **Enhanced Audio Integration:** ✅ COMPLETED - Background ambient audio with volume control and browser autoplay handling
 *   **Configuration Hot Reload:** ✅ COMPLETED - Config changes take effect on browser refresh without server restart
 *   **Fullscreen Mode Consistency:** ✅ COMPLETED - Image positioning remains identical between windowed and fullscreen modes
+*   **Favouriting System:** ✅ COMPLETED - Save and share specific painting moments with server-side storage and URL sharing
+*   **Play/Pause Control:** ✅ COMPLETED - Working animation pause/resume with proper state preservation
+*   **API Endpoints:** ✅ COMPLETED - REST API endpoints for favorites management
+*   **Favorites Opacity Fix:** ✅ COMPLETED - Fixed favorites saving to capture current animated opacity values instead of target opacity
+*   **UI Polish:** ✅ COMPLETED - Removed "successfully" from toast messages and added ESC key support to close favorites modal
+
+### 🚀 Potential Future Features
+*   **User-Provided Content:** Allow users to upload their own images to be used in the generative art.
+*   **Favorites Gallery:** Web interface to browse and manage saved favorites with thumbnail previews
 *   **Advanced Audio Features:** Add multiple audio tracks, crossfading, and synchronization with visual patterns.
 *   **More Complex Animations:** Introduce more advanced animation effects, such as panning, zooming, and rotation.
 *   **Color Palette Customization:** Allow users to customize the color palette of the generative art.
-*   **Social Sharing:** Allow users to share their favorite "paintings" on social media.
-*   **API Endpoints:** Create REST API endpoints for programmatic control of the art generation.
+*   **Social Media Integration:** Direct sharing to social platforms with preview images
+*   **Collection Management:** Organize favorites into collections or categories
+*   **Export Features:** Save favorite paintings as high-resolution images
 *   **WebSocket Integration:** Real-time pattern updates and synchronization across multiple displays.
+*   **Mobile App:** Native mobile applications for iOS and Android
+*   **Advanced Pattern Control:** More sophisticated pattern generation algorithms and user controls

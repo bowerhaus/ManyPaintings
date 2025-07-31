@@ -95,3 +95,5 @@ tmp/
 
 # Generated documentation
 docs/_build/
+favorites.json
+ManyPaintings-Windows.exe

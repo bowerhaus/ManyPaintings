@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python:*)",
       "Bash(venv\\Scripts\\activate:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(curl:*)",
+      "Bash(dir:*)",
+      "Bash(venvScriptsactivate.bat)"
     ],
     "deny": []
   }

@@ -127,25 +127,54 @@ The application uses a JSON-based configuration system with environment-specific
 **Main Configuration**: `config.json`
 ```json
 {
-  "flask": { "debug": true, "host": "127.0.0.1", "port": 5000 },
+  "flask": { 
+    "secret_key": "dev-secret-key-change-in-production",
+    "debug": true, 
+    "host": "127.0.0.1", 
+    "port": 5000 
+  },
   "application": {
     "image_directory": "static/images",
     "max_concurrent_images": 10,
     "preload_buffer_size": 5,
     "animation_fps": 30,
     "pattern_seed": "auto",
-    "initial_pattern_code": "MP-2024-001",
+    "initial_pattern_code": null,
     "enable_caching": true,
     "cache_max_age": 3600,
     "lazy_loading": true
   },
-  "animation_timing": { /* timing parameters */ },
+  "animation_timing": {
+    "fade_in_min_sec": 15.0,
+    "fade_in_max_sec": 60.0,
+    "fade_out_min_sec": 15.0,
+    "fade_out_max_sec": 60.0,
+    "min_hold_time_sec": 5.0,
+    "max_hold_time_sec": 120.0,
+    "layer_spawn_interval_sec": 4.0
+  },
   "layer_management": { 
     "max_concurrent_layers": 4,
     "max_opacity": 1.0,
     "min_opacity": 0.7
   },
-  "transformations": { /* transformation settings */ },
+  "transformations": {
+    "rotation": {
+      "enabled": true,
+      "min_degrees": -60,
+      "max_degrees": 60
+    },
+    "scale": {
+      "enabled": true,
+      "min_factor": 0.75,
+      "max_factor": 1.5
+    },
+    "translation": {
+      "enabled": true,
+      "x_range_percent": 30,
+      "y_range_percent": 30
+    }
+  },
   "color_remapping": {
     "enabled": true,
     "probability": 0.3,
@@ -154,12 +183,25 @@ The application uses a JSON-based configuration system with environment-specific
       "max_degrees": 360
     }
   },
+  "performance": {
+    "animation_quality": "high",
+    "preload_transform_cache": true
+  },
   "audio": {
     "enabled": true,
     "file_path": "static/audio/Ethereal Strokes Loop.mp3",
     "volume": 0.5,
     "loop": true,
-    "autoplay": true
+    "autoplay": false
+  },
+  "matte_border": {
+    "enabled": true,
+    "border_percent": 10,
+    "color": "#F8F8F8",
+    "style": "medium",
+    "image_area": {
+      "aspect_ratio": "1:1"
+    }
   },
   "environments": {
     "development": { /* dev overrides */ },
@@ -173,12 +215,13 @@ The application uses a JSON-based configuration system with environment-specific
 ```json
 {
   "animation_timing": {
-    "fade_in_min_sec": 30.0,
-    "max_hold_time_sec": 180.0
+    "fade_in_min_sec": 15.0,
+    "fade_in_max_sec": 60.0,
+    "max_hold_time_sec": 120.0
   },
   "transformations": {
     "rotation": { "enabled": false },
-    "scale": { "min_factor": 0.8, "max_factor": 1.5 }
+    "scale": { "min_factor": 0.75, "max_factor": 1.5 }
   },
   "layer_management": {
     "max_opacity": 0.7,
@@ -303,6 +346,9 @@ The project is configured for VS Code development with:
 4. **`GET /api/images`** - Image catalog with metadata and per-image configs
 5. **`GET /api/config`** - Application configuration including initial pattern code
 6. **`GET /api/pattern/<seed>`** - Deterministic pattern generation from seed
+7. **`POST /api/favorites`** - Save current pattern as favorite
+8. **`GET /api/favorites/<favorite_id>`** - Load specific favorite pattern
+9. **`DELETE /api/favorites/<favorite_id>`** - Delete specific favorite pattern
 
 ### API Usage Examples
 ```bash
@@ -317,6 +363,17 @@ curl http://localhost:5000/api/pattern/MP-2024-001
 
 # Health check
 curl http://localhost:5000/health
+
+# Save favorite pattern
+curl -X POST http://localhost:5000/api/favorites \
+  -H "Content-Type: application/json" \
+  -d '{"pattern_seed": "MP-2024-001", "name": "My Favorite Pattern"}'
+
+# Load favorite pattern
+curl http://localhost:5000/api/favorites/fav_123456
+
+# Delete favorite pattern
+curl -X DELETE http://localhost:5000/api/favorites/fav_123456
 ```
 
 ### Configuration Hot Reload
@@ -433,6 +490,53 @@ Individual images can override global settings using JSON configuration files:
 - **Aggressive**: `probability: 0.7` - Frequent color transformations
 - **Disabled**: `enabled: false` - Turn off color remapping entirely
 
+## Matte Border System
+
+### Overview
+The matte border system provides sophisticated image framing with configurable borders, 3D beveling effects, and aspect ratio control. This system enhances the gallery-like presentation of images with professional matting effects.
+
+### Configuration Options
+```json
+"matte_border": {
+  "enabled": true,           // Enable/disable matte border system
+  "border_percent": 10,      // Border width as percentage of container (5-25)
+  "color": "#F8F8F8",        // Matte border color (hex, rgb, or named colors)
+  "style": "medium",         // Border style: "light", "medium", "heavy"
+  "image_area": {
+    "aspect_ratio": "1:1"    // Image area aspect ratio ("1:1", "4:3", "16:9", "auto")
+  }
+}
+```
+
+### Border Styles
+- **Light**: Subtle shadow effects, minimal 3D depth
+- **Medium**: Balanced beveling with moderate shadow depth (default)
+- **Heavy**: Pronounced 3D effects with deep shadows and highlights
+
+### Aspect Ratio Options
+- **"1:1"**: Square image area (default)
+- **"4:3"**: Traditional photo aspect ratio
+- **"16:9"**: Widescreen aspect ratio
+- **"auto"**: Maintains original image proportions
+
+### Visual Effects
+- **3D Beveling**: CSS-based bevel effects create depth illusion
+- **Drop Shadows**: Configurable shadow depth based on style
+- **Clipping**: Images automatically clipped to fit within matte area
+- **Scaling**: Best-fit scaling maintains aspect ratios within defined area
+
+### Performance Characteristics
+- **CSS-Only Implementation**: No JavaScript processing overhead
+- **GPU Acceleration**: Hardware-accelerated CSS transforms and filters
+- **Responsive Design**: Scales proportionally with container size
+- **Memory Efficient**: No additional image processing or canvas operations
+
+### Integration with Animation System
+- **Transform Compatibility**: Works seamlessly with rotation, scale, and translation
+- **Layer Support**: Each layer can have independent matte styling
+- **Color Remapping**: Hue shifts apply to images within matte frames
+- **Opacity Control**: Matte borders respect layer opacity settings
+
 ## Audio Configuration
 
 ### Audio File Requirements
@@ -457,6 +561,107 @@ Individual images can override global settings using JSON configuration files:
 - **Fallback Strategy**: Waits for user interaction if autoplay blocked
 - **User Interaction**: Any click, keypress, or touch activates audio
 - **Visual Feedback**: Audio button shows current playback state
+
+## Favorites System
+
+### Overview
+The favorites system allows users to save and reload specific pattern configurations for future viewing. Each favorite captures the complete state needed to reproduce a visual experience.
+
+### Recent Fixes and Improvements ✅
+- **Opacity Capture Fix**: Fixed favorites saving to capture current animated opacity values using `getComputedStyle()` instead of just CSS property values. This ensures favorites save the exact opacity of layers during fade-in/fade-out transitions.
+- **UI Polish**: Removed "successfully" from all toast messages for cleaner feedback
+- **ESC Key Support**: Added ESC key functionality to close the favorites modal for better UX
+
+### Features
+- **Save Current Pattern**: Capture the current animation state as a favorite
+- **Load Saved Patterns**: Restore previously saved favorites with identical visual reproduction
+- **Delete Favorites**: Remove unwanted saved patterns
+- **Persistent Storage**: Favorites saved to `favorites.json` file on server
+
+### API Endpoints
+
+#### Save Favorite: `POST /api/favorites`
+```json
+{
+  "pattern_seed": "MP-2024-001",
+  "name": "My Favorite Pattern",
+  "description": "Optional description",
+  "metadata": {
+    "created_by": "user",
+    "tags": ["abstract", "colorful"]
+  }
+}
+```
+
+**Response**: Returns generated `favorite_id` for future reference
+
+#### Load Favorite: `GET /api/favorites/<favorite_id>`
+**Response**: Returns complete pattern data needed to recreate the visual experience
+```json
+{
+  "favorite_id": "fav_123456",
+  "pattern_seed": "MP-2024-001", 
+  "name": "My Favorite Pattern",
+  "created_at": "2024-07-31T10:30:00Z",
+  "description": "Optional description",
+  "metadata": { /* user metadata */ }
+}
+```
+
+#### Delete Favorite: `DELETE /api/favorites/<favorite_id>`
+**Response**: Confirmation of deletion
+
+### Storage Format
+Favorites are stored in `favorites.json` with this structure:
+```json
+{
+  "fav_123456": {
+    "favorite_id": "fav_123456",
+    "pattern_seed": "MP-2024-001",
+    "name": "My Favorite Pattern", 
+    "created_at": "2024-07-31T10:30:00Z",
+    "description": "Optional description",
+    "metadata": { /* additional user data */ }
+  }
+}
+```
+
+### Integration Notes
+- **Thread-Safe**: Multiple concurrent requests handled safely
+- **Error Handling**: Graceful fallbacks for missing files or invalid IDs
+- **Deterministic Playback**: Saved patterns reproduce identically using the same seed system
+- **No UI Integration**: API-only feature requiring custom frontend implementation
+
+## Build System & Deployment
+
+### Executable Build Support
+The project includes complete build automation for creating standalone executables:
+
+#### Build Scripts
+- **`build-windows.bat`** - Windows executable builder using PyInstaller
+- **`build-pi.sh`** - Raspberry Pi executable builder (must run on Pi hardware)
+- **`BUILD-INSTRUCTIONS.md`** - Complete build documentation with troubleshooting
+
+#### Build Features
+- **Standalone Executables** - No Python installation required on target systems
+- **Platform Detection** - Automatic Windows vs Raspberry Pi configuration
+- **Browser Integration** - Launches in app mode with Chrome/Chromium priority
+- **VS Code Integration** - Build tasks and launch configurations included
+
+#### Output Files
+- **Windows**: `ManyPaintings-Windows.exe` (~50-100MB)
+- **Raspberry Pi**: `ManyPaintings-RaspberryPi` (~80-150MB)
+
+#### Launcher Features
+- **Multiple Launch Modes**: App mode (default), full kiosk, normal browser window
+- **Health Monitoring**: Waits for Flask server startup before launching browser
+- **Graceful Shutdown**: Clean termination when browser closes
+- **Debug Output**: Comprehensive logging for troubleshooting
+
+### VS Code Development Integration
+- **Launch Configurations**: Python debugging, Flask development, Pi-optimized settings
+- **Build Tasks**: Automated executable building, dependency installation
+- **Debug Support**: Breakpoint support in launcher script for troubleshooting
 
 ## Developer Instructions
 

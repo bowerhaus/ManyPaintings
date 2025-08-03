@@ -312,3 +312,280 @@ body.white-background #kiosk-controls button:hover {
     z-index: 999 !important; /* Make sure they're on top of everything */
 }
 
+/* Bottom overlay control panel */
+.bottom-controls-trigger {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50vh; /* Large trigger area for easy access */
+    z-index: 200;
+    pointer-events: auto;
+}
+
+.bottom-overlay-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /* Remove fixed height - let content determine height */
+    min-height: 200px; /* Minimum height for safety */
+    max-height: 80vh; /* Don't exceed 80% of viewport */
+    background: linear-gradient(to top, rgba(255, 255, 255, 1.0) 0%, rgba(255, 255, 255, 1.0) 60px, rgba(255, 255, 255, 0.95) 120px, rgba(255, 255, 255, 0.8) 180px, transparent 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    opacity: 0;
+    transform: translateY(100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.2), 0 -1px 4px rgba(0, 0, 0, 0.1);
+    /* Let height be determined by content */
+    height: auto;
+    overflow: visible;
+}
+
+.bottom-overlay-panel.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.overlay-content {
+    position: relative; /* Changed from absolute to relative */
+    bottom: auto; /* Remove bottom positioning */
+    left: auto; /* Remove left positioning */
+    transform: none; /* Remove transform */
+    width: 90%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
+    margin: 2rem auto; /* Center horizontally and add vertical margin */
+    padding: 2rem 0; /* Add padding for better spacing */
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.control-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: rgba(0, 0, 0, 0.9);
+}
+
+.control-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.control-btn.primary {
+    background: rgba(0, 0, 0, 0.9);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.control-btn.primary:hover {
+    background: rgba(0, 0, 0, 1);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* Controls Grid */
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.control-group label {
+    color: rgba(0, 0, 0, 0.8);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.control-input {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.control-input input[type="range"] {
+    flex: 1;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.control-input input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.control-input input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.control-input input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.control-input span {
+    color: rgba(0, 0, 0, 0.9);
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    min-width: 3rem;
+    text-align: center;
+    padding: 0.25rem 0.5rem;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0.25rem;
+}
+
+.pattern-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0.25rem;
+    width: 100%;
+}
+
+.pattern-display span {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.9);
+    background: none;
+    padding: 0;
+}
+
+/* Responsive design for bottom overlay panel */
+@media (max-width: 768px) {
+    .bottom-controls-trigger {
+        height: 60vh; /* Larger trigger area for mobile */
+    }
+    
+    .overlay-content {
+        width: 95%;
+        gap: 1.5rem;
+        margin: 1.5rem auto;
+        padding: 1.5rem 0;
+    }
+    
+    .controls-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .quick-actions {
+        gap: 0.75rem;
+    }
+    
+    .control-btn {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .control-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bottom-controls-trigger {
+        height: 70vh; /* Even larger trigger area for small mobile */
+    }
+    
+    .overlay-content {
+        width: 100%;
+        gap: 1rem;
+        margin: 1rem auto;
+        padding: 1rem 0;
+    }
+    
+    .controls-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .control-group {
+        gap: 0.5rem;
+    }
+    
+    .control-group label {
+        font-size: 0.8rem;
+    }
+    
+    .control-input span {
+        font-size: 0.75rem;
+        min-width: 2.5rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .quick-actions {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .control-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .control-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .pattern-display span {
+        font-size: 0.75rem;
+    }
+}
+

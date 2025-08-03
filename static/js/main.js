@@ -455,9 +455,10 @@ window.App = (function () {
       }
 
       if (config.translationEnabled) {
-        // Translation as percentage of viewport
-        transformations.translateX = (random() - 0.5) * 2 * config.translationXRange;
-        transformations.translateY = (random() - 0.5) * 2 * config.translationYRange;
+        // Grid-based translation for better spatial distribution
+        const position = this.calculateGridBasedPosition(random, config.translationXRange, config.translationYRange);
+        transformations.translateX = position.x;
+        transformations.translateY = position.y;
       }
 
       if (config.colorRemappingEnabled && random() < config.colorRemappingProbability) {
@@ -479,6 +480,73 @@ window.App = (function () {
         hash = hash & hash; // Convert to 32-bit integer
       }
       return Math.abs(hash);
+    },
+
+    calculateGridBasedPosition(random, xRange, yRange) {
+      // Determine grid size based on viewport aspect ratio
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const aspectRatio = viewportWidth / viewportHeight;
+      
+      let gridCols, gridRows;
+      if (aspectRatio >= 1.7) {        // Widescreen (16:9, 21:9, etc.)
+        gridCols = 3; gridRows = 2;
+      } else if (aspectRatio >= 1.2) { // Standard wide (4:3, 3:2)
+        gridCols = 3; gridRows = 2;
+      } else {                         // Square or portrait
+        gridCols = 2; gridRows = 2;
+      }
+
+      // Define zone probabilities (center zones get higher weight)
+      const totalZones = gridCols * gridRows;
+      const centerWeight = 0.4 / Math.floor(totalZones / 2); // 40% for center zones
+      const edgeWeight = 0.6 / (totalZones - Math.floor(totalZones / 2)); // 60% for edge zones
+      
+      // Calculate which zones are "center" vs "edge"
+      const centerColStart = Math.floor(gridCols / 3);
+      const centerColEnd = gridCols - centerColStart - 1;
+      const centerRowStart = Math.floor(gridRows / 3);
+      const centerRowEnd = gridRows - centerRowStart - 1;
+      
+      // Build weighted zone list
+      const zones = [];
+      for (let row = 0; row < gridRows; row++) {
+        for (let col = 0; col < gridCols; col++) {
+          const isCenter = (col >= centerColStart && col <= centerColEnd) && 
+                          (row >= centerRowStart && row <= centerRowEnd);
+          const weight = isCenter ? centerWeight : edgeWeight;
+          zones.push({ row, col, weight });
+        }
+      }
+      
+      // Select zone using weighted random
+      let totalWeight = zones.reduce((sum, zone) => sum + zone.weight, 0);
+      let randomValue = random() * totalWeight;
+      let selectedZone = zones[0];
+      
+      for (const zone of zones) {
+        randomValue -= zone.weight;
+        if (randomValue <= 0) {
+          selectedZone = zone;
+          break;
+        }
+      }
+      
+      // Calculate position within selected zone
+      const zoneWidth = (2 * xRange) / gridCols;  // Each zone covers portion of total range
+      const zoneHeight = (2 * yRange) / gridRows;
+      
+      // Zone bounds (in percentage space: -xRange to +xRange)
+      const zoneLeft = -xRange + (selectedZone.col * zoneWidth);
+      const zoneRight = zoneLeft + zoneWidth;
+      const zoneTop = -yRange + (selectedZone.row * zoneHeight);
+      const zoneBottom = zoneTop + zoneHeight;
+      
+      // Random position within the zone
+      const x = zoneLeft + random() * (zoneRight - zoneLeft);
+      const y = zoneTop + random() * (zoneBottom - zoneTop);
+      
+      return { x, y };
     },
 
     seededRandom(seed) {

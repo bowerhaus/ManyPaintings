@@ -248,6 +248,28 @@ The application uses a JSON-based configuration system with environment-specific
 
 ## Development Notes
 
+### Frontend Styling Architecture
+**IMPORTANT**: This project uses **Tailwind CSS** with custom overrides for styling.
+
+- **Primary Stylesheet**: `static/css/tailwind-overrides.css` (loaded in base.html)
+- **Template Integration**: HTML templates use mix of Tailwind classes and custom CSS classes
+
+**When making style changes:**
+1. **ALWAYS check `tailwind-overrides.css` first** - this is the active stylesheet
+2. Look for existing CSS classes before creating new ones
+3. Templates may use Tailwind classes that need to be replaced with custom CSS classes
+4. Key custom classes include:
+   - `.bottom-controls-trigger` / `.bottom-overlay-panel` - control panel system
+   - `.control-btn` / `.quick-actions` / `.controls-grid` - UI controls
+   - `.image-layer` / `.matte-border` - image display system
+   - White background mode overrides with `body.white-background` prefix
+
+**Control Panel System:**
+- Uses content-based auto-sizing instead of fixed viewport heights
+- Solid white background with gradient fade for visibility
+- Large trigger areas (50vh+ desktop, 70vh mobile) for accessibility
+- Responsive design with proper content spacing
+
 ## Current Implementation Status
 
 ### Completed Components ✅

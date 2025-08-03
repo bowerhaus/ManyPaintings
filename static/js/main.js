@@ -139,6 +139,7 @@ window.App = (function () {
     frameInterval: 1000 / 30,
     lastFrameTime: 0,
     transformationCache: new Map(),
+    zoneDensity: new Map(), // Track current image count per zone
 
     init() {
       this.layersContainer = document.getElementById('image-layers');
@@ -340,6 +341,34 @@ window.App = (function () {
 
         this.activeLayers.set(imageId, layerInfo);
 
+        // Update zone density tracking for all covered zones
+        if (transformations.zoneKey && config.translationEnabled) {
+          // Get image dimensions from the loaded image
+          const imageWidth = img.naturalWidth || img.width || 800;
+          const imageHeight = img.naturalHeight || img.height || 600;
+          
+          // Calculate all zones this image covers
+          const coveredZones = this.calculateImageZoneCoverage(
+            transformations.translateX,
+            transformations.translateY,
+            imageWidth,
+            imageHeight,
+            transformations.scale || 1,
+            transformations.rotation || 0,
+            config.translationXRange,
+            config.translationYRange
+          );
+          
+          // Store covered zones in transformations for later cleanup
+          transformations.coveredZones = coveredZones;
+          
+          // Increment density for all covered zones
+          coveredZones.forEach(zoneKey => {
+            const currentDensity = this.zoneDensity.get(zoneKey) || 0;
+            this.zoneDensity.set(zoneKey, currentDensity + 1);
+          });
+        }
+
         // Start fade in animation
         this.startFadeIn(layerInfo);
 
@@ -414,9 +443,17 @@ window.App = (function () {
       const layerInfo = this.activeLayers.get(imageId);
       if (!layerInfo) return;
 
-      const { layer } = layerInfo;
+      const { layer, transformations } = layerInfo;
       layer.classList.add('fade-out');
       layer.classList.remove('active');
+
+      // Update zone density tracking for all covered zones
+      if (transformations && transformations.coveredZones) {
+        transformations.coveredZones.forEach(zoneKey => {
+          const currentDensity = this.zoneDensity.get(zoneKey) || 0;
+          this.zoneDensity.set(zoneKey, Math.max(0, currentDensity - 1));
+        });
+      }
 
       // Remove from DOM after transition
       setTimeout(() => {
@@ -459,6 +496,7 @@ window.App = (function () {
         const position = this.calculateGridBasedPosition(random, config.translationXRange, config.translationYRange);
         transformations.translateX = position.x;
         transformations.translateY = position.y;
+        transformations.zoneKey = position.zoneKey;
       }
 
       if (config.colorRemappingEnabled && random() < config.colorRemappingProbability) {
@@ -483,44 +521,30 @@ window.App = (function () {
     },
 
     calculateGridBasedPosition(random, xRange, yRange) {
-      // Determine grid size based on viewport aspect ratio
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const aspectRatio = viewportWidth / viewportHeight;
-      
-      let gridCols, gridRows;
-      if (aspectRatio >= 1.7) {        // Widescreen (16:9, 21:9, etc.)
-        gridCols = 3; gridRows = 2;
-      } else if (aspectRatio >= 1.2) { // Standard wide (4:3, 3:2)
-        gridCols = 3; gridRows = 2;
-      } else {                         // Square or portrait
-        gridCols = 2; gridRows = 2;
-      }
-
-      // Define zone probabilities (center zones get higher weight)
+      // Use 4x3 grid for better granularity and canvas coverage
+      const gridCols = 4;
+      const gridRows = 3;
       const totalZones = gridCols * gridRows;
-      const centerWeight = 0.4 / Math.floor(totalZones / 2); // 40% for center zones
-      const edgeWeight = 0.6 / (totalZones - Math.floor(totalZones / 2)); // 60% for edge zones
       
-      // Calculate which zones are "center" vs "edge"
-      const centerColStart = Math.floor(gridCols / 3);
-      const centerColEnd = gridCols - centerColStart - 1;
-      const centerRowStart = Math.floor(gridRows / 3);
-      const centerRowEnd = gridRows - centerRowStart - 1;
-      
-      // Build weighted zone list
+      // Create zones with density-based weighting
       const zones = [];
+      let totalWeight = 0;
+      
       for (let row = 0; row < gridRows; row++) {
         for (let col = 0; col < gridCols; col++) {
-          const isCenter = (col >= centerColStart && col <= centerColEnd) && 
-                          (row >= centerRowStart && row <= centerRowEnd);
-          const weight = isCenter ? centerWeight : edgeWeight;
-          zones.push({ row, col, weight });
+          const zoneKey = `${row}-${col}`;
+          const currentDensity = this.zoneDensity.get(zoneKey) || 0;
+          
+          // Higher weight for zones with lower density
+          // Base weight of 1.0, reduced by density count
+          const weight = Math.max(0.1, 1.0 - (currentDensity * 0.2));
+          
+          zones.push({ row, col, weight, zoneKey });
+          totalWeight += weight;
         }
       }
       
-      // Select zone using weighted random
-      let totalWeight = zones.reduce((sum, zone) => sum + zone.weight, 0);
+      // Select zone using weighted random distribution
       let randomValue = random() * totalWeight;
       let selectedZone = zones[0];
       
@@ -546,7 +570,56 @@ window.App = (function () {
       const x = zoneLeft + random() * (zoneRight - zoneLeft);
       const y = zoneTop + random() * (zoneBottom - zoneTop);
       
-      return { x, y };
+      return { x, y, zoneKey: selectedZone.zoneKey };
+    },
+
+    calculateImageZoneCoverage(centerX, centerY, imageWidth, imageHeight, scale, rotation, xRange, yRange) {
+      const gridCols = 4;
+      const gridRows = 3;
+      
+      // Calculate actual image dimensions after scaling
+      const scaledWidth = imageWidth * scale;
+      const scaledHeight = imageHeight * scale;
+      
+      // For simplicity, use bounding box approach (rotation creates larger bounding box)
+      const rotationRadians = (rotation || 0) * Math.PI / 180;
+      const boundingWidth = Math.abs(scaledWidth * Math.cos(rotationRadians)) + Math.abs(scaledHeight * Math.sin(rotationRadians));
+      const boundingHeight = Math.abs(scaledWidth * Math.sin(rotationRadians)) + Math.abs(scaledHeight * Math.cos(rotationRadians));
+      
+      // Convert percentage coordinates to zone space
+      const zoneWidth = (2 * xRange) / gridCols;
+      const zoneHeight = (2 * yRange) / gridRows;
+      
+      // Calculate image bounds in percentage space
+      const halfBoundingWidth = (boundingWidth / window.innerWidth) * 100 / 2;
+      const halfBoundingHeight = (boundingHeight / window.innerHeight) * 100 / 2;
+      
+      const imageLeft = centerX - halfBoundingWidth;
+      const imageRight = centerX + halfBoundingWidth;
+      const imageTop = centerY - halfBoundingHeight;
+      const imageBottom = centerY + halfBoundingHeight;
+      
+      // Find all zones that overlap with the image bounds
+      const coveredZones = [];
+      
+      for (let row = 0; row < gridRows; row++) {
+        for (let col = 0; col < gridCols; col++) {
+          const zoneLeft = -xRange + (col * zoneWidth);
+          const zoneRight = zoneLeft + zoneWidth;
+          const zoneTop = -yRange + (row * zoneHeight);
+          const zoneBottom = zoneTop + zoneHeight;
+          
+          // Check if image bounding box overlaps with zone
+          const overlaps = !(imageRight < zoneLeft || imageLeft > zoneRight || 
+                            imageBottom < zoneTop || imageTop > zoneBottom);
+          
+          if (overlaps) {
+            coveredZones.push(`${row}-${col}`);
+          }
+        }
+      }
+      
+      return coveredZones;
     },
 
     seededRandom(seed) {
@@ -790,6 +863,34 @@ window.App = (function () {
         };
 
         this.activeLayers.set(imageId, layerInfo);
+
+        // Update zone density tracking for favorites too
+        if (transformations.zoneKey && config.translationEnabled) {
+          // Get image dimensions from the loaded image  
+          const imageWidth = img.naturalWidth || img.width || 800;
+          const imageHeight = img.naturalHeight || img.height || 600;
+          
+          // Calculate all zones this image covers
+          const coveredZones = this.calculateImageZoneCoverage(
+            transformations.translateX,
+            transformations.translateY,
+            imageWidth,
+            imageHeight,
+            transformations.scale || 1,
+            transformations.rotation || 0,
+            config.translationXRange,
+            config.translationYRange
+          );
+          
+          // Store covered zones in transformations for later cleanup
+          transformations.coveredZones = coveredZones;
+          
+          // Increment density for all covered zones
+          coveredZones.forEach(zoneKey => {
+            const currentDensity = this.zoneDensity.get(zoneKey) || 0;
+            this.zoneDensity.set(zoneKey, currentDensity + 1);
+          });
+        }
 
         // Start with opacity 0 and fade in to the saved opacity quickly
         layer.style.opacity = '0';

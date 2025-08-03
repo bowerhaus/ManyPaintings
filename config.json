@@ -43,8 +43,8 @@
     },
     "translation": {
       "enabled": true,
-      "x_range_percent": 60,
-      "y_range_percent": 30
+      "x_range_percent": 70,
+      "y_range_percent": 60
     }
   },
   "color_remapping": {

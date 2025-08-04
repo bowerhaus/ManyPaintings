@@ -2,7 +2,7 @@
   "flask": {
     "secret_key": "dev-secret-key-change-in-production",
     "debug": true,
-    "host": "127.0.0.1",
+    "host": "0.0.0.0",
     "port": 5000
   },
   "application": {
@@ -92,7 +92,8 @@
   "environments": {
     "development": {
       "flask": {
-        "debug": true
+        "debug": true,
+        "host": "0.0.0.0"
       },
       "performance": {
         "animation_quality": "high"

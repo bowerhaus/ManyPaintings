@@ -265,7 +265,15 @@ def create_app(config_name=None):
     return app
 
 if __name__ == '__main__':
-    app = create_app()
-    port = int(os.environ.get('FLASK_PORT', 5000))
-    host = os.environ.get('FLASK_HOST', '127.0.0.1')
+    # Use development config by default
+    config_name = 'development'
+    config_obj = config[config_name]
+    
+    app = create_app(config_name)
+    
+    # Use config.json values only
+    host = config_obj.FLASK_HOST
+    port = config_obj.FLASK_PORT
+    print(f"Starting Flask server on {host}:{port}")
+    print(f"Debug mode: {app.config['DEBUG']}")
     app.run(host=host, port=port, debug=app.config['DEBUG'])

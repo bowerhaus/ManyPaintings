@@ -2112,14 +2112,21 @@ window.App = (function () {
       // Check if the panel is currently visible
       if (!this.onscreenControls.classList.contains('visible')) return;
       
-      // Check if the click was inside the control panel or trigger area
+      // Check if the click was inside the control panel
       const clickedInsidePanel = this.onscreenControls.contains(event.target);
-      const clickedInsideTrigger = this.controlsTriggerArea && this.controlsTriggerArea.contains(event.target);
       
-      // If clicked outside both the panel and trigger area, hide the controls
-      if (!clickedInsidePanel && !clickedInsideTrigger) {
-        console.log('UI: Click outside detected, hiding onscreen controls');
+      // Debug logging
+      console.log('UI: Click detected at:', event.clientX, event.clientY);
+      console.log('UI: Clicked inside panel:', clickedInsidePanel);
+      console.log('UI: Target element:', event.target);
+      
+      // If clicked outside the panel, hide the controls
+      // Note: clicks in trigger area should hide controls when they're visible
+      if (!clickedInsidePanel) {
+        console.log('UI: Click outside panel detected, hiding onscreen controls');
         this.hideOnscreenControls();
+      } else {
+        console.log('UI: Click inside panel, keeping controls visible');
       }
     },
 

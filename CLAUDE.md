@@ -321,24 +321,69 @@ The application uses a JSON-based configuration system with environment-specific
 - **Key Features**: Seeded pattern generation, sequence management, preloading
 - **API**: `generateNewPattern()`, `startPatternSequence()`
 
-#### Random Distribution System
-- **Purpose**: Equitable image selection with natural randomness
-- **Key Features**: Weighted random selection, usage tracking, allows consecutive appearances
-- **Algorithm**: 
-  - Tracks usage count for each image within pattern sequence
-  - Calculates dynamic weights based on usage (less-used images get bonus weight)
-  - Base weight of 1.0 with up to +0.5 bonus for below-average usage images
-  - Uses proper Fisher-Yates shuffle instead of biased `sort()` method
-  - Maintains seeded randomness for deterministic pattern reproduction
-- **Benefits**:
-  - **Natural Feel**: Images can appear consecutively or cluster naturally
-  - **Long-term Balance**: Less-used images gradually get higher selection probability
-  - **Deterministic**: Same pattern code always produces identical sequences
-  - **Configurable**: Bias strength can be adjusted (currently 0.5x multiplier)
-- **Previous Issues Fixed**:
-  - Replaced biased `sort(() => 0.5 - Math.random())` with Fisher-Yates shuffle
-  - Removed rigid cycle-based approach that prevented consecutive appearances
-  - Added gentle bias toward less-used images without eliminating randomness
+#### Weighted Random Distribution System
+- **Purpose**: Intelligent image selection that balances natural randomness with equitable distribution
+- **Core Philosophy**: Maintain the organic, unpredictable feel of true randomness while ensuring all images get fair representation over time
+
+##### Key Features
+- **Weighted Random Selection**: Dynamic probability adjustment based on usage history
+- **Usage Tracking**: Per-pattern monitoring of how frequently each image appears
+- **Natural Clustering**: Allows consecutive appearances and natural clustering patterns
+- **Deterministic Reproduction**: Same pattern seed produces identical sequences
+- **Real-time Adaptation**: Weights adjust throughout pattern sequences for continuous balance
+
+##### Technical Implementation
+- **Base Weight System**: Each image starts with weight of 1.0
+- **Usage Bias Calculation**: 
+  - Tracks usage count for each image within current pattern sequence
+  - Calculates average usage across all images
+  - Applies bias multiplier to images below average usage
+  - Current bias strength: 0.5x (less-used images get up to +0.5 bonus weight)
+- **Proper Randomization**: Uses Fisher-Yates shuffle algorithm instead of biased `sort()` methods
+- **Seeded Randomness**: All randomization uses pattern-seeded generators for deterministic reproduction
+
+##### Distribution Algorithm
+1. **Initialize**: Start pattern with equal weights (1.0) for all images
+2. **Track Usage**: Count selections for each image during pattern sequence
+3. **Calculate Bias**: Compare individual usage to pattern average
+4. **Apply Weights**: Boost probability for under-represented images
+5. **Select**: Use weighted random selection for next image choice
+6. **Update**: Increment usage counter and recalculate for next selection
+7. **Reset**: Begin fresh tracking when new pattern starts
+
+##### Mathematical Model
+```
+final_weight = base_weight + (bias_strength * usage_deficit)
+where:
+  base_weight = 1.0 (constant)
+  bias_strength = 0.5 (configurable)
+  usage_deficit = max(0, average_usage - current_usage)
+```
+
+##### Benefits Over Previous Systems
+- **Natural Feel**: Images can appear consecutively or cluster naturally (no artificial constraints)
+- **Long-term Fairness**: Less-used images gradually get higher selection probability
+- **Elimination of Bias**: Fixed previous `sort(() => 0.5 - Math.random())` which created statistical bias
+- **Pattern Consistency**: Same pattern code always produces identical sequences
+- **Flexible Configuration**: Bias strength can be adjusted (currently 0.5x multiplier)
+- **Performance Optimized**: Efficient calculations suitable for real-time animation
+
+##### Previous Issues Resolved
+- **Biased Shuffle Fixed**: Replaced statistically biased `sort(() => 0.5 - Math.random())` with Fisher-Yates shuffle
+- **Rigid Cycles Removed**: Eliminated cycle-based approach that prevented natural consecutive appearances  
+- **Gentle Bias Added**: Implemented usage-based weighting without eliminating randomness
+- **Deterministic Seeding**: Ensured all randomization uses pattern seeds for reproducible results
+
+##### Configuration Options
+- **Bias Strength**: Adjustable multiplier for usage-based weighting (default: 0.5)
+- **Tracking Window**: Per-pattern vs. global usage tracking (currently per-pattern)
+- **Weight Calculation**: Linear vs. exponential bias curves (currently linear)
+
+##### Performance Characteristics
+- **Memory Overhead**: Minimal - tracks simple usage counters per image
+- **CPU Impact**: Negligible - simple arithmetic operations during selection
+- **Scalability**: Efficient with large image collections (1000+ images)
+- **Real-time Updates**: Suitable for live animation without performance impact
 
 #### AudioManager
 - **Purpose**: Background audio playback and control
@@ -349,6 +394,100 @@ The application uses a JSON-based configuration system with environment-specific
 - **Purpose**: User interface and interaction handling
 - **Key Features**: Control panels, keyboard shortcuts, responsive design
 - **API**: `togglePlayPause()`, `updateAnimationSpeed()`, `toggleAudio()`
+
+### Enhanced Image Transformation System ✅ RECENT IMPROVEMENT
+
+The application now features an advanced **Grid-Based Spatial Positioning System** that provides superior image distribution and visual balance compared to traditional random positioning.
+
+#### Core Problem Solved
+Traditional random positioning can create visual clustering where multiple images appear in the same area while leaving other regions sparse. The new system ensures balanced spatial distribution while maintaining natural, organic positioning.
+
+#### Grid-Based Positioning Architecture
+- **Virtual Grid**: 4×3 grid system (12 zones total) covering the entire canvas
+- **Density Tracking**: Real-time monitoring of image count per grid zone
+- **Weighted Selection**: Less-populated zones receive higher selection probability
+- **Smooth Distribution**: Natural-feeling positioning that avoids rigid geometric layouts
+
+#### Technical Implementation
+
+##### Zone Management System
+```javascript
+// 4x3 grid for optimal canvas coverage
+const gridCols = 4; // Horizontal zones
+const gridRows = 3; // Vertical zones
+const totalZones = 12; // Full coverage zones
+
+// Each zone tracks current image density
+zoneDensity: new Map() // Format: "row-col" -> count
+```
+
+##### Dynamic Weight Calculation
+```javascript
+// Higher weight for zones with lower density
+const weight = Math.max(0.1, 1.0 - (currentDensity * 0.2));
+
+// Weight ranges:
+// - Empty zones: 1.0 (full weight)
+// - 1 image: 0.8 weight
+// - 2 images: 0.6 weight  
+// - 3 images: 0.4 weight
+// - 4+ images: 0.2 weight (minimum 0.1)
+```
+
+##### Position Calculation Process
+1. **Zone Selection**: Use weighted random to select optimal grid zone
+2. **Zone Bounds**: Calculate zone boundaries within translation ranges
+3. **Random Position**: Generate random position within selected zone
+4. **Density Update**: Increment zone density counter for tracking
+5. **Coverage Tracking**: Monitor zones covered by scaled/rotated images
+
+#### Advanced Features
+
+##### Multi-Zone Coverage Detection
+```javascript
+calculateImageZoneCoverage(centerX, centerY, imageWidth, imageHeight, scale, rotation)
+```
+- Calculates which zones an image actually covers after transformations
+- Accounts for rotation creating larger bounding boxes
+- Updates density for all covered zones, not just center zone
+- Ensures accurate density tracking for complex transformations
+
+##### Automatic Density Management
+- **Layer Creation**: Increments density for all zones covered by new images
+- **Layer Removal**: Decrements density when images fade out or are removed
+- **Real-time Updates**: Density tracking updates continuously during animation
+- **Memory Cleanup**: Zone density cleaned up when layers are destroyed
+
+#### Configuration Integration
+```json
+"transformations": {
+  "translation": {
+    "enabled": true,
+    "x_range_percent": 30,  // Horizontal spread across grid
+    "y_range_percent": 30   // Vertical spread across grid
+  }
+}
+```
+
+#### Performance Characteristics
+- **Computational Overhead**: Minimal - simple zone calculations and lookups
+- **Memory Usage**: Lightweight Map structure for zone density tracking
+- **Scalability**: Efficient with any number of concurrent layers
+- **Deterministic**: Seeded random ensures reproducible positioning with pattern codes
+
+#### Visual Impact Benefits
+- **Balanced Coverage**: Images distribute evenly across entire canvas over time
+- **Natural Clustering**: Some clustering still occurs naturally but is not excessive
+- **Reduced Dead Zones**: Eliminates large empty areas that could occur with pure random
+- **Visual Variety**: Each pattern provides diverse spatial compositions
+- **Professional Appearance**: More gallery-like presentation with thoughtful image placement
+
+#### Compatibility with Existing Systems
+- **Deterministic Patterns**: Works seamlessly with pattern seed system
+- **Transformation Cache**: Grid positions cached along with other transformations
+- **Favorites System**: Saved favorites reproduce exact grid-based positions
+- **Real-time Controls**: Speed multiplier and layer controls work with grid system
+- **Fullscreen Mode**: Grid positioning scales properly across different viewport sizes
 
 ### VS Code Integration
 The project is configured for VS Code development with:

@@ -38,13 +38,14 @@
     },
     "scale": {
       "enabled": true,
-      "min_factor": 0.75,
-      "max_factor": 1.5
+      "min_factor": 0.85,
+      "max_factor": 1.75
     },
     "translation": {
-      "enabled": true,
-      "x_range_percent": 70,
-      "y_range_percent": 60
+      "enabled": true
+    },
+    "best_fit_scaling": {
+      "enabled": false
     }
   },
   "color_remapping": {
@@ -115,8 +116,7 @@
       "transformations": {
         "translation": {
           "enabled": true,
-          "x_range_percent": 25,
-          "y_range_percent": 25
+          "minimum_visible_percent": 70
         }
       },
       "performance": {

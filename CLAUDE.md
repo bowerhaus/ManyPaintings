@@ -171,8 +171,10 @@ The application uses a JSON-based configuration system with environment-specific
     },
     "translation": {
       "enabled": true,
-      "x_range_percent": 30,
-      "y_range_percent": 30
+      "minimum_visible_percent": 60
+    },
+    "best_fit_scaling": {
+      "enabled": true
     }
   },
   "color_remapping": {
@@ -463,8 +465,10 @@ calculateImageZoneCoverage(centerX, centerY, imageWidth, imageHeight, scale, rot
 "transformations": {
   "translation": {
     "enabled": true,
-    "x_range_percent": 30,  // Horizontal spread across grid
-    "y_range_percent": 30   // Vertical spread across grid
+    "minimum_visible_percent": 60  // Ensures at least 60% of each image remains visible
+  },
+  "best_fit_scaling": {
+    "enabled": true  // Pre-scales images to fit within image area before transformations
   }
 }
 ```
@@ -488,6 +492,71 @@ calculateImageZoneCoverage(centerX, centerY, imageWidth, imageHeight, scale, rot
 - **Favorites System**: Saved favorites reproduce exact grid-based positions
 - **Real-time Controls**: Speed multiplier and layer controls work with grid system
 - **Fullscreen Mode**: Grid positioning scales properly across different viewport sizes
+
+### Best Fit Scaling System ✅ CONFIGURABLE FEATURE
+
+The application includes a **configurable best fit scaling system** that automatically sizes images to fit within the designated image area before applying transformations.
+
+#### Purpose and Function
+- **Automatic Sizing**: Scales images to fit entirely within the image area (matte border or viewport)
+- **Aspect Ratio Preservation**: Maintains original image aspect ratios during scaling
+- **Pre-Transformation Step**: Applied before rotation, scale, and translation transformations
+- **Consistent Presentation**: Ensures all images have appropriate base sizing regardless of original dimensions
+
+#### Technical Implementation
+```javascript
+applyBestFitScaling(imgElement, originalImg, imageArea) {
+  // Calculate scale factors for both dimensions
+  const scaleX = imageArea.width / originalWidth;
+  const scaleY = imageArea.height / originalHeight;
+  
+  // Use smaller scale factor to ensure complete containment
+  const bestFitScale = Math.min(scaleX, scaleY);
+  
+  // Apply scaling and center positioning
+  imgElement.style.width = `${originalWidth * bestFitScale}px`;
+  imgElement.style.height = `${originalHeight * bestFitScale}px`;
+}
+```
+
+#### Configuration Options
+```json
+"transformations": {
+  "best_fit_scaling": {
+    "enabled": true  // Enable/disable automatic best fit scaling
+  }
+}
+```
+
+#### Behavioral Modes
+- **Enabled (default)**: Images automatically scaled to fit within image area, then transformations applied
+- **Disabled**: Images use original dimensions, transformations applied directly to original size
+
+#### Benefits When Enabled
+- **Consistent Scaling**: All images start with appropriate base size relative to display area
+- **Professional Presentation**: Images properly sized for their display context
+- **Transformation Compatibility**: Provides consistent base for subsequent scale transformations
+- **Matte Border Integration**: Works seamlessly with matte border system for gallery-like presentation
+
+#### Benefits When Disabled
+- **Original Dimensions**: Images retain their native pixel dimensions
+- **Transformation Control**: Full control over image sizing through scale transformations only
+- **Performance**: Minor performance improvement by skipping pre-scaling calculations
+- **Specific Use Cases**: Useful when original image sizes are specifically designed for the application
+
+#### Integration with Transformation Pipeline
+1. **Image Loading**: Original image loaded and positioned
+2. **Best Fit Scaling**: *(Optional)* Pre-scale to fit image area
+3. **Scale Transformation**: Random scale factor applied (if enabled)
+4. **Rotation Transformation**: Random rotation applied (if enabled)  
+5. **Translation**: Grid-based positioning applied (if enabled)
+6. **Color Remapping**: Hue shift applied (if enabled)
+
+#### Performance Characteristics
+- **Computational Overhead**: Minimal - simple math calculations
+- **Memory Impact**: Negligible - no additional image storage
+- **Rendering Performance**: May improve consistency of GPU texture operations
+- **Deterministic**: Scaling calculations are deterministic and cached
 
 ### VS Code Integration
 The project is configured for VS Code development with:

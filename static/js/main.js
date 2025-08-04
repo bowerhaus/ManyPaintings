@@ -139,7 +139,6 @@ window.App = (function () {
     frameInterval: 1000 / 30,
     lastFrameTime: 0,
     transformationCache: new Map(),
-    zoneDensity: new Map(), // Track current image count per zone
 
     init() {
       this.layersContainer = document.getElementById('image-layers');
@@ -153,9 +152,27 @@ window.App = (function () {
       // Apply animation quality class to body
       document.body.className = `animation-quality-${config.animationQuality || 'high'}`;
 
-      console.log(`AnimationEngine: Initialized with ${this.frameRate} FPS target`);
+      // Initialize virtual coordinate system: ensure container uses full viewport
+      this.initializeVirtualCoordinateSystem();
+
+      console.log(`AnimationEngine: Initialized with ${this.frameRate} FPS target and virtual coordinate system`);
       console.log(`AnimationEngine: Max concurrent layers: ${config.maxConcurrentLayers || 5}`);
       console.log(`AnimationEngine: Animation quality: ${config.animationQuality || 'high'}`);
+    },
+
+    initializeVirtualCoordinateSystem() {
+      // Ensure image-layers container always uses full viewport dimensions
+      // This prevents matte border system from affecting image coordinate space
+      if (this.layersContainer) {
+        this.layersContainer.style.position = 'fixed';
+        this.layersContainer.style.left = '0';
+        this.layersContainer.style.top = '0';
+        this.layersContainer.style.width = '100vw';
+        this.layersContainer.style.height = '100vh';
+        this.layersContainer.style.zIndex = '10'; // Below controls but above background
+        
+        console.log('AnimationEngine: Virtual coordinate system initialized - container set to full viewport');
+      }
     },
 
     start() {
@@ -341,33 +358,6 @@ window.App = (function () {
 
         this.activeLayers.set(imageId, layerInfo);
 
-        // Update zone density tracking for all covered zones
-        if (transformations.zoneKey && config.translationEnabled) {
-          // Get image dimensions from the loaded image
-          const imageWidth = img.naturalWidth || img.width || 800;
-          const imageHeight = img.naturalHeight || img.height || 600;
-          
-          // Calculate all zones this image covers
-          const coveredZones = this.calculateImageZoneCoverage(
-            transformations.translateX,
-            transformations.translateY,
-            imageWidth,
-            imageHeight,
-            transformations.scale || 1,
-            transformations.rotation || 0,
-            config.translationXRange,
-            config.translationYRange
-          );
-          
-          // Store covered zones in transformations for later cleanup
-          transformations.coveredZones = coveredZones;
-          
-          // Increment density for all covered zones
-          coveredZones.forEach(zoneKey => {
-            const currentDensity = this.zoneDensity.get(zoneKey) || 0;
-            this.zoneDensity.set(zoneKey, currentDensity + 1);
-          });
-        }
 
         // Start fade in animation
         this.startFadeIn(layerInfo);
@@ -447,13 +437,6 @@ window.App = (function () {
       layer.classList.add('fade-out');
       layer.classList.remove('active');
 
-      // Update zone density tracking for all covered zones
-      if (transformations && transformations.coveredZones) {
-        transformations.coveredZones.forEach(zoneKey => {
-          const currentDensity = this.zoneDensity.get(zoneKey) || 0;
-          this.zoneDensity.set(zoneKey, Math.max(0, currentDensity - 1));
-        });
-      }
 
       // Remove from DOM after transition
       setTimeout(() => {
@@ -492,11 +475,10 @@ window.App = (function () {
       }
 
       if (config.translationEnabled) {
-        // Grid-based translation for better spatial distribution
-        const position = this.calculateGridBasedPosition(random, config.translationXRange, config.translationYRange);
-        transformations.translateX = position.x;
-        transformations.translateY = position.y;
-        transformations.zoneKey = position.zoneKey;
+        // Simple random positioning across full viewport
+        transformations.translateX = (random() - 0.5) * 100; // -50% to +50%
+        transformations.translateY = (random() - 0.5) * 100; // -50% to +50%
+        console.log(`Random position: (${transformations.translateX.toFixed(1)}%, ${transformations.translateY.toFixed(1)}%)`);
       }
 
       if (config.colorRemappingEnabled && random() < config.colorRemappingProbability) {
@@ -520,107 +502,6 @@ window.App = (function () {
       return Math.abs(hash);
     },
 
-    calculateGridBasedPosition(random, xRange, yRange) {
-      // Use 4x3 grid for better granularity and canvas coverage
-      const gridCols = 4;
-      const gridRows = 3;
-      const totalZones = gridCols * gridRows;
-      
-      // Create zones with density-based weighting
-      const zones = [];
-      let totalWeight = 0;
-      
-      for (let row = 0; row < gridRows; row++) {
-        for (let col = 0; col < gridCols; col++) {
-          const zoneKey = `${row}-${col}`;
-          const currentDensity = this.zoneDensity.get(zoneKey) || 0;
-          
-          // Higher weight for zones with lower density
-          // Base weight of 1.0, reduced by density count
-          const weight = Math.max(0.1, 1.0 - (currentDensity * 0.2));
-          
-          zones.push({ row, col, weight, zoneKey });
-          totalWeight += weight;
-        }
-      }
-      
-      // Select zone using weighted random distribution
-      let randomValue = random() * totalWeight;
-      let selectedZone = zones[0];
-      
-      for (const zone of zones) {
-        randomValue -= zone.weight;
-        if (randomValue <= 0) {
-          selectedZone = zone;
-          break;
-        }
-      }
-      
-      // Calculate position within selected zone
-      const zoneWidth = (2 * xRange) / gridCols;  // Each zone covers portion of total range
-      const zoneHeight = (2 * yRange) / gridRows;
-      
-      // Zone bounds (in percentage space: -xRange to +xRange)
-      const zoneLeft = -xRange + (selectedZone.col * zoneWidth);
-      const zoneRight = zoneLeft + zoneWidth;
-      const zoneTop = -yRange + (selectedZone.row * zoneHeight);
-      const zoneBottom = zoneTop + zoneHeight;
-      
-      // Random position within the zone
-      const x = zoneLeft + random() * (zoneRight - zoneLeft);
-      const y = zoneTop + random() * (zoneBottom - zoneTop);
-      
-      return { x, y, zoneKey: selectedZone.zoneKey };
-    },
-
-    calculateImageZoneCoverage(centerX, centerY, imageWidth, imageHeight, scale, rotation, xRange, yRange) {
-      const gridCols = 4;
-      const gridRows = 3;
-      
-      // Calculate actual image dimensions after scaling
-      const scaledWidth = imageWidth * scale;
-      const scaledHeight = imageHeight * scale;
-      
-      // For simplicity, use bounding box approach (rotation creates larger bounding box)
-      const rotationRadians = (rotation || 0) * Math.PI / 180;
-      const boundingWidth = Math.abs(scaledWidth * Math.cos(rotationRadians)) + Math.abs(scaledHeight * Math.sin(rotationRadians));
-      const boundingHeight = Math.abs(scaledWidth * Math.sin(rotationRadians)) + Math.abs(scaledHeight * Math.cos(rotationRadians));
-      
-      // Convert percentage coordinates to zone space
-      const zoneWidth = (2 * xRange) / gridCols;
-      const zoneHeight = (2 * yRange) / gridRows;
-      
-      // Calculate image bounds in percentage space
-      const halfBoundingWidth = (boundingWidth / window.innerWidth) * 100 / 2;
-      const halfBoundingHeight = (boundingHeight / window.innerHeight) * 100 / 2;
-      
-      const imageLeft = centerX - halfBoundingWidth;
-      const imageRight = centerX + halfBoundingWidth;
-      const imageTop = centerY - halfBoundingHeight;
-      const imageBottom = centerY + halfBoundingHeight;
-      
-      // Find all zones that overlap with the image bounds
-      const coveredZones = [];
-      
-      for (let row = 0; row < gridRows; row++) {
-        for (let col = 0; col < gridCols; col++) {
-          const zoneLeft = -xRange + (col * zoneWidth);
-          const zoneRight = zoneLeft + zoneWidth;
-          const zoneTop = -yRange + (row * zoneHeight);
-          const zoneBottom = zoneTop + zoneHeight;
-          
-          // Check if image bounding box overlaps with zone
-          const overlaps = !(imageRight < zoneLeft || imageLeft > zoneRight || 
-                            imageBottom < zoneTop || imageTop > zoneBottom);
-          
-          if (overlaps) {
-            coveredZones.push(`${row}-${col}`);
-          }
-        }
-      }
-      
-      return coveredZones;
-    },
 
     seededRandom(seed) {
       let state = seed;
@@ -649,8 +530,23 @@ window.App = (function () {
       // Get the image area dimensions (either from matte border or full viewport)
       const imageArea = this.getImageAreaDimensions();
       
-      // Apply best-fit scaling to the image area first
-      this.applyBestFitScaling(imgElement, img, imageArea);
+      // Apply best-fit scaling to the image area first (if enabled)
+      if (config.bestFitScalingEnabled) {
+        this.applyBestFitScaling(imgElement, img, imageArea);
+      } else {
+        // If best fit scaling is disabled, use original image dimensions
+        const originalWidth = img.naturalWidth || img.width;
+        const originalHeight = img.naturalHeight || img.height;
+        
+        imgElement.style.width = `${originalWidth}px`;
+        imgElement.style.height = `${originalHeight}px`;
+        imgElement.style.position = 'absolute';
+        imgElement.style.left = '50%';
+        imgElement.style.top = '50%';
+        imgElement.style.transform = `translate(-50%, -50%)`;
+        imgElement.style.transformOrigin = 'center center';
+        console.log(`AnimationEngine: Best fit scaling disabled, using original image dimensions: ${originalWidth}x${originalHeight}px`);
+      }
 
       // Apply transformations in proper order: scale -> rotate -> translate
       if (transformations) {
@@ -673,8 +569,10 @@ window.App = (function () {
 
         if (transforms.length > 0) {
           const existingTransform = imgElement.style.transform || '';
-          imgElement.style.transform = existingTransform + ' ' + transforms.join(' ');
+          const newTransform = existingTransform + ' ' + transforms.join(' ');
+          imgElement.style.transform = newTransform;
           imgElement.style.transformOrigin = 'center center';
+          console.log(`Applied transforms: ${newTransform}`);
         }
 
         // Apply hue shift filter if enabled
@@ -688,16 +586,8 @@ window.App = (function () {
     },
 
     getImageAreaDimensions() {
-      const imageLayersContainer = document.getElementById('image-layers');
-      if (imageLayersContainer) {
-        const computedStyle = getComputedStyle(imageLayersContainer);
-        return {
-          width: parseFloat(computedStyle.width) || window.innerWidth,
-          height: parseFloat(computedStyle.height) || window.innerHeight
-        };
-      }
-      
-      // Fallback to viewport dimensions
+      // Virtual coordinate system: Always return full viewport dimensions
+      // This ensures images use consistent coordinate space regardless of matte border settings
       return {
         width: window.innerWidth,
         height: window.innerHeight
@@ -864,33 +754,6 @@ window.App = (function () {
 
         this.activeLayers.set(imageId, layerInfo);
 
-        // Update zone density tracking for favorites too
-        if (transformations.zoneKey && config.translationEnabled) {
-          // Get image dimensions from the loaded image  
-          const imageWidth = img.naturalWidth || img.width || 800;
-          const imageHeight = img.naturalHeight || img.height || 600;
-          
-          // Calculate all zones this image covers
-          const coveredZones = this.calculateImageZoneCoverage(
-            transformations.translateX,
-            transformations.translateY,
-            imageWidth,
-            imageHeight,
-            transformations.scale || 1,
-            transformations.rotation || 0,
-            config.translationXRange,
-            config.translationYRange
-          );
-          
-          // Store covered zones in transformations for later cleanup
-          transformations.coveredZones = coveredZones;
-          
-          // Increment density for all covered zones
-          coveredZones.forEach(zoneKey => {
-            const currentDensity = this.zoneDensity.get(zoneKey) || 0;
-            this.zoneDensity.set(zoneKey, currentDensity + 1);
-          });
-        }
 
         // Start with opacity 0 and fade in to the saved opacity quickly
         layer.style.opacity = '0';
@@ -2852,29 +2715,67 @@ window.App = (function () {
         return;
       }
 
-      // Calculate the inner area excluding bevel shadow space
-      const shadowInset = 4; // Maximum shadow depth (adjust based on style)
+      // Virtual coordinate system: Keep container at full viewport size
+      // Matte border effect is achieved through CSS clipping, not container resizing
+      imageLayersContainer.style.position = 'fixed';
+      imageLayersContainer.style.left = '0';
+      imageLayersContainer.style.top = '0';
+      imageLayersContainer.style.width = '100vw';
+      imageLayersContainer.style.height = '100vh';
+      imageLayersContainer.style.boxSizing = 'border-box';
+      
+      // Apply CSS clip-path to create matte border effect
+      if (canvas && this.config && this.config.enabled !== false) {
+        const clipPath = this.createMatteClipPath(canvas);
+        imageLayersContainer.style.clipPath = clipPath;
+      } else {
+        // Remove clipping when matte border is disabled
+        imageLayersContainer.style.clipPath = 'none';
+      }
+
+      console.log('MatteBorderManager: Applied virtual coordinate system with CSS clipping');
+    },
+
+    handleResize() {
+      // Reapply virtual coordinate system and clipping on window resize
+      if (this.config && this.config.enabled !== false) {
+        this.applyConfiguration();
+      } else {
+        // Ensure virtual coordinate system is maintained even when matte border is disabled
+        const imageLayersContainer = document.getElementById('image-layers');
+        if (imageLayersContainer) {
+          imageLayersContainer.style.position = 'fixed';
+          imageLayersContainer.style.left = '0';
+          imageLayersContainer.style.top = '0';
+          imageLayersContainer.style.width = '100vw';
+          imageLayersContainer.style.height = '100vh';
+          imageLayersContainer.style.clipPath = 'none';
+        }
+      }
+    },
+
+    createMatteClipPath(canvas) {
+      // Calculate the inner area (image area) in viewport coordinates
+      const shadowInset = 4; // Maximum shadow depth
       const innerLeft = canvas.canvasLeft + canvas.borderSize + shadowInset;
       const innerTop = canvas.canvasTop + canvas.borderSize + shadowInset;
-      const innerWidth = canvas.canvasWidth - (canvas.borderSize * 2) - (shadowInset * 2);
-      const innerHeight = canvas.canvasHeight - (canvas.borderSize * 2) - (shadowInset * 2);
-
-      // Position image layers container to fill the inner area (excluding shadow space)
-      imageLayersContainer.style.position = 'absolute';
-      imageLayersContainer.style.left = `${innerLeft}px`;
-      imageLayersContainer.style.top = `${innerTop}px`;
-      imageLayersContainer.style.width = `${innerWidth}px`;
-      imageLayersContainer.style.height = `${innerHeight}px`;
-      imageLayersContainer.style.boxSizing = 'border-box';
-      imageLayersContainer.style.overflow = 'hidden';
-
-      console.log('MatteBorderManager: Positioned image layers within inner area (excluding shadow space):', {
-        left: innerLeft,
-        top: innerTop,
-        width: innerWidth,
-        height: innerHeight,
-        shadowInset
-      });
+      const innerRight = innerLeft + (canvas.canvasWidth - (canvas.borderSize * 2) - (shadowInset * 2));
+      const innerBottom = innerTop + (canvas.canvasHeight - (canvas.borderSize * 2) - (shadowInset * 2));
+      
+      // Convert to percentages for CSS clip-path
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      const leftPercent = (innerLeft / viewportWidth) * 100;
+      const topPercent = (innerTop / viewportHeight) * 100;
+      const rightPercent = (innerRight / viewportWidth) * 100;
+      const bottomPercent = (innerBottom / viewportHeight) * 100;
+      
+      // Create rectangular clip path for the image area
+      const clipPath = `polygon(${leftPercent}% ${topPercent}%, ${rightPercent}% ${topPercent}%, ${rightPercent}% ${bottomPercent}%, ${leftPercent}% ${bottomPercent}%)`;
+      
+      console.log('MatteBorderManager: Created clip path:', clipPath);
+      return clipPath;
     },
 
     setViewportBackground(color) {
@@ -2894,12 +2795,13 @@ window.App = (function () {
     resetMatteCanvas() {
       const imageLayersContainer = document.getElementById('image-layers');
       if (imageLayersContainer) {
-        // Reset image layers container to full viewport
-        imageLayersContainer.style.position = 'relative';
-        imageLayersContainer.style.left = '';
-        imageLayersContainer.style.top = '';
-        imageLayersContainer.style.width = '100%';
-        imageLayersContainer.style.height = '100%';
+        // Virtual coordinate system: Always keep at full viewport
+        imageLayersContainer.style.position = 'fixed';
+        imageLayersContainer.style.left = '0';
+        imageLayersContainer.style.top = '0';
+        imageLayersContainer.style.width = '100vw';
+        imageLayersContainer.style.height = '100vh';
+        imageLayersContainer.style.clipPath = 'none'; // Remove any clipping
       }
 
       // Reset matte border element

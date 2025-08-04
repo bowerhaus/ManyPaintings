@@ -99,8 +99,9 @@ class Config:
         
         translation_config = transform_config.get('translation', {})
         self.TRANSLATION_ENABLED = translation_config.get('enabled', True)
-        self.TRANSLATION_X_RANGE = translation_config.get('x_range_percent', 20)
-        self.TRANSLATION_Y_RANGE = translation_config.get('y_range_percent', 15)
+        
+        best_fit_scaling_config = transform_config.get('best_fit_scaling', {})
+        self.BEST_FIT_SCALING_ENABLED = best_fit_scaling_config.get('enabled', True)
         
         # Color remapping configuration
         color_remapping_config = self._config_data.get('color_remapping', {})

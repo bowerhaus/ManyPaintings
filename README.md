@@ -73,9 +73,9 @@ The application should provide extensive configuration options to fine-tune the 
 *   `scale.enabled` - Enable random scaling (default: true)
 *   `scale.min_factor` - Minimum scale multiplier (default: 0.5)
 *   `scale.max_factor` - Maximum scale multiplier (default: 1.0)
-*   `translation.enabled` - Enable random positioning (default: true)
-*   `translation.x_range_percent` - Horizontal variance as % of viewport (default: 30%)
-*   `translation.y_range_percent` - Vertical variance as % of viewport (default: 30%)
+*   `translation.enabled` - Enable grid-based positioning (default: true)
+*   `translation.minimum_visible_percent` - Minimum image visibility percentage (default: 60%)
+*   `best_fit_scaling.enabled` - Enable automatic image scaling to fit within image area (default: true)
 
 #### Color Remapping Configuration ✅ NEW FEATURE
 *   `enabled` - Enable/disable dynamic color remapping system (default: true)
@@ -257,8 +257,10 @@ Zone Selection Probability:
 "transformations": {
   "translation": {
     "enabled": true,
-    "x_range_percent": 30,  // Horizontal spread across grid zones
-    "y_range_percent": 30   // Vertical spread across grid zones
+    "minimum_visible_percent": 60  // Ensures at least 60% of each image remains visible
+  },
+  "best_fit_scaling": {
+    "enabled": true  // Pre-scales images to fit within image area before transformations
   }
 }
 ```
@@ -621,8 +623,10 @@ The application is configured using a **JSON-based configuration system** (`conf
     },
     "translation": {
       "enabled": true,
-      "x_range_percent": 30,
-      "y_range_percent": 30
+      "minimum_visible_percent": 60
+    },
+    "best_fit_scaling": {
+      "enabled": true
     }
   },
   "color_remapping": {

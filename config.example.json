@@ -41,8 +41,10 @@
     },
     "translation": {
       "enabled": true,
-      "x_range_percent": 20,
-      "y_range_percent": 15
+      "minimum_visible_percent": 60
+    },
+    "best_fit_scaling": {
+      "enabled": true
     }
   },
   "performance": {

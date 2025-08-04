@@ -247,10 +247,10 @@ Client (JavaScript)          Server (Flask)              Storage
   - **Maintains Determinism**: Uses same seeded random system for pattern reproducibility
   - **Performance Optimized**: Efficient calculation with minimal overhead
 
-- **Configuration Integration**: Works with existing translation settings
-  - **Range Compatibility**: Existing `x_range_percent` and `y_range_percent` still control overall spread
+- **Configuration Integration**: Works with new visibility-based translation settings
+  - **Visibility Control**: New `minimum_visible_percent` parameter ensures proper image visibility
   - **Universal Application**: Works across all aspect ratios and device types
-  - **Backward Compatible**: No configuration changes required
+  - **Improved UX**: Prevents images from being positioned mostly off-screen
 
 ### Advanced Abstract Art Images ✅ NEW
 - **Sophisticated Generation**: Created 10 new images using advanced generative techniques
@@ -321,4 +321,62 @@ Client (JavaScript)          Server (Flask)              Storage
 - **Memory Efficient**: Thumbnails use scaled-down transforms and cached images
 - **Error Boundaries**: Graceful handling of missing or corrupted favorites
 
-The system is now feature-complete and production-ready for both casual viewing and kiosk installations, with accurate state capture and a polished user experience.
+## 🔧 Recent Configuration Enhancements (August 2025)
+
+### Best Fit Scaling Configuration ✅ NEW
+- **Configurable Image Scaling**: Added `best_fit_scaling.enabled` option to control automatic image scaling
+  - **Enabled (default)**: Images automatically scaled to fit within image area before transformations
+  - **Disabled**: Images retain original pixel dimensions, transformations applied directly
+  - **Full Control**: Separate from scale transformation system for granular control
+  - **Performance Option**: Minor performance improvement when disabled
+
+### Enhanced Positioning System ✅ IMPROVED
+- **Visibility-Based Positioning**: Replaced X/Y range percentages with intelligent visibility control
+  - **Minimum Visible Percent**: New `minimum_visible_percent` parameter (default: 60%)
+  - **Smart Offset Calculation**: Automatically calculates maximum positioning offset to ensure visibility
+  - **Grid Integration**: Works seamlessly with 4×3 grid distribution system
+  - **Off-Screen Prevention**: Eliminates issues with images positioned mostly off-screen
+
+### Configuration Breaking Changes
+- **Translation Settings Updated**: 
+  - **Removed**: `x_range_percent` and `y_range_percent` parameters
+  - **Added**: `minimum_visible_percent` for visibility-based positioning
+  - **Backward Compatibility**: Old settings automatically migrated on first load
+
+### Scaling System Architecture
+The application now has **two separate scaling systems**:
+
+1. **Best Fit Scaling** (`best_fit_scaling.enabled`)
+   - Pre-scales images to fit within image area (matte border or viewport)
+   - Applied before all transformations
+   - Ensures consistent base sizing
+
+2. **Scale Transformation** (`scale.enabled`, `scale.min_factor`, `scale.max_factor`)
+   - Random scale factor applied after best fit scaling
+   - Part of the transformation pipeline
+   - Creates visual variety in image sizes
+
+### Matte Border Interaction
+- **Important Discovery**: Matte border system creates implicit scaling through container sizing
+- **True Original Size**: Requires disabling both `best_fit_scaling` AND `matte_border` 
+- **Container Effects**: Matte border constrains image area, creating apparent scaling even when best fit is disabled
+
+### Configuration Examples
+```json
+// Professional Gallery Mode (default)
+"transformations": {
+  "best_fit_scaling": { "enabled": true },
+  "translation": { "minimum_visible_percent": 60 }
+},
+"matte_border": { "enabled": true }
+
+// Original Size Mode (no scaling)
+"transformations": {
+  "best_fit_scaling": { "enabled": false },
+  "scale": { "enabled": false },
+  "translation": { "minimum_visible_percent": 100 }
+},
+"matte_border": { "enabled": false }
+```
+
+The system is now feature-complete and production-ready for both casual viewing and kiosk installations, with accurate state capture, granular scaling control, and a polished user experience.

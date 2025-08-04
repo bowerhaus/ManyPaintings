@@ -41,10 +41,15 @@ def create_app(config_name=None):
         image_manager = ImageManager(app.config['IMAGE_DIRECTORY'], base_config=dict(app.config))
         catalog = image_manager.get_image_catalog()
         
-        # Add cache headers for performance
+        # Add cache headers for performance, but not if cache-busting timestamp is present
         response = jsonify(catalog)
-        if app.config['ENABLE_CACHING']:
+        if app.config['ENABLE_CACHING'] and 't' not in request.args:
             response.headers['Cache-Control'] = f'public, max-age={app.config["CACHE_MAX_AGE"]}'
+        else:
+            # Disable caching for cache-busting requests
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
         
         return response
     

@@ -3,12 +3,12 @@
 {% block title %}Many Paintings - Generative Art{% endblock %}
 
 {% block content %}
-<div id="app-container" class="w-screen h-screen relative overflow-hidden">
-    <div id="canvas-container" class="w-full h-full relative bg-black transition-colors duration-500">
-        <div id="image-layers" class="w-full h-full relative overflow-hidden bg-black transition-colors duration-500 box-border"></div>
+<div id="app-container" class="app-container">
+    <div id="canvas-container" class="canvas-container">
+        <div id="image-layers" class="image-layers-container"></div>
         
         <!-- Rule of Thirds Grid Lines (for debugging) -->
-        <div id="rule-of-thirds-grid" class="absolute top-0 left-0 w-full h-full pointer-events-none z-30" style="display: none;">
+        <div id="rule-of-thirds-grid" class="rule-of-thirds-grid" style="display: none;">
             <!-- Vertical lines -->
             <div style="position: absolute; left: 33.333%; top: 0; width: 1px; height: 100%; background: rgba(255, 0, 0, 0.5);"></div>
             <div style="position: absolute; left: 66.667%; top: 0; width: 1px; height: 100%; background: rgba(255, 0, 0, 0.5);"></div>
@@ -23,18 +23,18 @@
             <!-- Center point (hidden by default, shown when using rule_of_thirds_and_centre mode) -->
             <div id="center-grid-dot" style="position: absolute; left: calc(50% - 3px); top: calc(50% - 3px); width: 6px; height: 6px; background: rgba(255, 255, 0, 0.8); border-radius: 50%; display: none;"></div>
         </div>
-        <div class="matte-border-container absolute top-0 left-0 w-full h-full pointer-events-none z-50">
+        <div class="matte-border-container">
             <div id="matte-border" class="matte-border classic"></div>
         </div>
-        <div id="loading-indicator" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center bg-black/80 text-white p-8 rounded-2xl backdrop-blur-lg transition-colors duration-500">
-            <div class="loading-spinner w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+        <div id="loading-indicator" class="loading-indicator">
+            <div class="loading-spinner"></div>
             <p>Loading images...</p>
         </div>
     </div>
     
-    <div id="ui-overlay" class="absolute top-0 left-0 w-full h-full pointer-events-none z-[100]">
-        <div id="controls" class="hidden absolute top-8 right-8 flex gap-2 pointer-events-auto">
-            <button id="fullscreen-btn" class="bg-black/70 border border-white/20 text-white p-3 rounded-lg cursor-pointer text-xl transition-all duration-200 backdrop-blur-lg hover:bg-white/10 hover:border-white/30 active:scale-95" title="Enter Fullscreen">
+    <div id="ui-overlay" class="ui-overlay">
+        <div id="controls" class="controls-panel">
+            <button id="fullscreen-btn" class="control-button" title="Enter Fullscreen">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
                 </svg>
@@ -121,41 +121,41 @@
             </div>
         </div>
         
-        <div id="error-message" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-600/90 text-white p-6 rounded-xl text-center max-w-sm backdrop-blur-lg pointer-events-auto transition-colors duration-500">
+        <div id="error-message" class="error-message">
             <p id="error-text"></p>
-            <button id="retry-btn" class="bg-white/20 border border-white/30 text-white py-2 px-4 rounded-md cursor-pointer mt-4 transition-colors duration-200 hover:bg-white/30">Retry</button>
+            <button id="retry-btn" class="retry-button">Retry</button>
         </div>
         
         <!-- Favorites Gallery Modal -->
-        <div id="favorites-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-lg z-[300] pointer-events-auto">
-            <div class="absolute inset-0 p-4 sm:p-6 md:p-8 flex items-center justify-center">
-                <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+        <div id="favorites-modal" class="modal favorites-modal hidden">
+            <div class="modal-backdrop">
+                <div class="modal-content">
                     <!-- Modal Header -->
-                    <div class="flex items-center justify-between p-6 border-b border-black/10">
-                        <h2 class="text-2xl font-bold text-black/90">Saved Favorites</h2>
-                        <button id="favorites-modal-close" class="flex items-center justify-center w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 transition-colors">
-                            <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current text-black/70">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Saved Favorites</h2>
+                        <button id="favorites-modal-close" class="modal-close">
+                            <svg viewBox="0 0 24 24" class="modal-close-icon">
                                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                             </svg>
                         </button>
                     </div>
                     
                     <!-- Modal Content -->
-                    <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                        <div id="favorites-loading" class="hidden text-center py-12">
-                            <div class="loading-spinner w-8 h-8 border-2 border-black/20 border-t-black/60 rounded-full animate-spin mx-auto mb-4"></div>
-                            <p class="text-black/70">Loading favorites...</p>
+                    <div class="modal-body">
+                        <div id="favorites-loading" class="loading-section hidden">
+                            <div class="loading-spinner small"></div>
+                            <p class="loading-text">Loading favorites...</p>
                         </div>
                         
-                        <div id="favorites-empty" class="hidden text-center py-12">
-                            <svg viewBox="0 0 24 24" class="w-16 h-16 fill-current text-black/30 mx-auto mb-4">
+                        <div id="favorites-empty" class="empty-section hidden">
+                            <svg viewBox="0 0 24 24" class="empty-icon">
                                 <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
                             </svg>
-                            <p class="text-black/70 text-lg mb-2">No favorites saved yet</p>
-                            <p class="text-black/50 text-sm">Press F to save your current painting as a favorite</p>
+                            <p class="empty-title">No favorites saved yet</p>
+                            <p class="empty-subtitle">Press F to save your current painting as a favorite</p>
                         </div>
                         
-                        <div id="favorites-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        <div id="favorites-grid" class="favorites-grid">
                             <!-- Favorites will be populated here -->
                         </div>
                     </div>
@@ -164,56 +164,56 @@
         </div>
         
         <!-- Image Manager Modal -->
-        <div id="image-manager-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-lg z-[300] pointer-events-auto">
-            <div class="absolute inset-0 p-4 sm:p-6 md:p-8 flex items-center justify-center">
-                <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+        <div id="image-manager-modal" class="modal image-manager-modal hidden">
+            <div class="modal-backdrop">
+                <div class="modal-content">
                     <!-- Modal Header -->
-                    <div class="flex items-center justify-between p-6 border-b border-black/10">
-                        <h2 class="text-2xl font-bold text-black/90">Image Manager</h2>
-                        <button id="image-manager-modal-close" class="flex items-center justify-center w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 transition-colors">
-                            <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current text-black/70">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Image Manager</h2>
+                        <button id="image-manager-modal-close" class="modal-close">
+                            <svg viewBox="0 0 24 24" class="modal-close-icon">
                                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                             </svg>
                         </button>
                     </div>
                     
                     <!-- Modal Content -->
-                    <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                    <div class="modal-body">
                         <!-- Upload Area -->
                         <div class="mb-6">
-                            <div id="upload-area" class="border-2 border-dashed border-black/20 rounded-lg p-8 text-center hover:border-black/40 transition-colors cursor-pointer">
-                                <svg viewBox="0 0 24 24" class="w-12 h-12 fill-current text-black/30 mx-auto mb-4">
+                            <div id="upload-area" class="upload-area">
+                                <svg viewBox="0 0 24 24" class="upload-icon">
                                     <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                                 </svg>
-                                <p class="text-black/70 text-lg mb-2">Drop images here or click to browse</p>
-                                <p class="text-black/50 text-sm">Supports PNG, JPG, JPEG, GIF, WEBP</p>
-                                <input type="file" id="image-upload-input" class="hidden" accept=".png,.jpg,.jpeg,.gif,.webp" multiple>
+                                <p class="upload-title">Drop images here or click to browse</p>
+                                <p class="upload-subtitle">Supports PNG, JPG, JPEG, GIF, WEBP</p>
+                                <input type="file" id="image-upload-input" class="upload-input" accept=".png,.jpg,.jpeg,.gif,.webp" multiple>
                             </div>
                             
                             <!-- Upload Progress -->
-                            <div id="upload-progress" class="hidden mt-4">
-                                <div class="bg-black/10 rounded-full h-2">
-                                    <div id="upload-progress-bar" class="bg-blue-500 rounded-full h-2 transition-all" style="width: 0%"></div>
+                            <div id="upload-progress" class="upload-progress hidden">
+                                <div class="upload-progress-bar">
+                                    <div id="upload-progress-bar" class="upload-progress-fill" style="width: 0%"></div>
                                 </div>
-                                <p id="upload-status" class="text-black/70 text-sm mt-2">Uploading...</p>
+                                <p id="upload-status" class="upload-status">Uploading...</p>
                             </div>
                         </div>
                         
                         <!-- Images Grid -->
-                        <div id="images-loading" class="hidden text-center py-12">
-                            <div class="loading-spinner w-8 h-8 border-2 border-black/20 border-t-black/60 rounded-full animate-spin mx-auto mb-4"></div>
-                            <p class="text-black/70">Loading images...</p>
+                        <div id="images-loading" class="loading-section hidden">
+                            <div class="loading-spinner small"></div>
+                            <p class="loading-text">Loading images...</p>
                         </div>
                         
-                        <div id="images-empty" class="hidden text-center py-12">
-                            <svg viewBox="0 0 24 24" class="w-16 h-16 fill-current text-black/30 mx-auto mb-4">
+                        <div id="images-empty" class="empty-section hidden">
+                            <svg viewBox="0 0 24 24" class="empty-icon">
                                 <path d="M21,19V5c0,-1.1 -0.9,-2 -2,-2H5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2zM8.5,13.5l2.5,3.01L14.5,12l4.5,6H5l3.5,-4.5z"/>
                             </svg>
-                            <p class="text-black/70 text-lg mb-2">No images found</p>
-                            <p class="text-black/50 text-sm">Upload some images to get started</p>
+                            <p class="empty-title">No images found</p>
+                            <p class="empty-subtitle">Upload some images to get started</p>
                         </div>
                         
-                        <div id="images-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        <div id="images-grid" class="image-manager-grid">
                             <!-- Images will be populated here -->
                         </div>
                     </div>
@@ -226,9 +226,21 @@
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        console.log('DOMContentLoaded - App available:', !!window.App);
+        
+        // Wait for App to be available (in case modules are still loading)
+        let attempts = 0;
+        while (!window.App && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
         if (window.App) {
+            console.log('Initializing App...');
             window.App.init();
+        } else {
+            console.error('App not available after waiting');
         }
         
         // Fullscreen functionality

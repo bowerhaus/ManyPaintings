@@ -5,82 +5,82 @@
 {% block body_class %}kiosk-mode{% endblock %}
 
 {% block content %}
-<div id="kiosk-container" class="w-screen h-screen relative overflow-hidden">
-    <div id="canvas-container" class="w-full h-full relative bg-black transition-colors duration-500">
-        <div id="image-layers" class="w-full h-full relative overflow-hidden bg-black transition-colors duration-500 box-border">
+<div id="kiosk-container" class="kiosk-container">
+    <div id="canvas-container" class="canvas-container">
+        <div id="image-layers" class="image-layers-container">
             <!-- Kiosk controls positioned inside the actual image viewing area -->
-            <div id="kiosk-controls" class="absolute top-8 right-8 md:top-4 md:right-4 z-[100] flex gap-3 md:gap-2">
-        <button id="audio-toggle-btn" class="bg-black/70 border border-white/30 rounded-lg p-3 md:p-2 text-white cursor-pointer transition-all duration-300 backdrop-blur-lg flex items-center justify-center w-12 h-12 md:w-10 md:h-10 hover:bg-black/80 hover:border-white/50 hover:scale-105 active:scale-95 shadow-lg" title="Toggle Audio (A)">
-            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-4 md:h-4 fill-current">
+            <div id="kiosk-controls" class="kiosk-controls">
+        <button id="audio-toggle-btn" class="kiosk-control-button" title="Toggle Audio (A)">
+            <svg viewBox="0 0 24 24" class="kiosk-icon">
                 <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.03C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
             </svg>
         </button>
-        <button id="background-toggle-btn" class="bg-black/70 border border-white/30 rounded-lg p-3 md:p-2 text-white cursor-pointer transition-all duration-300 backdrop-blur-lg flex items-center justify-center w-12 h-12 md:w-10 md:h-10 hover:bg-black/80 hover:border-white/50 hover:scale-105 active:scale-95 shadow-lg" title="Toggle Background (B)">
-            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-4 md:h-4 fill-current">
+        <button id="background-toggle-btn" class="kiosk-control-button" title="Toggle Background (B)">
+            <svg viewBox="0 0 24 24" class="kiosk-icon">
                 <path d="M12,18.5A6.5,6.5 0 0,1 5.5,12A6.5,6.5 0 0,1 12,5.5A6.5,6.5 0 0,1 18.5,12A6.5,6.5 0 0,1 12,18.5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
             </svg>
         </button>
-        <button id="favorite-btn" class="bg-black/70 border border-white/30 rounded-lg p-3 md:p-2 text-white cursor-pointer transition-all duration-300 backdrop-blur-lg flex items-center justify-center w-12 h-12 md:w-10 md:h-10 hover:bg-black/80 hover:border-white/50 hover:scale-105 active:scale-95 shadow-lg hover:text-red-400" title="Save Favorite (F)">
-            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-4 md:h-4 fill-current">
+        <button id="favorite-btn" class="kiosk-control-button favorite" title="Save Favorite (F)">
+            <svg viewBox="0 0 24 24" class="kiosk-icon">
                 <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
             </svg>
         </button>
-        <button id="favorites-gallery-btn" class="bg-black/70 border border-white/30 rounded-lg p-3 md:p-2 text-white cursor-pointer transition-all duration-300 backdrop-blur-lg flex items-center justify-center w-12 h-12 md:w-10 md:h-10 hover:bg-black/80 hover:border-white/50 hover:scale-105 active:scale-95 shadow-lg" title="View Favorites (G)">
-            <svg viewBox="0 0 24 24" class="w-5 h-5 md:w-4 md:h-4 fill-current">
+        <button id="favorites-gallery-btn" class="kiosk-control-button" title="View Favorites (G)">
+            <svg viewBox="0 0 24 24" class="kiosk-icon">
                 <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
             </svg>
         </button>
-        <button id="fullscreen-btn" class="bg-black/70 border border-white/30 rounded-lg p-3 md:p-2 text-white cursor-pointer transition-all duration-300 backdrop-blur-lg flex items-center justify-center w-12 h-12 md:w-10 md:h-10 hover:bg-black/80 hover:border-white/50 hover:scale-105 active:scale-95 shadow-lg" title="Enter Fullscreen">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 md:w-4 md:h-4">
+        <button id="fullscreen-btn" class="kiosk-control-button" title="Enter Fullscreen">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="kiosk-icon">
                 <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
             </svg>
         </button>
             </div>
         </div>
-        <div class="matte-border-container absolute top-0 left-0 w-full h-full pointer-events-none z-50">
+        <div class="matte-border-container">
             <div id="matte-border" class="matte-border classic"></div>
         </div>
-        <div id="loading-indicator" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center bg-black/80 text-white p-8 rounded-2xl backdrop-blur-lg transition-colors duration-500">
-            <div class="loading-spinner w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+        <div id="loading-indicator" class="loading-indicator">
+            <div class="loading-spinner"></div>
         </div>
     </div>
     
     
-    <div id="error-message" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-600/90 text-white p-6 rounded-xl text-center max-w-sm backdrop-blur-lg pointer-events-auto transition-colors duration-500">
+    <div id="error-message" class="error-message">
         <p id="error-text">Connection lost</p>
-        <div class="retry-spinner w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mt-4"></div>
+        <div class="retry-spinner"></div>
     </div>
 
     <!-- Favorites Gallery Modal -->
-    <div id="favorites-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-lg z-[300] pointer-events-auto">
-        <div class="absolute inset-0 p-4 sm:p-6 md:p-8 flex items-center justify-center">
-            <div class="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+    <div id="favorites-modal" class="modal favorites-modal hidden">
+        <div class="modal-backdrop">
+            <div class="modal-content">
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between p-6 border-b border-black/10">
-                    <h2 class="text-2xl font-bold text-black/90">Saved Favorites</h2>
-                    <button id="favorites-modal-close" class="flex items-center justify-center w-10 h-10 rounded-full bg-black/10 hover:bg-black/20 transition-colors">
-                        <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current text-black/70">
+                <div class="modal-header">
+                    <h2 class="modal-title">Saved Favorites</h2>
+                    <button id="favorites-modal-close" class="modal-close">
+                        <svg viewBox="0 0 24 24" class="modal-close-icon">
                             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                         </svg>
                     </button>
                 </div>
                 
                 <!-- Modal Content -->
-                <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                    <div id="favorites-loading" class="hidden text-center py-12">
-                        <div class="loading-spinner w-8 h-8 border-2 border-black/20 border-t-black/60 rounded-full animate-spin mx-auto mb-4"></div>
-                        <p class="text-black/70">Loading favorites...</p>
+                <div class="modal-body">
+                    <div id="favorites-loading" class="loading-section hidden">
+                        <div class="loading-spinner small"></div>
+                        <p class="loading-text">Loading favorites...</p>
                     </div>
                     
-                    <div id="favorites-empty" class="hidden text-center py-12">
-                        <svg viewBox="0 0 24 24" class="w-16 h-16 fill-current text-black/30 mx-auto mb-4">
+                    <div id="favorites-empty" class="empty-section hidden">
+                        <svg viewBox="0 0 24 24" class="empty-icon">
                             <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
                         </svg>
-                        <p class="text-black/70 text-lg mb-2">No favorites saved yet</p>
-                        <p class="text-black/50 text-sm">Press F to save your current painting as a favorite</p>
+                        <p class="empty-title">No favorites saved yet</p>
+                        <p class="empty-subtitle">Press F to save your current painting as a favorite</p>
                     </div>
                     
-                    <div id="favorites-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div id="favorites-grid" class="favorites-grid">
                         <!-- Favorites will be populated here -->
                     </div>
                 </div>
@@ -93,8 +93,20 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', async function() {
+        console.log('Kiosk DOMContentLoaded - App available:', !!window.App);
+        
+        // Wait for App to be available (in case modules are still loading)
+        let attempts = 0;
+        while (!window.App && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
         if (window.App) {
+            console.log('Kiosk: Initializing App...');
             await window.App.init({ kioskMode: true });
+        } else {
+            console.error('Kiosk: App not available after waiting');
         }
         
         // Kiosk controls
@@ -162,7 +174,7 @@
                 // Reset fullscreen button content
                 if (fullscreenBtn) {
                     fullscreenBtn.innerHTML = `
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 md:w-4 md:h-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="kiosk-icon">
                             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
                         </svg>
                     `;

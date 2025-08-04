@@ -3,7 +3,7 @@
  * Main JavaScript application with modular architecture
  */
 
-window.App = (function () {
+const App = (function () {
   'use strict';
 
   // Application state
@@ -1887,6 +1887,12 @@ window.App = (function () {
     },
 
     renderFavorites(favorites) {
+      console.log('FavoritesGallery: Rendering favorites:', favorites);
+      console.log('FavoritesGallery: Number of favorites:', favorites.length);
+      if (favorites.length > 0) {
+        console.log('FavoritesGallery: First favorite structure:', favorites[0]);
+      }
+      
       if (!this.grid) return;
 
       if (favorites.length === 0) {
@@ -1897,7 +1903,9 @@ window.App = (function () {
       this.showGrid();
       this.grid.innerHTML = '';
 
-      favorites.forEach(favorite => {
+      favorites.forEach((favorite, index) => {
+        console.log(`FavoritesGallery: Creating card for favorite ${index}:`, favorite);
+        console.log(`FavoritesGallery: Preview data:`, favorite.preview);
         const card = this.createFavoriteCard(favorite);
         this.grid.appendChild(card);
       });
@@ -1905,27 +1913,27 @@ window.App = (function () {
 
     createFavoriteCard(favorite) {
       const cardContainer = document.createElement('div');
-      cardContainer.className = 'relative';
+      cardContainer.className = 'favorite-card-container';
 
       const card = document.createElement('div');
-      card.className = 'bg-white rounded-lg border border-black/10 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 group';
+      card.className = 'favorite-card';
 
       const preview = this.createPreview(favorite.preview.layers);
       const date = new Date(favorite.created_at).toLocaleDateString();
       const time = new Date(favorite.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
       card.innerHTML = `
-        <div class="relative aspect-square bg-black/5 overflow-hidden">
+        <div class="favorite-preview">
           ${preview}
-          <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="preview-overlay"></div>
         </div>
-        <div class="p-3">
-          <div class="flex items-center justify-between">
-            <div class="text-sm text-black/70">
-              <div>${date}</div>
-              <div class="text-xs text-black/50">${time}</div>
+        <div class="favorite-info">
+          <div class="info-row">
+            <div>
+              <div class="date-info">${date}</div>
+              <div class="time-info">${time}</div>
             </div>
-            <div class="text-xs text-black/50">
+            <div class="layer-count">
               ${favorite.layer_count} layer${favorite.layer_count !== 1 ? 's' : ''}
             </div>
           </div>
@@ -1934,10 +1942,10 @@ window.App = (function () {
 
       // Create delete button as separate element
       const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg z-20';
+      deleteBtn.className = 'favorite-delete-btn';
       deleteBtn.title = 'Delete';
       deleteBtn.innerHTML = `
-        <svg class="w-3 h-3 opacity-70 hover:opacity-100 transition-opacity duration-200" fill="currentColor" viewBox="0 0 20 20">
+        <svg fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
         </svg>
       `;
@@ -1967,12 +1975,16 @@ window.App = (function () {
     },
 
     createPreview(layers) {
+      console.log('FavoritesGallery: createPreview called with layers:', layers);
+      
       if (!layers || layers.length === 0) {
-        return '<div class="absolute inset-0 bg-black/10 flex items-center justify-center text-black/30">No Preview</div>';
+        console.log('FavoritesGallery: No layers provided for preview');
+        return '<div class="preview-no-image">No Preview</div>';
       }
 
       let html = '';
       layers.slice(0, 4).forEach((layer, index) => {
+        console.log(`FavoritesGallery: Processing layer ${index}:`, layer);
         const zIndex = 10 + index;
         const opacity = Math.max(0.1, Math.min(1.0, layer.opacity || 0.8));
         const rotation = (layer.transformations?.rotation || 0) * 0.5; // Scale down rotation for preview
@@ -1986,12 +1998,25 @@ window.App = (function () {
 
         // Get the actual image path from ImageManager
         let imageUrl = null;
+        console.log(`FavoritesGallery: Looking for imageId: ${layer.imageId}`);
+        console.log('FavoritesGallery: ImageManager state:', {
+          hasApp: !!window.App,
+          hasImageManager: !!(window.App && window.App.ImageManager),
+          hasImages: !!(window.App && window.App.ImageManager && window.App.ImageManager.images),
+          imageCount: window.App && window.App.ImageManager && window.App.ImageManager.images ? window.App.ImageManager.images.size : 0
+        });
+        
         if (window.App && window.App.ImageManager && window.App.ImageManager.images) {
           const imageInfo = window.App.ImageManager.images.get(layer.imageId);
+          console.log(`FavoritesGallery: Image info for ${layer.imageId}:`, imageInfo);
           if (imageInfo) {
             imageUrl = imageInfo.path;
+            console.log(`FavoritesGallery: Found image URL: ${imageUrl}`);
           } else {
             console.warn(`FavoritesGallery: Image not found for ID: ${layer.imageId}`);
+            // Let's see what IDs are actually available
+            const availableIds = Array.from(window.App.ImageManager.images.keys());
+            console.log('FavoritesGallery: Available image IDs:', availableIds);
           }
         } else {
           console.warn('FavoritesGallery: ImageManager not available or images not loaded');
@@ -1999,26 +2024,24 @@ window.App = (function () {
 
         if (!imageUrl) {
           // Fallback to colored div if no image found
-          const colors = ['bg-blue-300', 'bg-purple-300', 'bg-pink-300', 'bg-green-300', 'bg-yellow-300'];
+          const colors = ['blue', 'purple', 'pink', 'green', 'yellow'];
           const colorClass = colors[index % colors.length];
           html += `
-            <div class="absolute inset-0 ${colorClass}" 
-                 style="z-index: ${zIndex}; transform: ${transform}; filter: ${filter}; transform-origin: center; opacity: ${opacity};">
-              <div class="absolute inset-0 flex items-center justify-center text-white text-xs">
+            <div class="preview-layer preview-fallback ${colorClass}" 
+                 style="z-index: ${zIndex}; transform: ${transform}; filter: ${filter}; opacity: ${opacity};">
+              <div class="preview-fallback-text">
                 Missing Image
               </div>
             </div>
           `;
         } else {
           html += `
-            <div class="absolute inset-0" 
-                 style="z-index: ${zIndex}; transform: ${transform}; filter: ${filter}; transform-origin: center; opacity: ${opacity};">
+            <div class="preview-layer" 
+                 style="z-index: ${zIndex}; transform: ${transform}; filter: ${filter}; opacity: ${opacity};">
               <img src="${imageUrl}" 
-                   class="w-full h-full object-contain" 
-                   style="mix-blend-mode: multiply;"
-                   onerror="console.warn('Failed to load image:', '${imageUrl}'); this.style.display='none'; this.nextElementSibling.style.display='block';" />
-              <div class="w-full h-full bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200 flex items-center justify-center text-white text-xs" 
-                   style="display: none;">Image Error</div>
+                   onload="console.log('Successfully loaded image:', '${imageUrl}')"
+                   onerror="console.warn('Failed to load image:', '${imageUrl}'); this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="preview-error">Image Error</div>
             </div>
           `;
         }
@@ -2113,17 +2136,17 @@ window.App = (function () {
 
         this.uploadArea.addEventListener('dragover', (e) => {
           e.preventDefault();
-          this.uploadArea.classList.add('border-black/40');
+          this.uploadArea.classList.add('dragover');
         });
 
         this.uploadArea.addEventListener('dragleave', (e) => {
           e.preventDefault();
-          this.uploadArea.classList.remove('border-black/40');
+          this.uploadArea.classList.remove('dragover');
         });
 
         this.uploadArea.addEventListener('drop', (e) => {
           e.preventDefault();
-          this.uploadArea.classList.remove('border-black/40');
+          this.uploadArea.classList.remove('dragover');
           const files = e.dataTransfer.files;
           if (files.length > 0) {
             this.uploadFiles(Array.from(files));
@@ -2163,15 +2186,20 @@ window.App = (function () {
     },
 
     async loadImages() {
+      console.log('ImageManagerUI: Loading images...');
       this.showLoading();
       
       try {
-        const response = await fetch('/api/images');
+        // Add timestamp to prevent caching
+        const response = await fetch(`/api/images?t=${Date.now()}`);
         const data = await response.json();
+        console.log('ImageManagerUI: Loaded images data:', data);
         
         if (data.images && data.images.length > 0) {
+          console.log(`ImageManagerUI: Displaying ${data.images.length} images`);
           this.displayImages(data.images);
         } else {
+          console.log('ImageManagerUI: No images found, showing empty state');
           this.showEmpty();
         }
       } catch (error) {
@@ -2199,29 +2227,24 @@ window.App = (function () {
       if (!this.grid) return;
 
       this.grid.innerHTML = images.map(image => `
-        <div class="relative group bg-white border border-black/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <div class="aspect-square bg-gray-100 relative">
+        <div class="image-card">
+          <button 
+            class="image-delete-btn delete-image-btn"
+            data-filename="${image.filename}"
+            title="Delete ${image.filename}"
+          >×</button>
+          <div class="image-card-thumbnail">
             <img 
               src="${image.path}" 
               alt="${image.filename}"
-              class="w-full h-full object-cover"
               loading="lazy"
             />
-            <button 
-              class="delete-image-btn absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              data-filename="${image.filename}"
-              title="Delete image"
-            >
-              <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
-            </button>
           </div>
-          <div class="p-3">
-            <p class="text-black/80 text-sm font-medium truncate" title="${image.filename}">
+          <div class="image-card-info">
+            <div class="image-card-filename" title="${image.filename}">
               ${image.filename}
-            </p>
-            <div class="text-black/50 text-xs mt-1 flex justify-between">
+            </div>
+            <div class="image-card-details">
               <span>${image.width}×${image.height}</span>
               <span>${this.formatFileSize(image.size)}</span>
             </div>
@@ -2294,27 +2317,38 @@ window.App = (function () {
     },
 
     async deleteImage(filename) {
+      console.log(`ImageManagerUI: Deleting image: ${filename}`);
+      
       try {
         const response = await fetch(`/api/images/${encodeURIComponent(filename)}`, {
           method: 'DELETE'
         });
 
         const result = await response.json();
+        console.log('ImageManagerUI: Delete response:', result);
 
         if (!response.ok) {
           throw new Error(result.error || 'Delete failed');
         }
 
+        console.log('ImageManagerUI: Image deleted successfully, refreshing display...');
+        
+        // Add a small delay to ensure filesystem changes are reflected
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Refresh the grid
         await this.loadImages();
         
         // Refresh the main image catalog if ImageManager is available
         if (window.App && window.App.ImageManager) {
+          console.log('ImageManagerUI: Refreshing ImageManager catalog...');
           await window.App.ImageManager.init();
         }
 
+        console.log('ImageManagerUI: Display refresh completed');
+
       } catch (error) {
-        console.error('Failed to delete image:', error);
+        console.error('ImageManagerUI: Failed to delete image:', error);
         alert(`Failed to delete image: ${error.message}`);
       }
     },
@@ -3642,3 +3676,10 @@ window.App = (function () {
     UI
   };
 })();
+
+// Expose App to global scope for template scripts
+window.App = App;
+
+// Ensure App is available immediately
+console.log('App object exposed to window:', !!window.App);
+console.log('App.UI available:', !!(window.App && window.App.UI));

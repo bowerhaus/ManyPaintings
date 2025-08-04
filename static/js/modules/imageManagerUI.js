@@ -140,8 +140,17 @@ export const ImageManagerUI = {
     
     if (!this.grid) return;
 
-    this.grid.innerHTML = images.map(image => `
-      <div class="relative group bg-white border border-black/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    this.grid.innerHTML = '';
+    
+    images.forEach(image => {
+      // Create container like favorites manager
+      const cardContainer = document.createElement('div');
+      cardContainer.className = 'favorite-card-container';
+      
+      // Create the main card
+      const card = document.createElement('div');
+      card.className = 'bg-white border border-black/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow';
+      card.innerHTML = `
         <div class="aspect-square bg-gray-100 relative">
           <img 
             src="${image.path}" 
@@ -149,15 +158,6 @@ export const ImageManagerUI = {
             class="w-full h-full object-cover"
             loading="lazy"
           />
-          <button 
-            class="delete-image-btn absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            data-filename="${image.filename}"
-            title="Delete image"
-          >
-            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-          </button>
         </div>
         <div class="p-3">
           <p class="text-black/80 text-sm font-medium truncate" title="${image.filename}">
@@ -168,16 +168,33 @@ export const ImageManagerUI = {
             <span>${this.formatFileSize(image.size)}</span>
           </div>
         </div>
-      </div>
-    `).join('');
-
-    // Add delete event listeners
-    this.grid.querySelectorAll('.delete-image-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      `;
+      
+      // Create delete button as separate element like favorites manager
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'favorite-delete-btn';
+      deleteBtn.title = 'Delete image';
+      deleteBtn.dataset.filename = image.filename;
+      deleteBtn.innerHTML = `
+        <svg fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      `;
+      
+      // Add both elements to container
+      cardContainer.appendChild(card);
+      cardContainer.appendChild(deleteBtn);
+      
+      // Add delete event listener
+      deleteBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        const filename = btn.dataset.filename;
-        this.deleteImage(filename);
+        e.stopImmediatePropagation();
+        this.deleteImage(image.filename);
       });
+      
+      // Add to grid
+      this.grid.appendChild(cardContainer);
     });
   },
 

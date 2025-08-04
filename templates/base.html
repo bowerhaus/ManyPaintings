@@ -17,9 +17,9 @@
     {% block content %}{% endblock %}
     
     <!-- Load modular JavaScript files -->
-    <script src="{{ url_for('static', filename='js/modules/ImageManager.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/modules/AnimationEngine.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/modules/ImageManager.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/modules/AnimationEngine.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

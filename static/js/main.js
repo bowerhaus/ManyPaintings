@@ -2163,14 +2163,17 @@ window.App = (function () {
     setupOnscreenControls() {
       if (!this.onscreenControls || kioskMode) return;
 
-      // Speed slider
+      // Speed slider (1-10 maps to speed multipliers)
       const speedSlider = document.getElementById('speed-slider');
       const speedValue = document.getElementById('speed-value');
       if (speedSlider && speedValue) {
         speedSlider.addEventListener('input', (e) => {
-          this.speedMultiplier = parseFloat(e.target.value);
-          speedValue.textContent = `${this.speedMultiplier.toFixed(1)}x`;
-          console.log(`UI: Speed changed to ${this.speedMultiplier}x`);
+          const sliderValue = parseInt(e.target.value);
+          // Map 1-10 to speed multipliers: 1=0.1x, 2=0.2x, 3=0.5x, 4=0.8x, 5=1.0x, 6=1.5x, 7=2.0x, 8=3.0x, 9=5.0x, 10=10.0x
+          const speedMap = [0, 0.1, 0.2, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0];
+          this.speedMultiplier = speedMap[sliderValue];
+          speedValue.textContent = `${sliderValue}`;
+          console.log(`UI: Speed changed to level ${sliderValue} (${this.speedMultiplier}x)`);
           this.updateAnimationSpeed();
         });
       }
@@ -2187,26 +2190,48 @@ window.App = (function () {
         });
       }
 
-      // Audio volume slider
+      // Audio volume slider (0-100 in steps of 10)
       const audioVolumeSlider = document.getElementById('audio-volume-slider');
       const audioVolumeValue = document.getElementById('audio-volume-value');
       if (audioVolumeSlider && audioVolumeValue) {
         audioVolumeSlider.addEventListener('input', (e) => {
-          const volume = parseFloat(e.target.value);
-          this.updateVolumeDisplay(volume);
-          console.log(`UI: Audio volume changed to ${volume}`);
+          const volumePercent = parseInt(e.target.value);
+          const volume = volumePercent / 100; // Convert to 0-1 range for audio API
+          audioVolumeValue.textContent = `${volumePercent}%`;
+          console.log(`UI: Audio volume changed to ${volumePercent}% (${volume})`);
           AudioManager.setVolume(volume);
         });
       }
 
 
       // Set initial values from config
-      if (speedSlider) speedSlider.value = this.speedMultiplier;
-      if (speedValue) speedValue.textContent = `${this.speedMultiplier.toFixed(1)}x`;
+      if (speedSlider) {
+        // Convert current speedMultiplier back to 1-10 slider value
+        const speedMap = [0, 0.1, 0.2, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0];
+        let sliderValue = 5; // Default to middle (1.0x speed)
+        for (let i = 1; i < speedMap.length; i++) {
+          if (Math.abs(this.speedMultiplier - speedMap[i]) < 0.05) {
+            sliderValue = i;
+            break;
+          }
+        }
+        speedSlider.value = sliderValue;
+      }
+      if (speedValue) {
+        // Display the slider value (1-10) instead of speed multiplier
+        const currentSliderValue = speedSlider ? speedSlider.value : 5;
+        speedValue.textContent = `${currentSliderValue}`;
+      }
       if (layersSlider) layersSlider.value = this.maxLayers;
       if (layersValue) layersValue.textContent = this.maxLayers.toString();
-      if (audioVolumeSlider) audioVolumeSlider.value = (config.audio && config.audio.volume) || 0.5;
-      if (audioVolumeValue) audioVolumeValue.textContent = `${Math.round(((config.audio && config.audio.volume) || 0.5) * 100)}%`;
+      if (audioVolumeSlider) {
+        const volumePercent = Math.round(((config.audio && config.audio.volume) || 0.5) * 100);
+        audioVolumeSlider.value = Math.round(volumePercent / 10) * 10; // Round to nearest 10
+      }
+      if (audioVolumeValue) {
+        const volumePercent = Math.round(((config.audio && config.audio.volume) || 0.5) * 100);
+        audioVolumeValue.textContent = `${Math.round(volumePercent / 10) * 10}%`;
+      }
 
       // Initialize play/pause button
       this.updatePlayPauseButton();

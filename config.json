@@ -43,7 +43,7 @@
     },
     "translation": {
       "enabled": true,
-      "layout_mode": "rule_of_thirds_and_centre",
+      "layout_mode": "random",
       "minimum_visible_percent": 60,
       "rule_of_thirds": {
         "max_horizontal_deviation_percent": 5,
@@ -54,7 +54,6 @@
         "max_vertical_deviation_percent": 5
       },
       "random": {
-        "respect_matte_border": true,
         "distribution_method": "uniform"
       }
     },

@@ -172,7 +172,18 @@ The application uses a JSON-based configuration system with environment-specific
     "translation": {
       "enabled": true,
       "layout_mode": "rule_of_thirds_and_centre",
-      "minimum_visible_percent": 60
+      "minimum_visible_percent": 60,
+      "rule_of_thirds": {
+        "max_horizontal_deviation_percent": 10,
+        "max_vertical_deviation_percent": 10
+      },
+      "rule_of_thirds_and_centre": {
+        "max_horizontal_deviation_percent": 10,
+        "max_vertical_deviation_percent": 10
+      },
+      "random": {
+        "distribution_method": "uniform"
+      }
     },
     "best_fit_scaling": {
       "enabled": true
@@ -461,6 +472,7 @@ The application now features a sophisticated **Multi-Mode Layout System** with t
 - **Pattern**: No pattern - each image gets completely random placement
 - **Visual Effect**: Organic, unpredictable compositions
 - **Grid Visualization**: Grid lines hidden (irrelevant), G key toggles debug borders only
+- **Minimum Visibility**: Enforces `minimum_visible_percent` constraint to ensure at least 60% of each image remains visible after all transformations (rotation, scale, translation)
 
 #### Technical Implementation
 
@@ -479,19 +491,36 @@ const maxRangeY = (actualImageArea.height / window.innerHeight) * 100;
 ```
 
 ##### Matte Border Integration
-Random mode automatically calculates and respects matte border boundaries:
+All layout modes automatically calculate and respect matte border boundaries:
 
 ```javascript
 getActualImageAreaBounds() {
   // Reads actual border configuration
-  const borderPercent = window.APP_CONFIG.matteBorder.borderPercent;
+  const borderPercent = window.APP_CONFIG.matte_border.border_percent;
   
   // Calculates usable image area within border
   const borderSize = (borderPercent / 100) * smallerCanvasDimension;
   const imageWidth = canvasWidth - (borderSize * 2);
   
-  // Returns precise bounds for random distribution
+  // Returns precise bounds for positioning
   return { left, top, width, height };
+}
+```
+
+##### Minimum Visibility Constraint (Random Mode Only)
+Random mode enforces a minimum visibility constraint to prevent images from being positioned mostly off-screen:
+
+```javascript
+enforceMinimumVisibilityRandom(transformations, imageWidth, imageHeight) {
+  const minVisiblePercent = config.transformations.translation.minimum_visible_percent || 60;
+  
+  // Calculate effective bounds after scale + rotation
+  const boundingWidth = Math.abs(effectiveWidth * Math.cos(rotation)) + 
+                       Math.abs(effectiveHeight * Math.sin(rotation));
+  
+  // Ensure at least minVisiblePercent stays within matte border
+  const maxTranslateX = (actualImageArea.width - requiredVisibleWidth) / 2;
+  transformations.translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, originalTranslateX));
 }
 ```
 

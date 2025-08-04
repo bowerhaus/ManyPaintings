@@ -54,7 +54,6 @@
         "max_vertical_deviation_percent": 10
       },
       "random": {
-        "respect_matte_border": true,
         "distribution_method": "uniform"
       }
     },

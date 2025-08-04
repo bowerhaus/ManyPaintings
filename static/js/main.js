@@ -682,6 +682,11 @@ window.App = (function () {
         transformations.hueShift = random() * (config.color_remapping.hue_shift_range.max_degrees - config.color_remapping.hue_shift_range.min_degrees) + config.color_remapping.hue_shift_range.min_degrees;
       }
 
+      // Apply minimum visibility constraint for random mode
+      if (config.transformations?.translation?.layout_mode === 'random' && config.transformations?.translation?.minimum_visible_percent) {
+        this.enforceMinimumVisibilityRandom(transformations, img.naturalWidth, img.naturalHeight);
+      }
+
       if (config.preloadTransformCache) {
         this.transformationCache.set(transformSeed, transformations);
       }
@@ -895,6 +900,51 @@ window.App = (function () {
         width: imageWidth,
         height: imageHeight
       };
+    },
+
+    enforceMinimumVisibilityRandom(transformations, imageWidth, imageHeight) {
+      const minVisiblePercent = config.transformations?.translation?.minimum_visible_percent || 60;
+      const actualImageArea = this.getActualImageAreaBounds();
+      
+      console.log(`Enforcing minimum visibility: ${minVisiblePercent}% for ${imageWidth}x${imageHeight} image`);
+      
+      // Calculate effective image bounds after scale and rotation
+      const scale = transformations.scale || 1;
+      const rotation = transformations.rotation || 0;
+      const effectiveWidth = imageWidth * scale;
+      const effectiveHeight = imageHeight * scale;
+      
+      // Account for rotation expanding bounding box
+      const rotationRadians = rotation * Math.PI / 180;
+      const boundingWidth = Math.abs(effectiveWidth * Math.cos(rotationRadians)) + 
+                           Math.abs(effectiveHeight * Math.sin(rotationRadians));
+      const boundingHeight = Math.abs(effectiveWidth * Math.sin(rotationRadians)) + 
+                            Math.abs(effectiveHeight * Math.cos(rotationRadians));
+      
+      console.log(`Effective bounds: ${effectiveWidth}x${effectiveHeight} → rotated bounds: ${boundingWidth.toFixed(1)}x${boundingHeight.toFixed(1)}`);
+      
+      // Calculate how much of the image needs to stay within the image area
+      const requiredVisibleWidth = boundingWidth * (minVisiblePercent / 100);
+      const requiredVisibleHeight = boundingHeight * (minVisiblePercent / 100);
+      
+      // Calculate maximum allowed translation from center to keep required percentage visible
+      // The image center can move at most this far while keeping minVisiblePercent within bounds
+      const maxTranslateX = Math.max(0, (actualImageArea.width - requiredVisibleWidth) / 2);
+      const maxTranslateY = Math.max(0, (actualImageArea.height - requiredVisibleHeight) / 2);
+      
+      // Convert to viewport units for comparison
+      const maxTranslateXVw = (maxTranslateX / window.innerWidth) * 100;
+      const maxTranslateYVh = (maxTranslateY / window.innerHeight) * 100;
+      
+      // Clamp the existing translation values
+      const originalTranslateX = transformations.translateX || 0;
+      const originalTranslateY = transformations.translateY || 0;
+      
+      transformations.translateX = Math.max(-maxTranslateXVw, Math.min(maxTranslateXVw, originalTranslateX));
+      transformations.translateY = Math.max(-maxTranslateYVh, Math.min(maxTranslateYVh, originalTranslateY));
+      
+      console.log(`Translation constrained: (${originalTranslateX.toFixed(1)}vw, ${originalTranslateY.toFixed(1)}vh) → (${transformations.translateX.toFixed(1)}vw, ${transformations.translateY.toFixed(1)}vh)`);
+      console.log(`Max allowed: ±${maxTranslateXVw.toFixed(1)}vw, ±${maxTranslateYVh.toFixed(1)}vh`);
     },
 
     applyBestFitScaling(imgElement, originalImg, image_area) {

@@ -99,8 +99,17 @@ class Config:
         
         translation_config = transform_config.get('translation', {})
         self.TRANSLATION_ENABLED = translation_config.get('enabled', True)
-        self.TRANSLATION_X_RANGE = translation_config.get('x_range_percent', 20)
-        self.TRANSLATION_Y_RANGE = translation_config.get('y_range_percent', 15)
+        self.TRANSLATION_LAYOUT_MODE = translation_config.get('layout_mode', 'random')
+        rule_of_thirds_config = translation_config.get('rule_of_thirds', {})
+        self.TRANSLATION_RULE_OF_THIRDS_MAX_HORIZONTAL_DEVIATION_PERCENT = rule_of_thirds_config.get('max_horizontal_deviation_percent', 5)
+        self.TRANSLATION_RULE_OF_THIRDS_MAX_VERTICAL_DEVIATION_PERCENT = rule_of_thirds_config.get('max_vertical_deviation_percent', 5)
+        
+        rule_of_thirds_and_centre_config = translation_config.get('rule_of_thirds_and_centre', {})
+        self.TRANSLATION_RULE_OF_THIRDS_AND_CENTRE_MAX_HORIZONTAL_DEVIATION_PERCENT = rule_of_thirds_and_centre_config.get('max_horizontal_deviation_percent', 5)
+        self.TRANSLATION_RULE_OF_THIRDS_AND_CENTRE_MAX_VERTICAL_DEVIATION_PERCENT = rule_of_thirds_and_centre_config.get('max_vertical_deviation_percent', 5)
+        
+        best_fit_scaling_config = transform_config.get('best_fit_scaling', {})
+        self.BEST_FIT_SCALING_ENABLED = best_fit_scaling_config.get('enabled', True)
         
         # Color remapping configuration
         color_remapping_config = self._config_data.get('color_remapping', {})

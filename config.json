@@ -38,13 +38,27 @@
     },
     "scale": {
       "enabled": true,
-      "min_factor": 0.75,
-      "max_factor": 1.5
+      "min_factor": 0.5,
+      "max_factor": 1.1
     },
     "translation": {
       "enabled": true,
-      "x_range_percent": 30,
-      "y_range_percent": 30
+      "layout_mode": "random",
+      "minimum_visible_percent": 60,
+      "rule_of_thirds": {
+        "max_horizontal_deviation_percent": 5,
+        "max_vertical_deviation_percent": 5
+      },
+      "rule_of_thirds_and_centre": {
+        "max_horizontal_deviation_percent": 5,
+        "max_vertical_deviation_percent": 5
+      },
+      "random": {
+        "distribution_method": "uniform"
+      }
+    },
+    "best_fit_scaling": {
+      "enabled": false
     }
   },
   "color_remapping": {
@@ -70,9 +84,9 @@
     "enabled": true,
     "border_percent": 10,
     "color": "#F8F8F8",
-    "style": "medium",
+    "style": "thin",
     "image_area": {
-      "aspect_ratio": "1:1"
+      "aspect_ratio": "16:9"
     }
   },
   "environments": {
@@ -115,8 +129,7 @@
       "transformations": {
         "translation": {
           "enabled": true,
-          "x_range_percent": 25,
-          "y_range_percent": 25
+          "minimum_visible_percent": 70
         }
       },
       "performance": {

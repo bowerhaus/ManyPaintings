@@ -1,6 +1,6 @@
 # ManyPaintings - Current Status
 
-**Last Updated:** July 31, 2025
+**Last Updated:** August 3, 2025
 
 ## 🔧 Windows Build System - Fixed ✅
 
@@ -47,6 +47,8 @@
 - **Flask Backend**: REST API with hot-reload configuration system
 - **Modular JavaScript**: ImageManager, AnimationEngine, PatternManager, FavoritesManager, FavoritesGallery, AudioManager, UI
 - **Deterministic Patterns**: Same seed produces identical visual sequences
+- **Grid-Based Distribution**: Intelligent spatial positioning with aspect-ratio awareness
+- **Advanced Image Generation**: Mathematical algorithms for sophisticated abstract art
 - **Weighted Random Selection**: Balanced image distribution with natural clustering
 - **Memory Management**: Intelligent image loading and cleanup
 - **Error Handling**: Graceful fallbacks and user feedback
@@ -230,7 +232,39 @@ Client (JavaScript)          Server (Flask)              Storage
 11. **Robust Animation Control**: Proper pause/resume functionality
 12. **Enhanced User Feedback**: Polished notifications and keyboard shortcuts
 
-## 🆕 Latest Updates (Enhanced Favorites & Timing System)
+## 🆕 Latest Updates (Grid-Based Distribution & Enhanced Favorites)
+
+### Grid-Based Image Distribution System ✅ NEW
+- **Intelligent Spatial Distribution**: Replaced simple center-biased positioning with sophisticated grid-based algorithm
+  - **Dynamic Grid Sizing**: 3×2 grid for widescreen (16:9, 21:9), 2×2 for square/portrait aspects
+  - **Weighted Zone Selection**: Center zones get 40% probability, edge zones split remaining 60%
+  - **Full Coverage**: Images now distribute across entire viewport, not just center area
+  - **Aspect-Ratio Aware**: Automatically adapts grid structure based on viewport dimensions
+
+- **Mathematical Implementation**: Advanced positioning algorithm in `main.js:485-550`
+  - **Zone Calculation**: Dynamic zone boundaries based on viewport aspect ratio
+  - **Weighted Random**: Proper weighted selection preventing clustering
+  - **Maintains Determinism**: Uses same seeded random system for pattern reproducibility
+  - **Performance Optimized**: Efficient calculation with minimal overhead
+
+- **Configuration Integration**: Works with new visibility-based translation settings
+  - **Visibility Control**: New `minimum_visible_percent` parameter ensures proper image visibility
+  - **Universal Application**: Works across all aspect ratios and device types
+  - **Improved UX**: Prevents images from being positioned mostly off-screen
+
+### Advanced Abstract Art Images ✅ NEW
+- **Sophisticated Generation**: Created 10 new images using advanced generative techniques
+  - **Fluid Dynamics Simulation**: Mathematical particle flow through computed vector fields
+  - **Generative Spirals**: Organic spirals with noise variation and natural growth patterns
+  - **Fractal Tree Structures**: Recursive branching algorithms creating complex organic forms
+  - **Cellular Automata**: Evolved patterns using Conway's Game of Life derivatives
+  - **Wave Interference**: Mathematical wave equations creating complex interference patterns
+
+- **Enhanced Visual Quality**: Professional-grade abstract art optimized for layering
+  - **Rich Color Palettes**: Sophisticated color schemes (deep blues, earth tones, purples)
+  - **Mathematical Precision**: Generated using numpy for accurate calculations
+  - **Alpha Optimization**: Perfect transparency and blending for overlay effects
+  - **Hue-Shift Compatible**: Complex patterns ideal for color remapping system
 
 ### Major Improvements
 - **Background Color Persistence**: Favorites now save and restore background color (black/white)
@@ -242,6 +276,12 @@ Client (JavaScript)          Server (Flask)              Storage
   - **Immediate Layer Clearing**: No more brief visibility of old images during loading
   - **Smart Pattern Timing**: New layers start appearing at 1.5s while favorites are still fading
   - **Config-Based Fade Timing**: Uses configuration values for natural, customizable transitions
+
+- **Enhanced Control Panel Visibility**: Fixed visibility issues against different backgrounds
+  - **Dark Panel Default**: Semi-transparent black panel (95% opacity) with white text for black backgrounds
+  - **Adaptive Backgrounds**: Automatically switches to light panel with dark text for white backgrounds
+  - **Larger Trigger Areas**: Increased from 18.75vh to 30vh on desktop, 35vh tablet, 40vh mobile
+  - **Improved Contrast**: Stronger shadows and backdrop blur for better separation
 
 ### Enhanced Fade-Out System
 - **Config-Driven Timing**: Favorite layers now use configuration values for realistic fade-outs
@@ -281,4 +321,62 @@ Client (JavaScript)          Server (Flask)              Storage
 - **Memory Efficient**: Thumbnails use scaled-down transforms and cached images
 - **Error Boundaries**: Graceful handling of missing or corrupted favorites
 
-The system is now feature-complete and production-ready for both casual viewing and kiosk installations, with accurate state capture and a polished user experience.
+## 🔧 Recent Configuration Enhancements (August 2025)
+
+### Best Fit Scaling Configuration ✅ NEW
+- **Configurable Image Scaling**: Added `best_fit_scaling.enabled` option to control automatic image scaling
+  - **Enabled (default)**: Images automatically scaled to fit within image area before transformations
+  - **Disabled**: Images retain original pixel dimensions, transformations applied directly
+  - **Full Control**: Separate from scale transformation system for granular control
+  - **Performance Option**: Minor performance improvement when disabled
+
+### Enhanced Positioning System ✅ IMPROVED
+- **Visibility-Based Positioning**: Replaced X/Y range percentages with intelligent visibility control
+  - **Minimum Visible Percent**: New `minimum_visible_percent` parameter (default: 60%)
+  - **Smart Offset Calculation**: Automatically calculates maximum positioning offset to ensure visibility
+  - **Grid Integration**: Works seamlessly with 4×3 grid distribution system
+  - **Off-Screen Prevention**: Eliminates issues with images positioned mostly off-screen
+
+### Configuration Breaking Changes
+- **Translation Settings Updated**: 
+  - **Removed**: `x_range_percent` and `y_range_percent` parameters
+  - **Added**: `minimum_visible_percent` for visibility-based positioning
+  - **Backward Compatibility**: Old settings automatically migrated on first load
+
+### Scaling System Architecture
+The application now has **two separate scaling systems**:
+
+1. **Best Fit Scaling** (`best_fit_scaling.enabled`)
+   - Pre-scales images to fit within image area (matte border or viewport)
+   - Applied before all transformations
+   - Ensures consistent base sizing
+
+2. **Scale Transformation** (`scale.enabled`, `scale.min_factor`, `scale.max_factor`)
+   - Random scale factor applied after best fit scaling
+   - Part of the transformation pipeline
+   - Creates visual variety in image sizes
+
+### Matte Border Interaction
+- **Important Discovery**: Matte border system creates implicit scaling through container sizing
+- **True Original Size**: Requires disabling both `best_fit_scaling` AND `matte_border` 
+- **Container Effects**: Matte border constrains image area, creating apparent scaling even when best fit is disabled
+
+### Configuration Examples
+```json
+// Professional Gallery Mode (default)
+"transformations": {
+  "best_fit_scaling": { "enabled": true },
+  "translation": { "minimum_visible_percent": 60 }
+},
+"matte_border": { "enabled": true }
+
+// Original Size Mode (no scaling)
+"transformations": {
+  "best_fit_scaling": { "enabled": false },
+  "scale": { "enabled": false },
+  "translation": { "minimum_visible_percent": 100 }
+},
+"matte_border": { "enabled": false }
+```
+
+The system is now feature-complete and production-ready for both casual viewing and kiosk installations, with accurate state capture, granular scaling control, and a polished user experience.

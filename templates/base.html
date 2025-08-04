@@ -111,71 +111,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind-overrides.css') }}">
     
     <script>
-        window.APP_CONFIG = {
-            maxConcurrentImages: {{ config.MAX_CONCURRENT_IMAGES }},
-            preloadBufferSize: {{ config.PRELOAD_BUFFER_SIZE }},
-            animationFPS: {{ config.ANIMATION_FPS }},
-            enableCaching: {{ config.ENABLE_CACHING|tojson }},
-            lazyLoading: {{ config.LAZY_LOADING|tojson }},
-            
-            // Animation timing (seconds)
-            fadeInMinSec: {{ config.FADE_IN_MIN_SEC }},
-            fadeInMaxSec: {{ config.FADE_IN_MAX_SEC }},
-            fadeOutMinSec: {{ config.FADE_OUT_MIN_SEC }},
-            fadeOutMaxSec: {{ config.FADE_OUT_MAX_SEC }},
-            minHoldTimeSec: {{ config.MIN_HOLD_TIME_SEC }},
-            maxHoldTimeSec: {{ config.MAX_HOLD_TIME_SEC }},
-            layerSpawnIntervalSec: {{ config.LAYER_SPAWN_INTERVAL_SEC }},
-            maxConcurrentLayers: {{ config.MAX_CONCURRENT_LAYERS }},
-            maxOpacity: {{ config.MAX_OPACITY }},
-            minOpacity: {{ config.MIN_OPACITY }},
-            
-            // Image transformations
-            rotationEnabled: {{ config.ROTATION_ENABLED|tojson }},
-            rotationMinDegrees: {{ config.ROTATION_MIN_DEGREES }},
-            rotationMaxDegrees: {{ config.ROTATION_MAX_DEGREES }},
-            scaleEnabled: {{ config.SCALE_ENABLED|tojson }},
-            scaleMinFactor: {{ config.SCALE_MIN_FACTOR }},
-            scaleMaxFactor: {{ config.SCALE_MAX_FACTOR }},
-            translationEnabled: {{ config.TRANSLATION_ENABLED|tojson }},
-            translationXRange: {{ config.TRANSLATION_X_RANGE }},
-            translationYRange: {{ config.TRANSLATION_Y_RANGE }},
-            
-            // Color remapping
-            colorRemappingEnabled: {{ config.COLOR_REMAPPING_ENABLED|tojson }},
-            colorRemappingProbability: {{ config.COLOR_REMAPPING_PROBABILITY }},
-            colorRemappingHueMinDegrees: {{ config.COLOR_REMAPPING_HUE_MIN_DEGREES }},
-            colorRemappingHueMaxDegrees: {{ config.COLOR_REMAPPING_HUE_MAX_DEGREES }},
-            
-            // Performance
-            animationQuality: "{{ config.ANIMATION_QUALITY }}",
-            preloadTransformCache: {{ config.PRELOAD_TRANSFORM_CACHE|tojson }},
-            
-            // Audio
-            audio: {
-                enabled: {{ config.AUDIO_ENABLED|tojson }},
-                file_path: "{{ config.AUDIO_FILE_PATH }}",
-                volume: {{ config.AUDIO_VOLUME }},
-                loop: {{ config.AUDIO_LOOP|tojson }},
-                autoplay: {{ config.AUDIO_AUTOPLAY|tojson }}
-            },
-            
-            // Matte Border
-            matteBorder: {
-                enabled: {{ config.MATTE_BORDER_ENABLED|tojson }},
-                borderPercent: {{ config.MATTE_BORDER_BORDER_PERCENT }},
-                color: "{{ config.MATTE_BORDER_COLOR }}",
-                style: "{{ config.MATTE_BORDER_STYLE }}",
-                imageArea: {
-                    aspectRatio: "{{ config.MATTE_BORDER_IMAGE_AREA_ASPECT_RATIO }}"
-                }
-            }
-        };
+        // Configuration will be loaded from /api/config
+        window.APP_CONFIG = null;
     </script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
     {% block content %}{% endblock %}
     
+    <!-- Load modular JavaScript files -->
+    <script src="{{ url_for('static', filename='js/modules/ImageManager.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/modules/AnimationEngine.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>

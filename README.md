@@ -36,10 +36,12 @@ This document outlines the Product Requirements for a generative art application
 
 *   **Layer Management:** Multiple images can be displayed simultaneously as semi-transparent layers, creating rich compositional depth through overlapping elements.
 
-*   **Image Transformations:** Before appearing, images can be randomly transformed to create visual variety:
-    *   **Rotation:** Images may be rotated by random angles
+*   **Intelligent Image Selection:** ✅ **NEW FEATURE** - Advanced weighted random distribution system that balances natural randomness with equitable representation of all images over time.
+
+*   **Enhanced Image Transformations:** ✅ **IMPROVED FEATURE** - Advanced transformation system with multiple layout modes:
+    *   **Rotation:** Images may be rotated by random angles with deterministic seeded generation
     *   **Scaling:** Images may be scaled up or down within defined limits
-    *   **Translation:** Images may be positioned at different locations on the canvas
+    *   **Multi-Mode Layout System:** ✅ **NEW** - Three positioning strategies: Rule of Thirds (4 points), Rule of Thirds + Center (5 points), and Random distribution with matte border awareness and minimum visibility constraints
     *   **Color Remapping:** Images may have their colors dynamically shifted for visual variety
 
 *   **Configurable Animation Parameters:** The animation system should support fine-tuned control through configuration:
@@ -71,9 +73,10 @@ The application should provide extensive configuration options to fine-tune the 
 *   `scale.enabled` - Enable random scaling (default: true)
 *   `scale.min_factor` - Minimum scale multiplier (default: 0.5)
 *   `scale.max_factor` - Maximum scale multiplier (default: 1.0)
-*   `translation.enabled` - Enable random positioning (default: true)
-*   `translation.x_range_percent` - Horizontal variance as % of viewport (default: 30%)
-*   `translation.y_range_percent` - Vertical variance as % of viewport (default: 30%)
+*   `translation.enabled` - Enable positioning system (default: true)
+*   `translation.layout_mode` - Positioning strategy: "rule_of_thirds", "rule_of_thirds_and_centre", or "random" (default: "rule_of_thirds_and_centre")
+*   `translation.minimum_visible_percent` - Minimum image visibility percentage (default: 60%)
+*   `best_fit_scaling.enabled` - Enable automatic image scaling to fit within image area (default: true)
 
 #### Color Remapping Configuration ✅ NEW FEATURE
 *   `enabled` - Enable/disable dynamic color remapping system (default: true)
@@ -144,68 +147,112 @@ The application now includes a comprehensive favouriting system that allows user
 *   **Viewport Adaptation:** Automatic scaling and positioning adjustment for different screen sizes
 *   **Browser Compatibility:** Works with all modern browsers supporting Fetch API and Clipboard API
 
-#### Fullscreen Mode Support ✅ IMPLEMENTED
-*   **Consistent Positioning:** Image layers maintain identical visual positioning between windowed and fullscreen modes
-*   **Container-Relative Transformations:** Image translations use percentage-based positioning instead of viewport units
-*   **Seamless Transition:** No visual jump or repositioning when entering/exiting fullscreen
-*   **Automatic Detection:** Browser fullscreen API integration with responsive layout adjustments
+### 3.5. Intelligent Distribution System ✅ NEW FEATURE
 
-#### Performance Optimization Configuration
-*   `animation_quality` - Animation smoothness level (default: 'high', options: 'low', 'medium', 'high')
-*   `preload_transform_cache` - Pre-calculate transformations for performance (default: true)
+The application now features an advanced **Weighted Random Distribution System** that provides the perfect balance between natural randomness and equitable image representation.
 
-#### UI Control Configuration ✅ IMPLEMENTED
-*   **Speed Range:** 0.1x to 20x multiplier with real-time effect on all animations
-*   **Layer Range:** 1-8 concurrent layers with immediate cleanup
-*   **Audio Controls:** Volume slider (0-100%), play/pause toggle with visual feedback
-*   **Background Toggle:** Black/white background switching with adaptive blend modes
-*   **Pattern Display:** Real-time pattern code display with automatic updates
-*   **Control Panel:** 85% viewport width, bottom-center positioning, mouse-activated, enlarged for 5 control groups
-*   **Visual Design:** Glassmorphism effects with backdrop-blur and smooth transitions
-*   **Unified Interface:** All controls consolidated in single panel for improved UX
+#### Core Philosophy
+Traditional random selection can lead to clustering where some images appear frequently while others are neglected. Our system maintains the organic, unpredictable feel of true randomness while ensuring all images receive fair representation over time.
 
-### 3.4. User Interaction
+#### Key Features
+*   **Dynamic Weighting:** Images that appear less frequently gradually receive higher selection probability
+*   **Natural Clustering:** Unlike rigid rotation systems, images can still appear consecutively or cluster naturally
+*   **Statistical Fairness:** Over longer viewing sessions, all images receive approximately equal screen time
+*   **Deterministic Reproduction:** Same pattern codes produce identical sequences for sharing and reproduction
+*   **Real-time Adaptation:** Selection weights continuously adjust throughout pattern sequences
 
-#### 3.4.1. Onscreen Controls System ✅ IMPLEMENTED
-*   **Mouse-Activated Control Panel:** A sophisticated control interface that appears when hovering over the bottom-center area of the canvas
-*   **Real-time Speed Control:** Dynamic speed multiplier ranging from 0.1x to 20x affecting all animation timings (fade in/out, hold times, spawn intervals)
-*   **Layer Management:** Live adjustment of concurrent layer count (1-8 layers) with immediate cleanup of excess layers
-*   **Audio Control:** Volume slider (0-100%) and play/pause toggle with browser autoplay compliance and visual feedback
-*   **Background Theme Toggle:** Instant switching between black and white backgrounds with adaptive UI styling and smart blend modes
-*   **Pattern Code Display:** Real-time pattern code display showing current sequence with automatic updates
-*   **Glassmorphism UI Design:** Modern backdrop-blur visual effects with smooth opacity transitions
-*   **Responsive Layout:** 85% canvas width control panel optimized for different screen sizes
-*   **Unified Control Interface:** All settings consolidated in single horizontal layout for improved accessibility
+#### Technical Implementation
+*   **Usage Tracking:** Monitors how frequently each image appears within the current pattern sequence
+*   **Bias Calculation:** Compares individual image usage to the pattern average
+*   **Weight Adjustment:** Less-used images receive bonus weight (up to +0.5x multiplier)
+*   **Proper Randomization:** Uses Fisher-Yates shuffle algorithm instead of biased sorting methods
+*   **Seeded Randomness:** All selections use pattern-seeded generators for reproducible results
 
-#### 3.4.2. Interactive Features
-*   **Speed Multiplier Effects:**
-    - At 1x: Normal contemplative timing (15-60s fades, 5-120s hold times)
-    - At 10x: Rapid dynamic changes (1.5-6s fades, 0.5-12s holds)
-    - At 20x: Ultra-fast generative effects (0.75-3s fades, 0.25-6s holds)
-    - At 0.1x: Ultra-slow meditative experience (150-600s fades, 50-1200s holds)
+#### Mathematical Model
+```
+Selection Weight = Base Weight (1.0) + (Bias Strength × Usage Deficit)
 
-*   **Layer Control Benefits:**
-    - 1-2 layers: Minimalist, focused compositions
-    - 4-6 layers: Rich, complex overlapping visuals
-    - 8 layers: Dense, dynamic layered experiences
+Where:
+- Base Weight: 1.0 (equal starting probability)
+- Bias Strength: 0.5 (configurable boost factor)  
+- Usage Deficit: max(0, average_usage - current_usage)
+```
 
-*   **Pattern Code System:**
-    - Real-time display of current pattern codes for sequence identification
-    - Automatic updates as patterns change and evolve
-    - Deterministic generation for consistent results
+#### Benefits Over Traditional Systems
+*   **Eliminates Statistical Bias:** Fixed the common `sort(() => 0.5 - Math.random())` anti-pattern
+*   **Prevents Image Neglect:** No image gets "forgotten" during long viewing sessions
+*   **Maintains Surprise:** Natural clustering and consecutive appearances still occur
+*   **Performance Optimized:** Minimal computational overhead suitable for real-time animation
+*   **Configurable Balance:** Bias strength can be adjusted from pure random (0.0) to strong bias (1.0+)
 
-*   **Background Theme System:**
-    - Instant toggle between black and white backgrounds
-    - Adaptive UI styling that automatically adjusts for optimal contrast
-    - Smart blend mode switching (normal for black, multiply for white backgrounds)
-    - Persistent preference storage using localStorage
-    - Keyboard shortcut (B key) for quick switching
+#### Visual Experience Impact
+*   **Short Sessions (< 30 minutes):** Feels completely random with natural variety
+*   **Medium Sessions (30-120 minutes):** Subtle balance ensures broader image exposure
+*   **Long Sessions (2+ hours):** Clear equitable distribution while maintaining organic feel
+*   **Pattern Reproduction:** Identical visual sequences when using same pattern codes
 
-*   **Fullscreen Mode:**
-    - Consistent image positioning between windowed and fullscreen modes
-    - Use F11 or browser fullscreen controls for immersive viewing
-    - All animations and controls work identically in fullscreen
-    - Seamless transition without visual jumps or repositioning
+#### Performance Characteristics
+*   **Memory Usage:** Minimal - simple usage counters per image
+*   **CPU Impact:** Negligible - basic arithmetic during image selection
+*   **Scalability:** Efficient with large collections (tested with 1000+ images)
+*   **Real-time Updates:** Selection calculations happen instantly during animation
+
+### 3.6. Multi-Mode Layout System ✅ RECENT IMPROVEMENT
+
+The application now features a sophisticated **Multi-Mode Layout System** with three distinct positioning strategies that provide different visual experiences and use cases.
+
+#### Available Layout Modes
+
+##### 1. Rule of Thirds (`rule_of_thirds`)
+**Purpose:** Structured, aesthetically pleasing positioning based on photography composition principles
+*   **Positioning:** Images cycle through the 4 rule of thirds intersection points
+*   **Pattern:** Top-left → Top-right → Bottom-left → Bottom-right (round-robin)
+*   **Visual Effect:** Classic photographic composition with balanced positioning
+*   **Grid Visualization:** Shows red grid lines and yellow intersection points when enabled (G key)
+
+##### 2. Rule of Thirds + Center (`rule_of_thirds_and_centre`)
+**Purpose:** Expanded structured positioning including the viewport center
+*   **Positioning:** Images cycle through 5 positions: 4 rule of thirds points + center point
+*   **Pattern:** Top-left → Top-right → Bottom-left → Bottom-right → Center (round-robin)
+*   **Visual Effect:** More variety while maintaining compositional structure
+*   **Grid Visualization:** Shows rule of thirds grid + center dot when enabled (G key)
+
+##### 3. Random (`random`)
+**Purpose:** Natural, unpredictable positioning across the entire visible area
+*   **Positioning:** True random distribution within matte border bounds
+*   **Pattern:** No pattern - each image gets completely random placement
+*   **Visual Effect:** Organic, unpredictable compositions
+*   **Grid Visualization:** Grid lines hidden (irrelevant), G key toggles debug borders only
+*   **Minimum Visibility:** Enforces 60% minimum visibility constraint to prevent images from being positioned mostly off-screen
+
+#### Configuration
+Set your preferred layout mode in `config.json`:
+```json
+"transformations": {
+  "translation": {
+    "layout_mode": "rule_of_thirds_and_centre"
+  }
+}
+```
+Options: `rule_of_thirds`, `rule_of_thirds_and_centre`, `random`
+
+#### Debugging
+Press **G** to toggle grid visualization and see how images are positioned.
+
+
+### 3.7. UI Controls
+*   **Speed Control:** 0.1x to 20x animation speed multiplier
+*   **Layer Control:** 1-8 concurrent image layers  
+*   **Audio Controls:** Volume and play/pause
+*   **Background Toggle:** Switch between black and white backgrounds
+*   **Pattern Display:** Shows current pattern code for reproducibility
+
+### 3.8. Keyboard Shortcuts
+*   **Spacebar:** Play/Pause animations
+*   **N:** Generate new pattern  
+*   **B:** Toggle background (black/white)
+*   **A:** Toggle audio playback
+*   **G:** Toggle grid visualization (for debugging positioning)
 
 ## 4. Target Audience
 
@@ -428,7 +475,9 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 - **N:** Generate new pattern
 - **B:** Toggle background (black/white)
 - **A:** Toggle audio playback
+- **G:** Toggle rule of thirds grid / debug borders
 - **F:** Save current painting as favorite
+- **V:** View favorites gallery
 
 #### Control Panel Features
 - **Real-time adjustments:** All changes take effect immediately
@@ -496,8 +545,11 @@ The application is configured using a **JSON-based configuration system** (`conf
     },
     "translation": {
       "enabled": true,
-      "x_range_percent": 30,
-      "y_range_percent": 30
+      "layout_mode": "rule_of_thirds_and_centre",
+      "minimum_visible_percent": 60
+    },
+    "best_fit_scaling": {
+      "enabled": true
     }
   },
   "color_remapping": {
@@ -546,29 +598,42 @@ FLASK_CONFIG=production python app.py
 FLASK_CONFIG=raspberry_pi python app.py
 ```
 
-#### Configuration Hot Reload ✅ NEW FEATURE
+#### Simplified Configuration System ✅ RECENT IMPROVEMENT
 
-The application now supports **hot reloading** of configuration changes without requiring a server restart:
+The application now uses a **streamlined configuration architecture** that eliminates complexity and reduces potential errors:
+
+**Previous Complex System (Removed):**
+- JSON config → Flask processing → HTML template injection → JavaScript variables
+- Required 4 different naming conventions for the same setting
+- Example: `max_horizontal_deviation_percent` → `TRANSLATION_RULE_OF_THIRDS_MAX_HORIZONTAL_DEVIATION_PERCENT` → `translationRuleOfThirdsMaxHorizontalDeviationPercent`
+
+**New Simple System:**
+- JSON config → Direct API fetch → JavaScript uses JSON structure
+- Single consistent naming convention across all layers
+- Example: Direct access to `config.transformations.translation.rule_of_thirds.max_horizontal_deviation_percent`
+
+**Benefits:**
+- **Much simpler:** One source of truth (JSON config)
+- **Fewer errors:** No variable name mismatches between layers
+- **Easier maintenance:** Add new config options just in JSON
+- **Hot reload still works:** Config changes detected on page refresh
+- **Same functionality:** All features work exactly as before
+
+#### Configuration Hot Reload ✅ MAINTAINED FEATURE
+
+The application continues to support **hot reloading** of configuration changes:
 
 **How to use:**
 1. Edit `config.json` with any desired changes
-2. Save the file
+2. Save the file  
 3. Refresh your browser (F5 or Ctrl+R)
 4. Changes take effect immediately
 
-**Features:**
-- **Automatic Detection:** File modification timestamps are monitored
-- **Thread-Safe:** Multiple browser refreshes safely trigger config reloads
-- **No Server Restart:** Changes apply without stopping the Flask server
-- **All Settings:** Works with all configuration sections (timing, transformations, audio, etc.)
-
 **What gets reloaded:**
-- Animation timing parameters
-- Layer management settings
-- Image transformation settings
-- Audio configuration
-- Matte border settings
-- Performance settings
+- All JSON configuration sections
+- Layout modes and positioning settings
+- Animation timing and transformation parameters
+- Audio, matte border, and performance settings
 
 ### 6.8. Production Deployment
 

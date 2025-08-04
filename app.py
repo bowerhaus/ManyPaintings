@@ -93,24 +93,18 @@ def create_app(config_name=None):
     
     @app.route('/api/config')
     def get_config():
-        """Get application configuration including initial pattern code."""
+        """Get application configuration - returns JSON config directly."""
         # Check for config changes before serving config
         config_obj = config[config_name or 'default']
         config_obj.check_and_reload()
         
-        config_data = {
-            'initial_pattern_code': app.config.get('INITIAL_PATTERN_CODE'),
-            'pattern_seed': app.config.get('PATTERN_SEED', 'auto'),
-            'animation_fps': app.config.get('ANIMATION_FPS', 30),
-            'max_concurrent_images': app.config.get('MAX_CONCURRENT_IMAGES', 10),
-            'preload_buffer_size': app.config.get('PRELOAD_BUFFER_SIZE', 5),
-            'lazy_loading': app.config.get('LAZY_LOADING', True),
-            'matte_border': app.config.get('MATTE_BORDER', {})
-        }
+        # Return the raw JSON configuration data directly
+        config_data = config_obj._config_data
         
         response = jsonify(config_data)
-        if app.config['ENABLE_CACHING']:
-            response.headers['Cache-Control'] = f'public, max-age={app.config["CACHE_MAX_AGE"]}'
+        if config_data.get('application', {}).get('enable_caching', True):
+            cache_max_age = config_data.get('application', {}).get('cache_max_age', 3600)
+            response.headers['Cache-Control'] = f'public, max-age={cache_max_age}'
         
         return response
     

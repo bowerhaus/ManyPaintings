@@ -1,6 +1,6 @@
-# CLAUDE.md
+# GEMINI.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Gemini when working with code in this repository.
 
 ## Project Overview
 
@@ -25,7 +25,7 @@ python -m venv venv
 
 # Activate virtual environment
 # Windows:
-venv\Scripts\activate
+vvenv\Scripts\activate
 # Linux/macOS:
 source venv/bin/activate
 
@@ -171,7 +171,6 @@ The application uses a JSON-based configuration system with environment-specific
     },
     "translation": {
       "enabled": true,
-      "layout_mode": "rule_of_thirds_and_centre",
       "minimum_visible_percent": 60
     },
     "best_fit_scaling": {
@@ -236,43 +235,6 @@ The application uses a JSON-based configuration system with environment-specific
   }
 }
 ```
-
-### Layout Mode Configuration
-
-The `layout_mode` setting in the `translation` configuration controls how images are positioned:
-
-```json
-"transformations": {
-  "translation": {
-    "enabled": true,
-    "layout_mode": "rule_of_thirds_and_centre"
-  }
-}
-```
-
-#### Available Layout Mode Options
-
-##### `"rule_of_thirds"`
-Classic rule of thirds positioning using 4 intersection points:
-- **Positions**: Top-left (33.3%, 33.3%), Top-right (66.7%, 33.3%), Bottom-left (33.3%, 66.7%), Bottom-right (66.7%, 66.7%)
-- **Pattern**: Round-robin cycling through all 4 positions
-- **Visual**: Shows rule of thirds grid with 4 yellow intersection dots when G key pressed
-- **Best for**: Classic photographic composition, structured layouts
-
-##### `"rule_of_thirds_and_centre"`
-Extended rule of thirds with center point:
-- **Positions**: All 4 rule of thirds points + center (50%, 50%)
-- **Pattern**: Round-robin cycling through all 5 positions
-- **Visual**: Shows rule of thirds grid + center dot when G key pressed
-- **Best for**: More variety while maintaining compositional structure
-
-##### `"random"`
-Pure random positioning within matte border bounds:
-- **Positions**: Completely random distribution across visible image area
-- **Pattern**: No pattern - each image gets unique random placement
-- **Visual**: Grid lines hidden (irrelevant), G key shows debug borders only
-- **Best for**: Organic, natural compositions, unpredictable layouts
-- **Smart boundaries**: Automatically respects matte border settings for perfect distribution
 
 ### Configuration Loading
 - Environment selection via `FLASK_CONFIG` environment variable
@@ -435,101 +397,55 @@ where:
 - **Key Features**: Control panels, keyboard shortcuts, responsive design
 - **API**: `togglePlayPause()`, `updateAnimationSpeed()`, `toggleAudio()`
 
-### Image Layout System ✅ RECENT IMPROVEMENT
+### Enhanced Image Transformation System ✅ RECENT IMPROVEMENT
 
-The application now features a sophisticated **Multi-Mode Layout System** with three distinct positioning strategies that provide different visual experiences and use cases.
+The application now features an advanced **Rule of Thirds Positioning System** that provides superior image distribution and visual balance compared to traditional random positioning.
 
-#### Available Layout Modes
+#### Core Problem Solved
+Traditional random positioning can create visual clustering where multiple images appear in the same area while leaving other regions sparse. The new system ensures balanced spatial distribution while maintaining natural, organic positioning by adhering to the principles of the rule of thirds.
 
-##### 1. Rule of Thirds (`rule_of_thirds`)
-**Purpose**: Structured, aesthetically pleasing positioning based on photography composition principles
-- **Positioning**: Images cycle through the 4 rule of thirds intersection points
-- **Pattern**: Top-left → Top-right → Bottom-left → Bottom-right (round-robin)
-- **Visual Effect**: Classic photographic composition with balanced positioning
-- **Grid Visualization**: Shows red grid lines and yellow intersection points when enabled (G key)
-
-##### 2. Rule of Thirds + Center (`rule_of_thirds_and_centre`)
-**Purpose**: Expanded structured positioning including the viewport center
-- **Positioning**: Images cycle through 5 positions: 4 rule of thirds points + center point
-- **Pattern**: Top-left → Top-right → Bottom-left → Bottom-right → Center (round-robin)
-- **Visual Effect**: More variety while maintaining compositional structure
-- **Grid Visualization**: Shows rule of thirds grid + center dot when enabled (G key)
-
-##### 3. Random (`random`)
-**Purpose**: Natural, unpredictable positioning across the entire visible area
-- **Positioning**: True random distribution within matte border bounds
-- **Pattern**: No pattern - each image gets completely random placement
-- **Visual Effect**: Organic, unpredictable compositions
-- **Grid Visualization**: Grid lines hidden (irrelevant), G key toggles debug borders only
+#### Rule of Thirds Positioning Architecture
+- **Intersection Points**: The system uses the four intersection points of the rule of thirds grid as focal points for image placement.
+- **Randomized Placement**: Images are randomly assigned to one of the four intersection points.
+- **Controlled Deviation**: To create a more organic and less rigid appearance, images are not placed directly on the intersection points. Instead, their final position is randomly deviated from the intersection point within a configurable maximum deviation percentage.
 
 #### Technical Implementation
 
-##### Viewport-Relative Positioning
-All layout modes use viewport units (`vw`, `vh`) for consistent positioning:
+##### Intersection Points
+The four intersection points are calculated as follows:
+- Top-left: (1/3 width, 1/3 height)
+- Top-right: (2/3 width, 1/3 height)
+- Bottom-left: (1/3 width, 2/3 height)
+- Bottom-right: (2/3 width, 2/3 height)
 
-```javascript
-// Rule of thirds calculation
-const viewportOffsetX = (point.x - 0.5) * 100; // -16.7vw or +16.7vw
-const viewportOffsetY = (point.y - 0.5) * 100; // -16.7vh or +16.7vh
-
-// Random positioning with matte border awareness
-const actualImageArea = this.getActualImageAreaBounds();
-const maxRangeX = (actualImageArea.width / window.innerWidth) * 100;
-const maxRangeY = (actualImageArea.height / window.innerHeight) * 100;
-```
-
-##### Matte Border Integration
-Random mode automatically calculates and respects matte border boundaries:
-
-```javascript
-getActualImageAreaBounds() {
-  // Reads actual border configuration
-  const borderPercent = window.APP_CONFIG.matteBorder.borderPercent;
-  
-  // Calculates usable image area within border
-  const borderSize = (borderPercent / 100) * smallerCanvasDimension;
-  const imageWidth = canvasWidth - (borderSize * 2);
-  
-  // Returns precise bounds for random distribution
-  return { left, top, width, height };
-}
-```
-
-##### Smart Grid Visualization
-Grid behavior adapts to the active layout mode:
-
-- **Structured Modes** (`rule_of_thirds`, `rule_of_thirds_and_centre`):
-  - G key toggles full grid with lines, dots, and image borders
-  - Shows intersection points and center dot (when applicable)
-  - Provides visual debugging for structured positioning
-
-- **Random Mode**:
-  - G key toggles image borders only (grid lines irrelevant)
-  - Grid automatically hidden (not useful for random positioning)
-  - Debug borders help visualize random distribution
+##### Position Calculation Process
+1.  **Select Intersection**: One of the four intersection points is randomly selected for each new image.
+2.  **Calculate Deviation**: A random deviation is calculated for both the horizontal and vertical axes, up to the configured maximum percentage of the image's dimensions.
+3.  **Apply Position**: The final position of the image is the selected intersection point plus the calculated random deviation.
 
 #### Configuration Integration
 ```json
 "transformations": {
   "translation": {
     "enabled": true,
-    "layout_mode": "rule_of_thirds_and_centre"  // Options: rule_of_thirds, rule_of_thirds_and_centre, random
+    "layout_mode": "rule_of_thirds",
+    "rule_of_thirds": {
+      "max_horizontal_deviation_percent": 20,
+      "max_vertical_deviation_percent": 20
+    }
   }
 }
 ```
 
-#### Performance Characteristics
-- **Viewport Units**: Hardware-accelerated CSS transforms using `vw`/`vh`
-- **Deterministic Patterns**: Structured modes use seeded random for reproducibility  
-- **Matte Border Awareness**: Automatic boundary calculation with minimal overhead
-- **Real-time Adaptation**: Layout responds to viewport size changes and configuration updates
-
 #### Visual Impact Benefits
-- **Compositional Control**: Choose between structured aesthetics or organic randomness
-- **Professional Presentation**: Rule of thirds provides gallery-quality composition
-- **Visual Variety**: Center mode adds more positioning options while maintaining structure
-- **Natural Distribution**: Random mode provides authentic unpredictable placement
-- **Flexible Debugging**: Appropriate visualization tools for each layout type
+- **Balanced Compositions**: Images are placed at points of natural visual interest.
+- **Organic Feel**: Randomized deviation prevents a rigid, grid-like appearance.
+- **Professional Aesthetic**: Compositions adhere to a fundamental principle of visual design.
+
+#### Compatibility with Existing Systems
+- **Deterministic Patterns**: Works seamlessly with the pattern seed system.
+- **Transformation Cache**: Positions are cached along with other transformations.
+- **Favorites System**: Saved favorites reproduce the exact positions.
 
 ### Best Fit Scaling System ✅ CONFIGURABLE FEATURE
 
@@ -698,9 +614,6 @@ Appear at bottom center when mouse hovers over the bottom area:
 - **N**: Generate new pattern
 - **B**: Toggle background (black/white)
 - **A**: Toggle audio playback
-- **G**: Toggle rule of thirds grid / debug borders
-- **F**: Save current pattern as favorite
-- **V**: View favorites gallery
 
 ### Responsive Design
 - **Desktop**: Full control panel with all features

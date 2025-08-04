@@ -1,4 +1,4 @@
-/**
+2/**
  * Many Paintings - Generative Art Application
  * Main JavaScript application with modular architecture
  */
@@ -97,7 +97,7 @@ window.App = (function () {
     },
 
     cleanupMemory() {
-      if (this.loadedImages.size <= config.maxConcurrentImages) {
+      if (this.loadedImages.size <= (config.application?.max_concurrent_images || 10)) {
         return;
       }
 
@@ -139,10 +139,12 @@ window.App = (function () {
     frameInterval: 1000 / 30,
     lastFrameTime: 0,
     transformationCache: new Map(),
+    ruleOfThirdsIndex: 0, // Track current rule of thirds position
+    debugBordersVisible: false, // Track debug border state for random mode
 
     init() {
       this.layersContainer = document.getElementById('image-layers');
-      this.frameRate = config.animationFPS || 30;
+      this.frameRate = config.application?.animation_fps || 30;
       this.frameInterval = 1000 / this.frameRate;
 
       if (!this.layersContainer) {
@@ -155,8 +157,18 @@ window.App = (function () {
       // Initialize virtual coordinate system: ensure container uses full viewport
       this.initializeVirtualCoordinateSystem();
 
+      // Initialize debug boxes since grid is visible by default
+      setTimeout(() => {
+        const grid = document.getElementById('rule-of-thirds-grid');
+        if (grid && grid.style.display !== 'none') {
+          this.toggleImageBoxes(true);
+        }
+        // Initialize center dot visibility
+        this.updateCenterDotVisibility();
+      }, 100);
+
       console.log(`AnimationEngine: Initialized with ${this.frameRate} FPS target and virtual coordinate system`);
-      console.log(`AnimationEngine: Max concurrent layers: ${config.maxConcurrentLayers || 5}`);
+      console.log(`AnimationEngine: Max concurrent layers: ${config.layer_management?.max_concurrent_layers || 5}`);
       console.log(`AnimationEngine: Animation quality: ${config.animationQuality || 'high'}`);
     },
 
@@ -170,15 +182,108 @@ window.App = (function () {
         this.layersContainer.style.width = '100vw';
         this.layersContainer.style.height = '100vh';
         this.layersContainer.style.zIndex = '10'; // Below controls but above background
-        
+
         console.log('AnimationEngine: Virtual coordinate system initialized - container set to full viewport');
       }
+    },
+
+    toggleRuleOfThirdsGrid() {
+      const grid = document.getElementById('rule-of-thirds-grid');
+      if (grid) {
+        const currentLayoutMode = window.APP_CONFIG && window.APP_CONFIG.transformations?.translation?.layout_mode;
+        const isVisible = grid.style.display !== 'none';
+        
+        if (currentLayoutMode === 'random') {
+          // In random mode, toggle only the image borders, not the grid lines
+          this.toggleImageBoxes(!this.debugBordersVisible);
+          this.debugBordersVisible = !this.debugBordersVisible;
+          console.log('Random mode: Image borders', this.debugBordersVisible ? 'shown' : 'hidden');
+          return;
+        }
+        
+        // For structured modes, toggle the full grid
+        grid.style.display = isVisible ? 'none' : 'block';
+        this.toggleImageBoxes(!isVisible);
+        this.updateCenterDotVisibility();
+
+        console.log('Rule of thirds grid:', isVisible ? 'hidden' : 'visible');
+      }
+    },
+
+    shouldShowDebugBorders() {
+      const currentLayoutMode = window.APP_CONFIG && window.APP_CONFIG.transformations?.translation?.layout_mode;
+      const grid = document.getElementById('rule-of-thirds-grid');
+      
+      if (currentLayoutMode === 'random') {
+        // In random mode, use the separate debug borders state
+        return this.debugBordersVisible;
+      } else {
+        // In structured modes, use grid visibility
+        return grid && grid.style.display !== 'none';
+      }
+    },
+
+    updateCenterDotVisibility() {
+      const centerDot = document.getElementById('center-grid-dot');
+      const grid = document.getElementById('rule-of-thirds-grid');
+      
+      if (centerDot && grid) {
+        const currentLayoutMode = window.APP_CONFIG && window.APP_CONFIG.transformations?.translation?.layout_mode;
+        const isGridVisible = grid.style.display !== 'none';
+        const isUsingCenterMode = currentLayoutMode === 'rule_of_thirds_and_centre';
+        const isRandomMode = currentLayoutMode === 'random';
+        
+        // In random mode, hide the grid lines but allow debug borders via G key
+        if (isRandomMode) {
+          grid.style.display = 'none';
+          centerDot.style.display = 'none';
+          // Don't automatically hide image borders - let user control with G key
+          console.log('Grid lines hidden for random mode (G key toggles image borders only)');
+          return;
+        }
+        
+        // Show center dot only if grid is visible AND using center mode
+        if (isGridVisible && isUsingCenterMode) {
+          centerDot.style.display = 'block';
+          console.log('Center grid dot shown for rule_of_thirds_and_centre mode');
+        } else {
+          centerDot.style.display = 'none';
+        }
+      }
+    },
+
+    toggleImageBoxes(showBoxes) {
+      const layers = this.layersContainer.querySelectorAll('.image-layer');
+      console.log(`Toggling debug boxes: ${showBoxes}, found ${layers.length} layers`);
+
+      layers.forEach(layer => {
+        const img = layer.querySelector('img');
+        if (showBoxes) {
+          console.log('Adding debug styles to existing layer:', layer.id);
+
+          // Add border to image if it exists
+          if (img) {
+            img.style.border = '3px solid rgba(0, 255, 0, 0.9)';
+            img.style.boxShadow = '0 0 0 1px rgba(0, 255, 0, 0.5)';
+          }
+
+        } else {
+          console.log('Removing debug styles from layer:', layer.id);
+
+          // Remove border from image
+          if (img) {
+            img.style.border = '';
+            img.style.boxShadow = '';
+          }
+
+        }
+      });
     },
 
     start() {
       if (!this.isPlaying) {
         this.isPlaying = true;
-        
+
         // Resume all layer animations
         this.activeLayers.forEach((layerInfo, imageId) => {
           if (layerInfo.layer) {
@@ -188,17 +293,17 @@ window.App = (function () {
               layerInfo.startTime += pauseDuration;
               delete layerInfo.pausedAt;
             }
-            
+
             // Only resume layers that were actually paused
             if (layerInfo.pausedOpacity !== undefined) {
               console.log(`AnimationEngine: Resuming layer ${imageId} from opacity ${layerInfo.pausedOpacity}`);
-              
+
               // Resume based on paused phase
               if (layerInfo.pausedPhase === 'fade-in') {
                 // Continue fade-in from current opacity to target opacity
                 layerInfo.layer.style.transition = `opacity ${layerInfo.pausedTimeRemaining}ms ease-in-out`;
                 layerInfo.layer.style.opacity = layerInfo.opacity;
-                
+
                 layerInfo.holdTimeout = setTimeout(() => {
                   layerInfo.phase = 'hold';
                   layerInfo.holdTimeout = setTimeout(() => {
@@ -207,7 +312,7 @@ window.App = (function () {
                     }
                   }, layerInfo.holdTime);
                 }, layerInfo.pausedTimeRemaining);
-                
+
               } else if (layerInfo.pausedPhase === 'hold') {
                 // Resume hold phase - just wait for remaining time
                 layerInfo.holdTimeout = setTimeout(() => {
@@ -215,17 +320,17 @@ window.App = (function () {
                     this.startFadeOut(layerInfo);
                   }
                 }, layerInfo.pausedTimeRemaining);
-                
+
               } else if (layerInfo.pausedPhase === 'fade-out') {
                 // Resume fade-out
                 layerInfo.layer.style.transition = `opacity ${layerInfo.fadeOutDuration}ms ease-in-out`;
                 layerInfo.layer.style.opacity = '0';
-                
+
                 setTimeout(() => {
                   this.removeLayer(layerInfo);
                 }, layerInfo.fadeOutDuration);
               }
-              
+
               // Clean up pause data
               delete layerInfo.pausedOpacity;
               delete layerInfo.pausedTimeRemaining;
@@ -233,7 +338,7 @@ window.App = (function () {
             }
           }
         });
-        
+
         console.log(`AnimationEngine: Started and resumed ${this.activeLayers.size} layer animations`);
         this.animate();
       }
@@ -245,28 +350,28 @@ window.App = (function () {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
       }
-      
+
       // Pause all layer animations by freezing their current state
       this.activeLayers.forEach((layerInfo, imageId) => {
         if (layerInfo.layer) {
           // Store current computed opacity BEFORE removing transitions
           const currentOpacity = getComputedStyle(layerInfo.layer).opacity;
           layerInfo.pausedOpacity = parseFloat(currentOpacity);
-          
+
           // Remove transitions and immediately set to current computed opacity
           layerInfo.layer.style.transition = 'none';
           layerInfo.layer.style.opacity = currentOpacity;
-          
+
           console.log(`AnimationEngine: Paused layer ${imageId} at opacity ${layerInfo.pausedOpacity}`);
         }
-        
+
         // Clear any pending timeouts and calculate remaining time
         if (layerInfo.holdTimeout) {
           clearTimeout(layerInfo.holdTimeout);
           layerInfo.holdTimeout = null;
-          
+
           const elapsed = Date.now() - layerInfo.startTime;
-          
+
           if (layerInfo.phase === 'fade-in') {
             layerInfo.pausedTimeRemaining = Math.max(0, layerInfo.fadeInDuration - elapsed);
             layerInfo.pausedPhase = 'fade-in';
@@ -278,12 +383,12 @@ window.App = (function () {
             // If already fading out, just note it
             layerInfo.pausedPhase = 'fade-out';
           }
-          
+
           // Store when we paused for accurate resume timing
           layerInfo.pausedAt = Date.now();
         }
       });
-      
+
       console.log(`AnimationEngine: Stopped and paused ${this.activeLayers.size} layer animations`);
     },
 
@@ -310,8 +415,8 @@ window.App = (function () {
       }
 
       // Check if we've reached the concurrent layer limit
-      if (this.activeLayers.size >= (config.maxConcurrentLayers || 5)) {
-        console.log(`AnimationEngine: Max concurrent layers (${config.maxConcurrentLayers || 5}) reached, skipping ${imageId}`);
+      if (this.activeLayers.size >= (config.layer_management?.max_concurrent_layers || 5)) {
+        console.log(`AnimationEngine: Max concurrent layers (${config.layer_management?.max_concurrent_layers || 5}) reached, skipping ${imageId}`);
         return null;
       }
 
@@ -320,25 +425,25 @@ window.App = (function () {
 
         // Generate deterministic timing and transformation parameters (affected by speed multiplier)
         const speedMultiplier = UI.speedMultiplier || 1.0;
-        
+
         // Create seeded random generator for this specific image instance
         const animationSeed = options.seed ? `${imageId}-${options.seed}-animation` : imageId;
         const animationRandom = this.seededRandom(this.hashCode(animationSeed));
-        
-        const baseFadeInDuration = this.seededRandomBetween(animationRandom, config.fadeInMinSec || 2, config.fadeInMaxSec || 5) * 1000;
-        const baseFadeOutDuration = this.seededRandomBetween(animationRandom, config.fadeOutMinSec || 3, config.fadeOutMaxSec || 6) * 1000;
-        const baseHoldTime = this.seededRandomBetween(animationRandom, config.minHoldTimeSec || 4, config.maxHoldTimeSec || 12) * 1000;
+
+        const baseFadeInDuration = this.seededRandomBetween(animationRandom, config.animation_timing?.fade_in_min_sec || 2, config.animation_timing?.fade_in_max_sec || 5) * 1000;
+        const baseFadeOutDuration = this.seededRandomBetween(animationRandom, config.animation_timing?.fade_out_min_sec || 3, config.animation_timing?.fade_out_max_sec || 6) * 1000;
+        const baseHoldTime = this.seededRandomBetween(animationRandom, config.animation_timing?.min_hold_time_sec || 4, config.animation_timing?.max_hold_time_sec || 12) * 1000;
 
         const fadeInDuration = baseFadeInDuration / speedMultiplier;
         const fadeOutDuration = baseFadeOutDuration / speedMultiplier;
         const holdTime = baseHoldTime / speedMultiplier;
-        const minOpacity = config.minOpacity || 0.7;
-        const maxOpacity = config.maxOpacity || 0.8;
+        const minOpacity = config.layer_management?.min_opacity || 0.7;
+        const maxOpacity = config.layer_management?.max_opacity || 0.8;
         const opacity = Math.min(maxOpacity, animationRandom() * (maxOpacity - minOpacity) + minOpacity);
 
         console.log(`AnimationEngine: Speed ${speedMultiplier}x - fadeIn: ${fadeInDuration}ms, hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms`);
 
-        const transformations = this.generateTransformations(imageId, options.seed);
+        const transformations = this.generateTransformations(img, imageId, options.seed);
         const layer = this.createLayer(imageId, img, transformations);
 
         this.layersContainer.appendChild(layer);
@@ -447,7 +552,7 @@ window.App = (function () {
       }, 2000); // Match CSS transition duration
     },
 
-    generateTransformations(imageId, seed = null) {
+    generateTransformations(img, imageId, seed = null) {
       // Use imageId + seed for deterministic transformations
       const transformSeed = seed ? `${imageId}-${seed}` : imageId;
 
@@ -466,23 +571,115 @@ window.App = (function () {
         hueShift: 0
       };
 
-      if (config.rotationEnabled) {
-        transformations.rotation = random() * (config.rotationMaxDegrees - config.rotationMinDegrees) + config.rotationMinDegrees;
+      if (config.transformations?.rotation?.enabled) {
+        transformations.rotation = random() * (config.transformations.rotation.max_degrees - config.transformations.rotation.min_degrees) + config.transformations.rotation.min_degrees;
       }
 
-      if (config.scaleEnabled) {
-        transformations.scale = random() * (config.scaleMaxFactor - config.scaleMinFactor) + config.scaleMinFactor;
+      if (config.transformations?.scale?.enabled) {
+        transformations.scale = random() * (config.transformations.scale.max_factor - config.transformations.scale.min_factor) + config.transformations.scale.min_factor;
       }
 
-      if (config.translationEnabled) {
-        // Simple random positioning across full viewport
-        transformations.translateX = (random() - 0.5) * 100; // -50% to +50%
-        transformations.translateY = (random() - 0.5) * 100; // -50% to +50%
-        console.log(`Random position: (${transformations.translateX.toFixed(1)}%, ${transformations.translateY.toFixed(1)}%)`);
+      if (config.transformations?.translation?.enabled) {
+        if (config.transformations?.translation?.layout_mode === 'rule_of_thirds') {
+          const intersectionPoints = [
+            { x: 1 / 3, y: 1 / 3 },    // Top-left
+            { x: 2 / 3, y: 1 / 3 },    // Top-right
+            { x: 1 / 3, y: 2 / 3 },    // Bottom-left
+            { x: 2 / 3, y: 2 / 3 },    // Bottom-right
+          ];
+
+          // Round-robin through the intersection points
+          const point = intersectionPoints[this.ruleOfThirdsIndex];
+          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % intersectionPoints.length;
+
+          // Apply deviation if configured
+          let finalX = point.x;
+          let finalY = point.y;
+          
+          if (config.transformations?.translation?.rule_of_thirds?.max_horizontal_deviation_percent && config.transformations?.translation?.rule_of_thirds?.max_vertical_deviation_percent) {
+            const maxHorizontalDev = config.transformations.translation.rule_of_thirds.max_horizontal_deviation_percent / 100;
+            const maxVerticalDev = config.transformations.translation.rule_of_thirds.max_vertical_deviation_percent / 100;
+            
+            const horizontalDeviation = (random() - 0.5) * 2 * maxHorizontalDev;
+            const verticalDeviation = (random() - 0.5) * 2 * maxVerticalDev;
+            
+            finalX = Math.max(0.1, Math.min(0.9, point.x + horizontalDeviation));
+            finalY = Math.max(0.1, Math.min(0.9, point.y + verticalDeviation));
+          }
+
+          // Convert rule of thirds point to viewport offset from center
+          const viewportOffsetX = (finalX - 0.5) * 100;
+          const viewportOffsetY = (finalY - 0.5) * 100;
+          
+          transformations.translateX = viewportOffsetX;
+          transformations.translateY = viewportOffsetY;
+
+          console.log(`Rule of thirds: Point ${(this.ruleOfThirdsIndex === 0 ? 4 : this.ruleOfThirdsIndex)} → translate(${viewportOffsetX.toFixed(1)}vw, ${viewportOffsetY.toFixed(1)}vh) [deviation: ${config.transformations?.translation?.rule_of_thirds?.max_horizontal_deviation_percent || 0}%, ${config.transformations?.translation?.rule_of_thirds?.max_vertical_deviation_percent || 0}%]`);
+
+        } else if (config.transformations?.translation?.layout_mode === 'rule_of_thirds_and_centre') {
+          const intersectionPoints = [
+            { x: 1 / 3, y: 1 / 3 },    // Top-left
+            { x: 2 / 3, y: 1 / 3 },    // Top-right
+            { x: 1 / 3, y: 2 / 3 },    // Bottom-left
+            { x: 2 / 3, y: 2 / 3 },    // Bottom-right
+            { x: 0.5, y: 0.5 },        // Center
+          ];
+
+          // Round-robin through the intersection points including center
+          const point = intersectionPoints[this.ruleOfThirdsIndex];
+          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % intersectionPoints.length;
+
+          // Apply deviation if configured
+          let finalX = point.x;
+          let finalY = point.y;
+          
+          if (config.transformations?.translation?.rule_of_thirds_and_centre?.max_horizontal_deviation_percent && config.transformations?.translation?.rule_of_thirds_and_centre?.max_vertical_deviation_percent) {
+            const maxHorizontalDev = config.transformations.translation.rule_of_thirds_and_centre.max_horizontal_deviation_percent / 100;
+            const maxVerticalDev = config.transformations.translation.rule_of_thirds_and_centre.max_vertical_deviation_percent / 100;
+            
+            const horizontalDeviation = (random() - 0.5) * 2 * maxHorizontalDev;
+            const verticalDeviation = (random() - 0.5) * 2 * maxVerticalDev;
+            
+            finalX = Math.max(0.1, Math.min(0.9, point.x + horizontalDeviation));
+            finalY = Math.max(0.1, Math.min(0.9, point.y + verticalDeviation));
+          }
+
+          // Convert point to viewport offset from center
+          const viewportOffsetX = (finalX - 0.5) * 100;
+          const viewportOffsetY = (finalY - 0.5) * 100;
+          
+          
+          transformations.translateX = viewportOffsetX;
+          transformations.translateY = viewportOffsetY;
+
+          console.log(`Rule of thirds + center: Point ${(this.ruleOfThirdsIndex === 0 ? 5 : this.ruleOfThirdsIndex)} → translate(${viewportOffsetX.toFixed(1)}vw, ${viewportOffsetY.toFixed(1)}vh) [deviation: ${config.transformations?.translation?.rule_of_thirds_and_centre?.max_horizontal_deviation_percent || 0}%, ${config.transformations?.translation?.rule_of_thirds_and_centre?.max_vertical_deviation_percent || 0}%]`);
+
+        } else if (config.transformations?.translation?.layout_mode === 'random') {
+          // Random positioning within actual matte border bounds
+          const actualImageArea = this.getActualImageAreaBounds();
+          
+          // Convert image area bounds to viewport-relative offsets
+          const centerOffsetX = ((actualImageArea.left + actualImageArea.width/2) / window.innerWidth - 0.5) * 100;
+          const centerOffsetY = ((actualImageArea.top + actualImageArea.height/2) / window.innerHeight - 0.5) * 100;
+          
+          // Calculate random range within the actual image area
+          const maxRangeX = (actualImageArea.width / window.innerWidth) * 100;
+          const maxRangeY = (actualImageArea.height / window.innerHeight) * 100;
+          
+          transformations.translateX = (random() - 0.5) * maxRangeX + centerOffsetX;
+          transformations.translateY = (random() - 0.5) * maxRangeY + centerOffsetY;
+          transformations.useViewportUnits = true;
+          
+          console.log(`Random positioning (actual bounds): translate(${transformations.translateX.toFixed(1)}vw, ${transformations.translateY.toFixed(1)}vh) - area: ${actualImageArea.width}x${actualImageArea.height}`);
+        } else {
+          // Default/fallback to random positioning
+          transformations.translateX = (random() - 0.5) * 100; // -50% to +50%
+          transformations.translateY = (random() - 0.5) * 100; // -50% to +50%
+        }
       }
 
-      if (config.colorRemappingEnabled && random() < config.colorRemappingProbability) {
-        transformations.hueShift = random() * (config.colorRemappingHueMaxDegrees - config.colorRemappingHueMinDegrees) + config.colorRemappingHueMinDegrees;
+      if (config.color_remapping?.enabled && random() < config.color_remapping?.probability) {
+        transformations.hueShift = random() * (config.color_remapping.hue_shift_range.max_degrees - config.color_remapping.hue_shift_range.min_degrees) + config.color_remapping.hue_shift_range.min_degrees;
       }
 
       if (config.preloadTransformCache) {
@@ -524,20 +721,54 @@ window.App = (function () {
       layer.className = 'image-layer';
       layer.id = `layer-${imageId}-${Date.now()}`;
 
+      // Add debug box if grid is visible
+      const grid = document.getElementById('rule-of-thirds-grid');
+      if (grid && grid.style.display !== 'none') {
+        console.log('Adding debug-mode to layer:', layer.id);
+        layer.classList.add('debug-mode');
+
+        // Add border to layer container to show its boundaries
+        layer.style.border = '2px dashed rgba(255, 165, 0, 0.8)'; // Orange dashed border for layer
+        layer.style.boxShadow = '0 0 0 1px rgba(255, 165, 0, 0.3)';
+
+      }
+
       const imgElement = img.cloneNode();
       imgElement.draggable = false;
 
+      // Add debug border if debug mode is active
+      const shouldShowDebugBorder = this.shouldShowDebugBorders();
+      if (shouldShowDebugBorder) {
+        // Add border directly to image
+        imgElement.style.border = '3px solid rgba(0, 255, 0, 0.9)';
+        imgElement.style.boxShadow = '0 0 0 1px rgba(0, 255, 0, 0.5)';
+
+        console.log('Added debug border to layer:', layer.id);
+
+        // Debug: Log the actual computed position after transforms are applied
+        setTimeout(() => {
+          const rect = imgElement.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          const viewportCenterX = centerX / window.innerWidth * 100;
+          const viewportCenterY = centerY / window.innerHeight * 100;
+          console.log(`Image ${uniqueClass} actual center: (${viewportCenterX.toFixed(1)}%, ${viewportCenterY.toFixed(1)}%)`);
+        }, 100);
+      }
+
+      layer.appendChild(imgElement);
+
       // Get the image area dimensions (either from matte border or full viewport)
-      const imageArea = this.getImageAreaDimensions();
-      
+      const image_area = this.getImageAreaDimensions();
+
       // Apply best-fit scaling to the image area first (if enabled)
-      if (config.bestFitScalingEnabled) {
-        this.applyBestFitScaling(imgElement, img, imageArea);
+      if (config.transformations?.best_fit_scaling?.enabled) {
+        this.applyBestFitScaling(imgElement, img, image_area);
       } else {
         // If best fit scaling is disabled, use original image dimensions
         const originalWidth = img.naturalWidth || img.width;
         const originalHeight = img.naturalHeight || img.height;
-        
+
         imgElement.style.width = `${originalWidth}px`;
         imgElement.style.height = `${originalHeight}px`;
         imgElement.style.position = 'absolute';
@@ -548,23 +779,29 @@ window.App = (function () {
         console.log(`AnimationEngine: Best fit scaling disabled, using original image dimensions: ${originalWidth}x${originalHeight}px`);
       }
 
-      // Apply transformations in proper order: scale -> rotate -> translate
+      // Apply transformations in proper order
       if (transformations) {
         const transforms = [];
 
-        // Scale second (around center of fitted image)
-        if (config.scaleEnabled && transformations.scale !== 1) {
+        // Apply translation based on layout mode
+        if (config.transformations?.translation?.enabled && (transformations.translateX || transformations.translateY)) {
+          if (config.transformations?.translation?.layout_mode === 'rule_of_thirds' || config.transformations?.translation?.layout_mode === 'rule_of_thirds_and_centre' || transformations.useViewportUnits) {
+            // Use viewport units for structured positioning and random mode
+            transforms.push(`translate(${transformations.translateX}vw, ${transformations.translateY}vh)`);
+          } else {
+            // Use standard percentage translate for fallback positioning
+            transforms.push(`translate(${transformations.translateX}%, ${transformations.translateY}%)`);
+          }
+        }
+
+        // Scale (around center of image)
+        if (config.transformations?.scale?.enabled && transformations.scale !== 1) {
           transforms.push(`scale(${transformations.scale})`);
         }
 
-        // Rotate third (around center of scaled image)
-        if (config.rotationEnabled && transformations.rotation) {
+        // Rotate (around center of scaled image)
+        if (config.transformations?.rotation?.enabled && transformations.rotation) {
           transforms.push(`rotate(${transformations.rotation}deg)`);
-        }
-
-        // Translate last (move the final transformed image)
-        if (config.translationEnabled && (transformations.translateX || transformations.translateY)) {
-          transforms.push(`translate(${transformations.translateX}%, ${transformations.translateY}%)`);
         }
 
         if (transforms.length > 0) {
@@ -576,7 +813,7 @@ window.App = (function () {
         }
 
         // Apply hue shift filter if enabled
-        if (config.colorRemappingEnabled && transformations.hueShift !== 0) {
+        if (config.color_remapping?.enabled && transformations.hueShift !== 0) {
           imgElement.style.filter = `hue-rotate(${transformations.hueShift}deg)`;
         }
       }
@@ -594,39 +831,105 @@ window.App = (function () {
       };
     },
 
-    applyBestFitScaling(imgElement, originalImg, imageArea) {
+    getActualImageAreaBounds() {
+      // Get the actual usable image area, accounting for matte border
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Check if matte border is enabled and get configuration
+      let border_percent = 0;
+      let image_areaAspectRatio = null;
+      
+      // Try to get border configuration from APP_CONFIG
+      if (window.APP_CONFIG && window.APP_CONFIG.matte_border) {
+        if (window.APP_CONFIG.matte_border.enabled) {
+          border_percent = window.APP_CONFIG.matte_border.border_percent || 10;
+          image_areaAspectRatio = window.APP_CONFIG.matte_border.image_area?.aspect_ratio;
+        }
+      }
+      
+      // If no matte border, use full viewport
+      if (border_percent === 0) {
+        return {
+          left: 0,
+          top: 0,
+          width: viewportWidth,
+          height: viewportHeight
+        };
+      }
+      
+      // Calculate the actual image area (similar to MatteBorderManager logic)
+      let canvasWidth = viewportWidth;
+      let canvasHeight = viewportHeight;
+      
+      // Apply aspect ratio constraints if specified
+      if (image_areaAspectRatio && image_areaAspectRatio !== 'auto') {
+        const [widthRatio, heightRatio] = image_areaAspectRatio.split(':').map(Number);
+        const targetAspectRatio = widthRatio / heightRatio;
+        const currentAspectRatio = canvasWidth / canvasHeight;
+        
+        if (currentAspectRatio > targetAspectRatio) {
+          canvasWidth = canvasHeight * targetAspectRatio;
+        } else {
+          canvasHeight = canvasWidth / targetAspectRatio;
+        }
+      }
+      
+      // Calculate border size
+      const smallerCanvasDimension = Math.min(canvasWidth, canvasHeight);
+      const borderSize = (border_percent / 100) * smallerCanvasDimension;
+      
+      // Calculate final image area
+      const imageWidth = canvasWidth - (borderSize * 2);
+      const imageHeight = canvasHeight - (borderSize * 2);
+      
+      // Center the image area in viewport
+      const imageLeft = (viewportWidth - imageWidth) / 2;
+      const imageTop = (viewportHeight - imageHeight) / 2;
+      
+      console.log(`Calculated image area: ${imageWidth}x${imageHeight} at (${imageLeft}, ${imageTop}) with ${border_percent}% border`);
+      
+      return {
+        left: imageLeft,
+        top: imageTop,
+        width: imageWidth,
+        height: imageHeight
+      };
+    },
+
+    applyBestFitScaling(imgElement, originalImg, image_area) {
       // Get original image dimensions
       const originalWidth = originalImg.naturalWidth || originalImg.width;
       const originalHeight = originalImg.naturalHeight || originalImg.height;
-      
+
       if (!originalWidth || !originalHeight) {
         console.warn('AnimationEngine: Unable to get image dimensions for best-fit scaling');
         return;
       }
 
       // Calculate scale factors for both dimensions
-      const scaleX = imageArea.width / originalWidth;
-      const scaleY = imageArea.height / originalHeight;
-      
+      const scaleX = image_area.width / originalWidth;
+      const scaleY = image_area.height / originalHeight;
+
       // Use the smaller scale factor to ensure image fits entirely within the area (best-fit)
       const bestFitScale = Math.min(scaleX, scaleY);
-      
+
       // Calculate final dimensions
       const finalWidth = originalWidth * bestFitScale;
       const finalHeight = originalHeight * bestFitScale;
-      
+
       // Apply the best-fit scaling
       imgElement.style.width = `${finalWidth}px`;
       imgElement.style.height = `${finalHeight}px`;
-      
+
       // Center the image within the image area
       imgElement.style.position = 'absolute';
       imgElement.style.left = '50%';
       imgElement.style.top = '50%';
       imgElement.style.transform = `translate(-50%, -50%)`;
       imgElement.style.transformOrigin = 'center center';
-      
-      console.log(`AnimationEngine: Applied best-fit scaling - original: ${originalWidth}x${originalHeight}, area: ${imageArea.width}x${imageArea.height}, scale: ${bestFitScale.toFixed(3)}, final: ${finalWidth.toFixed(0)}x${finalHeight.toFixed(0)}`);
+
+      console.log(`AnimationEngine: Applied best-fit scaling - original: ${originalWidth}x${originalHeight}, area: ${image_area.width}x${image_area.height}, scale: ${bestFitScale.toFixed(3)}, final: ${finalWidth.toFixed(0)}x${finalHeight.toFixed(0)}`);
     },
 
     updateExistingLayerSpeeds(newSpeedMultiplier) {
@@ -682,7 +985,7 @@ window.App = (function () {
       // Immediate clearing for favorites loading - no fade transitions
       this.activeLayers.forEach((layerInfo, imageId) => {
         const { layer } = layerInfo;
-        
+
         // Clear any timeouts
         if (layerInfo.holdTimeout) {
           clearTimeout(layerInfo.holdTimeout);
@@ -690,13 +993,13 @@ window.App = (function () {
         if (layerInfo.fadeOutTimeout) {
           clearTimeout(layerInfo.fadeOutTimeout);
         }
-        
+
         // Remove from DOM immediately
         if (layer.parentNode) {
           layer.parentNode.removeChild(layer);
         }
       });
-      
+
       // Clear the active layers map
       this.activeLayers.clear();
     },
@@ -721,22 +1024,22 @@ window.App = (function () {
         const speedMultiplier = UI.speedMultiplier || 1.0;
         const layerIndex = options.layerIndex || 0;
         const totalLayers = options.totalLayers || 1;
-        
+
         // Use config values for hold and fade times
         // Hold time: random between min and max, then divide by 2
-        const configHoldMin = config.minHoldTimeSec || 4;
-        const configHoldMax = config.maxHoldTimeSec || 12;
+        const configHoldMin = config.animation_timing?.min_hold_time_sec || 4;
+        const configHoldMax = config.animation_timing?.max_hold_time_sec || 12;
         const randomHoldTime = this.seededRandomBetween(() => Math.random(), configHoldMin, configHoldMax);
         const baseHoldTime = (randomHoldTime / 2) * 1000;
-        
+
         // Fade-out time: random between fade-out min and max (no division)
-        const configFadeMin = config.fadeOutMinSec || 3;
-        const configFadeMax = config.fadeOutMaxSec || 6;
+        const configFadeMin = config.animation_timing?.fade_out_min_sec || 3;
+        const configFadeMax = config.animation_timing?.fade_out_max_sec || 6;
         const baseFadeOutDuration = this.seededRandomBetween(() => Math.random(), configFadeMin, configFadeMax) * 1000;
-        
+
         const fadeOutDuration = baseFadeOutDuration / speedMultiplier;
         const holdTime = baseHoldTime / speedMultiplier;
-        
+
         console.log(`AnimationEngine: Favorite restore layer ${layerIndex}/${totalLayers} with speed ${speedMultiplier}x - hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms (config-based timing)`);
 
         const layerInfo = {
@@ -758,23 +1061,23 @@ window.App = (function () {
         // Start with opacity 0 and fade in to the saved opacity quickly
         layer.style.opacity = '0';
         layer.style.transition = 'opacity 200ms ease-in-out';
-        
+
         // Force reflow and then animate to saved opacity
         layer.offsetHeight;
-        
+
         requestAnimationFrame(() => {
           const opacityToSet = favoriteData.opacity.toString();
           layer.style.opacity = opacityToSet;
-          
+
           console.log(`AnimationEngine: Setting layer ${imageId} opacity to ${opacityToSet}, element opacity after setting:`, layer.style.opacity);
-          
+
           // After transition completes, remove transition to prevent interference
           setTimeout(() => {
             layer.style.transition = 'none';
             layer.style.opacity = opacityToSet; // Ensure it stays at the right value
             console.log(`AnimationEngine: Removed transition from layer ${imageId}, final opacity:`, layer.style.opacity);
           }, 600); // Slightly after the 500ms transition
-          
+
           // Schedule the hold phase to end and start fade out
           layerInfo.holdTimeout = setTimeout(() => {
             if (layerInfo.phase === 'hold') {
@@ -822,9 +1125,9 @@ window.App = (function () {
         });
         const configData = await response.json();
         this.initialPatternCode = configData.initial_pattern_code;
-        
+
         console.log(`PatternManager: Config loaded - initial_pattern_code: ${this.initialPatternCode}`);
-        
+
         if (this.initialPatternCode) {
           console.log(`PatternManager: Using initial pattern code: ${this.initialPatternCode}`);
         } else {
@@ -839,7 +1142,7 @@ window.App = (function () {
     async generateNewPattern(seed = null) {
       try {
         console.log(`PatternManager: generateNewPattern called with seed: ${seed}`);
-        
+
         if (!seed) {
           seed = this.generateSeed();
           console.log(`PatternManager: No seed provided, generated random seed: ${seed}`);
@@ -855,11 +1158,11 @@ window.App = (function () {
         console.log(`PatternManager: Generated pattern with seed ${seed}`);
         console.log(`PatternManager: Sequence length: ${this.imageSequence.length}`);
         console.log(`PatternManager: First 10 images in sequence:`, this.imageSequence.slice(0, 10));
-        
+
         this.updatePatternDisplay();
 
         // Preload upcoming images
-        const upcomingImages = this.imageSequence.slice(0, config.preloadBufferSize || 5);
+        const upcomingImages = this.imageSequence.slice(0, config.application?.preload_buffer_size || 5);
         await ImageManager.preloadImages(upcomingImages, true);
 
       } catch (error) {
@@ -881,7 +1184,7 @@ window.App = (function () {
       }
 
       const sequence = [];
-      
+
       // Track usage count for each image to create gentle bias toward less-used images
       const usageCounts = {};
       allImageIds.forEach(id => usageCounts[id] = 0);
@@ -899,7 +1202,7 @@ window.App = (function () {
       const maxCount = Math.max(...counts);
       console.log(`PatternManager: Generated weighted sequence - min appearances: ${minCount}, max appearances: ${maxCount}, range: ${maxCount - minCount}`);
       console.log(`PatternManager: First 10 images in sequence: ${sequence.slice(0, 10).join(', ')}`);
-      
+
       // Test deterministic behavior - log a checksum of the first 20 items for reproducibility testing
       const checksumData = sequence.slice(0, Math.min(20, sequence.length)).join('|');
       const checksum = this.simpleChecksum(checksumData);
@@ -912,7 +1215,7 @@ window.App = (function () {
       // Calculate weights for each image - less used images get higher weight
       const totalUsage = Object.values(usageCounts).reduce((sum, count) => sum + count, 0);
       const avgUsage = totalUsage / imageIds.length;
-      
+
       // Calculate weights: images with below-average usage get bonus weight
       const weights = imageIds.map(id => {
         const usage = usageCounts[id];
@@ -921,18 +1224,18 @@ window.App = (function () {
         const usageDiff = Math.max(0, avgUsage - usage);
         return 1.0 + (usageDiff * 0.5); // 0.5 is the bias strength
       });
-      
+
       // Select based on weighted probability
       const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
       let random = seededRandom() * totalWeight;
-      
+
       for (let i = 0; i < imageIds.length; i++) {
         random -= weights[i];
         if (random <= 0) {
           return imageIds[i];
         }
       }
-      
+
       // Fallback (shouldn't happen)
       return imageIds[imageIds.length - 1];
     },
@@ -988,7 +1291,7 @@ window.App = (function () {
       this.showNextImage();
 
       // Schedule next images based on configuration and speed multiplier
-      const baseInterval = (config.layerSpawnIntervalSec || 4) * 1000;
+      const baseInterval = (config.animation_timing?.layer_spawn_interval_sec || 4) * 1000;
       const speedMultiplier = UI.speedMultiplier || 1.0;
       const adjustedInterval = baseInterval / speedMultiplier;
 
@@ -1014,7 +1317,7 @@ window.App = (function () {
 
       let attempts = 0;
       const maxAttempts = Math.min(10, this.imageSequence.length); // Avoid infinite loops
-      
+
       while (attempts < maxAttempts) {
         const imageId = this.imageSequence[this.sequenceIndex];
 
@@ -1025,7 +1328,7 @@ window.App = (function () {
           };
 
           const layer = await AnimationEngine.showImage(imageId, options);
-          
+
           // If showImage returns null (duplicate/max layers), try next image
           if (layer === null) {
             console.log(`PatternManager: Image ${imageId} skipped, trying next in sequence`);
@@ -1046,7 +1349,7 @@ window.App = (function () {
       }
 
       // Preload upcoming images (regardless of success/failure)
-      const upcomingCount = Math.min(config.preloadBufferSize || 5, this.imageSequence.length);
+      const upcomingCount = Math.min(config.application?.preload_buffer_size || 5, this.imageSequence.length);
       const upcomingImages = [];
 
       for (let i = 0; i < upcomingCount; i++) {
@@ -1081,7 +1384,7 @@ window.App = (function () {
     init() {
       console.log('AudioManager: Initializing with config:', config);
       console.log('AudioManager: Audio config section:', config.audio);
-      
+
       if (!config.audio || !config.audio.enabled) {
         console.log('AudioManager: Audio disabled in config');
         return;
@@ -1092,7 +1395,7 @@ window.App = (function () {
       this.filePath = config.audio.file_path || 'static/audio/ambient.mp3';
 
       console.log(`AudioManager: Initialized with file: ${this.filePath}, volume: ${this.volume}`);
-      
+
       // Test if the audio file URL is accessible
       fetch(this.filePath, { method: 'HEAD' })
         .then(response => {
@@ -1171,7 +1474,7 @@ window.App = (function () {
 
     setupUserInteractionHandler() {
       console.log('AudioManager: Setting up user interaction handler for autoplay');
-      
+
       const handleUserInteraction = async (event) => {
         console.log('AudioManager: User interaction detected, attempting to start audio');
         try {
@@ -1190,7 +1493,7 @@ window.App = (function () {
       document.addEventListener('click', handleUserInteraction, { once: true });
       document.addEventListener('keydown', handleUserInteraction, { once: true });
       document.addEventListener('touchstart', handleUserInteraction, { once: true });
-      
+
       console.log('AudioManager: User interaction listeners added');
     },
 
@@ -1264,13 +1567,13 @@ window.App = (function () {
     async captureCurrentState() {
       // Capture only visible layers from AnimationEngine
       const layers = [];
-      
+
       AnimationEngine.activeLayers.forEach((layerInfo, imageId) => {
         // Get the actual current opacity from the DOM element
         // Always use getComputedStyle to get the current animated opacity value
         const computedOpacity = getComputedStyle(layerInfo.layer).opacity;
         const actualOpacity = computedOpacity;
-        
+
         const layerData = {
           imageId: imageId,
           opacity: parseFloat(actualOpacity), // Use actual displayed opacity
@@ -1283,7 +1586,7 @@ window.App = (function () {
           },
           animationPhase: layerInfo.phase
         };
-        
+
         console.log(`FavoritesManager: Capturing layer ${imageId} - stored opacity: ${layerInfo.opacity}, computed opacity: ${computedOpacity}, using: ${layerData.opacity}`);
         layers.push(layerData);
       });
@@ -1305,7 +1608,7 @@ window.App = (function () {
     async saveFavorite() {
       try {
         const state = await this.captureCurrentState();
-        
+
         const response = await fetch('/api/favorites', {
           method: 'POST',
           headers: {
@@ -1320,10 +1623,10 @@ window.App = (function () {
 
         const result = await response.json();
         console.log('FavoritesManager: Favorite saved with ID:', result.id);
-        
+
         // Show success feedback
         UI.showSuccess('Favorite saved!');
-        
+
         return result.id;
       } catch (error) {
         console.error('FavoritesManager: Failed to save favorite:', error);
@@ -1335,7 +1638,7 @@ window.App = (function () {
     async loadFavorite(favoriteId) {
       try {
         const response = await fetch(`/api/favorites/${favoriteId}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('Favorite not found');
@@ -1345,10 +1648,10 @@ window.App = (function () {
 
         const state = await response.json();
         console.log('FavoritesManager: Loading favorite state:', state);
-        
+
         await this.restoreState(state);
         console.log('FavoritesManager: Favorite restored successfully');
-        
+
       } catch (error) {
         console.error('FavoritesManager: Failed to load favorite:', error);
         UI.showError('Failed to load favorite: ' + error.message);
@@ -1359,10 +1662,10 @@ window.App = (function () {
     async restoreState(state) {
       // Stop any ongoing pattern sequence first
       PatternManager.stopPatternSequence();
-      
+
       // Clear all current layers immediately (no fade transitions)
       AnimationEngine.clearAllLayersImmediate();
-      
+
       // Restore background color if saved
       if (state.backgroundColor) {
         const shouldBeWhite = state.backgroundColor === 'white';
@@ -1370,7 +1673,7 @@ window.App = (function () {
           UI.toggleBackground();
         }
       }
-      
+
       // Wait a moment for DOM cleanup and background change to complete
       await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -1387,7 +1690,7 @@ window.App = (function () {
           };
 
           await AnimationEngine.showImageFromFavorite(layerData.imageId, options);
-          
+
         } catch (error) {
           console.warn(`FavoritesManager: Failed to restore layer ${layerData.imageId}:`, error);
           // Continue with other layers even if one fails
@@ -1398,7 +1701,7 @@ window.App = (function () {
       // The first favorite layer will start fading at 3s, so start new patterns after 1.5s
       const speedMultiplier = UI.speedMultiplier || 1.0;
       const restartDelay = Math.max(200, 1500 / speedMultiplier); // 1.5s at normal speed, minimum 200ms
-      
+
       setTimeout(() => {
         console.log('FavoritesManager: Restarting pattern sequence (early start while favorites fade)');
         PatternManager.startPatternSequence();
@@ -1408,15 +1711,15 @@ window.App = (function () {
     async listFavorites() {
       try {
         const response = await fetch('/api/favorites');
-        
+
         if (!response.ok) {
           throw new Error(`Failed to load favorites: ${response.statusText}`);
         }
-        
+
         const favorites = await response.json();
         console.log('FavoritesManager: Loaded favorites list:', favorites);
         return favorites;
-        
+
       } catch (error) {
         console.error('FavoritesManager: Failed to list favorites:', error);
         throw error;
@@ -1428,14 +1731,14 @@ window.App = (function () {
         const response = await fetch(`/api/favorites/${favoriteId}`, {
           method: 'DELETE'
         });
-        
+
         if (!response.ok) {
           throw new Error(`Failed to delete favorite: ${response.statusText}`);
         }
-        
+
         console.log(`FavoritesManager: Deleted favorite ${favoriteId}`);
         return true;
-        
+
       } catch (error) {
         console.error('FavoritesManager: Failed to delete favorite:', error);
         throw error;
@@ -1547,7 +1850,7 @@ window.App = (function () {
     createFavoriteCard(favorite) {
       const cardContainer = document.createElement('div');
       cardContainer.className = 'relative';
-      
+
       const card = document.createElement('div');
       card.className = 'bg-white rounded-lg border border-black/10 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 group';
 
@@ -1572,7 +1875,7 @@ window.App = (function () {
           </div>
         </div>
       `;
-      
+
       // Create delete button as separate element
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg z-20';
@@ -1582,7 +1885,7 @@ window.App = (function () {
           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
         </svg>
       `;
-      
+
       // Add both elements to container
       cardContainer.appendChild(card);
       cardContainer.appendChild(deleteBtn);
@@ -1593,7 +1896,7 @@ window.App = (function () {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        
+
         console.log('Deleting favorite:', favorite.id);
         this.deleteFavorite(favorite.id, cardContainer);
       });
@@ -1633,7 +1936,7 @@ window.App = (function () {
             imageUrl = imageInfo.path;
           }
         }
-        
+
         if (!imageUrl) {
           // Fallback to colored div if no image found
           const colors = ['bg-blue-300', 'bg-purple-300', 'bg-pink-300', 'bg-green-300', 'bg-yellow-300'];
@@ -1676,12 +1979,12 @@ window.App = (function () {
       try {
         await FavoritesManager.deleteFavorite(favoriteId);
         cardElement.remove();
-        
+
         // Check if grid is now empty
         if (this.grid && this.grid.children.length === 0) {
           this.showEmpty();
         }
-        
+
         UI.showSuccess('Favorite deleted');
       } catch (error) {
         console.error('FavoritesGallery: Failed to delete favorite:', error);
@@ -1715,8 +2018,8 @@ window.App = (function () {
       });
 
       // Initialize UI values from config
-      this.maxLayers = config.maxConcurrentLayers || 4;
-      console.log(`UI: Initialized with maxLayers: ${this.maxLayers}, config.maxConcurrentLayers: ${config.maxConcurrentLayers}`);
+      this.maxLayers = config.layer_management?.max_concurrent_layers || 4;
+      console.log(`UI: Initialized with maxLayers: ${this.maxLayers}, config.layer_management.max_concurrent_layers: ${config.layer_management?.max_concurrent_layers}`);
 
       // Background preference will default to black (no persistence)
       this.isWhiteBackground = false;
@@ -1725,13 +2028,13 @@ window.App = (function () {
 
       this.setupEventListeners();
       this.setupOnscreenControls();
-      
+
       // Ensure onscreen controls start hidden
       if (this.onscreenControls && !kioskMode) {
         this.onscreenControls.classList.remove('visible');
         console.log('UI: Onscreen controls initialized as hidden');
       }
-      
+
       this.showMainControls();
       this.hideLoading();
     },
@@ -1778,10 +2081,10 @@ window.App = (function () {
         console.log('UI: Setting up mouse events for control trigger area');
         this.controlsTriggerArea.addEventListener('mouseenter', this.showOnscreenControls.bind(this));
         this.controlsTriggerArea.addEventListener('mouseleave', this.scheduleHideControls.bind(this));
-        
+
         // Also add pointer events to ensure trigger works
         this.controlsTriggerArea.style.pointerEvents = 'auto';
-        
+
         // Add debugging
         this.controlsTriggerArea.addEventListener('mouseenter', () => {
           console.log('UI: Mouse entered trigger area');
@@ -1854,7 +2157,7 @@ window.App = (function () {
       if (layersValue) layersValue.textContent = this.maxLayers.toString();
       if (audioVolumeSlider) audioVolumeSlider.value = (config.audio && config.audio.volume) || 0.5;
       if (audioVolumeValue) audioVolumeValue.textContent = `${Math.round(((config.audio && config.audio.volume) || 0.5) * 100)}%`;
-      
+
       // Initialize play/pause button
       this.updatePlayPauseButton();
     },
@@ -1877,7 +2180,7 @@ window.App = (function () {
       if (!this.onscreenControls || kioskMode) return;
 
       console.log('UI: Scheduling hide controls');
-      
+
       // Clear existing timer
       if (this.mouseTimer) {
         clearTimeout(this.mouseTimer);
@@ -1908,8 +2211,9 @@ window.App = (function () {
     updateMaxLayers() {
       // Update the maximum concurrent layers configuration
       console.log(`UI: Updating max concurrent layers to ${this.maxLayers}`);
-      config.maxConcurrentLayers = this.maxLayers;
-      console.log(`UI: Config updated - maxConcurrentLayers: ${config.maxConcurrentLayers}`);
+      if (!config.layer_management) config.layer_management = {};
+      config.layer_management.max_concurrent_layers = this.maxLayers;
+      console.log(`UI: Config updated - max_concurrent_layers: ${config.layer_management.max_concurrent_layers}`);
 
       // If we've reduced the layer limit, remove excess layers immediately
       const currentLayerCount = AnimationEngine.activeLayers.size;
@@ -1964,6 +2268,12 @@ window.App = (function () {
           break;
         case 'KeyG':
           event.preventDefault();
+          if (AnimationEngine.toggleRuleOfThirdsGrid) {
+            AnimationEngine.toggleRuleOfThirdsGrid();
+          }
+          break;
+        case 'KeyV':
+          event.preventDefault();
           this.showFavoritesGallery();
           break;
       }
@@ -1971,18 +2281,18 @@ window.App = (function () {
 
     handleClickOutside(event) {
       if (!this.onscreenControls || kioskMode) return;
-      
+
       // Check if the panel is currently visible
       if (!this.onscreenControls.classList.contains('visible')) return;
-      
+
       // Check if the click was inside the control panel
       const clickedInsidePanel = this.onscreenControls.contains(event.target);
-      
+
       // Debug logging
       console.log('UI: Click detected at:', event.clientX, event.clientY);
       console.log('UI: Clicked inside panel:', clickedInsidePanel);
       console.log('UI: Target element:', event.target);
-      
+
       // If clicked outside the panel, hide the controls
       // Note: clicks in trigger area should hide controls when they're visible
       if (!clickedInsidePanel) {
@@ -1995,10 +2305,10 @@ window.App = (function () {
 
     hideOnscreenControls() {
       if (!this.onscreenControls || kioskMode) return;
-      
+
       console.log('UI: Hiding onscreen controls');
       this.onscreenControls.classList.remove('visible');
-      
+
       // Clear any existing timer
       if (this.mouseTimer) {
         clearTimeout(this.mouseTimer);
@@ -2014,10 +2324,10 @@ window.App = (function () {
         });
         return;
       }
-      
+
       console.log('UI: Showing onscreen controls');
       this.onscreenControls.classList.add('visible');
-      
+
       // Clear any existing timer
       if (this.mouseTimer) {
         clearTimeout(this.mouseTimer);
@@ -2030,14 +2340,14 @@ window.App = (function () {
         console.log('UI: Cannot schedule hide controls - missing element or kiosk mode');
         return;
       }
-      
+
       console.log('UI: Scheduling hide controls in 3 seconds');
-      
+
       // Clear any existing timer
       if (this.mouseTimer) {
         clearTimeout(this.mouseTimer);
       }
-      
+
       // Set a timer to hide controls after 3 seconds
       this.mouseTimer = setTimeout(() => {
         console.log('UI: Auto-hiding onscreen controls after timeout');
@@ -2064,7 +2374,7 @@ window.App = (function () {
       if (btn) {
         const playing = isPlaying !== null ? isPlaying : AnimationEngine.isPlaying;
         const icon = btn.querySelector('svg path');
-        
+
         if (playing) {
           // Pause icon
           if (icon) icon.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
@@ -2117,7 +2427,7 @@ window.App = (function () {
 
     updateAudioButton() {
       const isPlaying = AudioManager.isPlaying();
-      
+
       const btn = document.getElementById('audio-toggle-btn');
       if (btn) {
         const icon = btn.querySelector('svg path');
@@ -2133,7 +2443,7 @@ window.App = (function () {
           }
         }
       }
-      
+
       console.log(`UI: Audio button updated - ${isPlaying ? 'playing' : 'stopped'}`);
     },
 
@@ -2182,14 +2492,14 @@ window.App = (function () {
       const toast = document.createElement('div');
       toast.className = 'fixed top-8 left-1/2 transform -translate-x-1/2 bg-green-600/90 text-white px-6 py-3 rounded-lg backdrop-blur-lg z-[400] transition-all duration-300';
       toast.textContent = message;
-      
+
       document.body.appendChild(toast);
-      
+
       // Animate in
       setTimeout(() => {
         toast.style.transform = 'translateX(-50%) translateY(0)';
       }, 10);
-      
+
       // Remove after 3 seconds
       setTimeout(() => {
         toast.style.transform = 'translateX(-50%) translateY(-100px)';
@@ -2200,7 +2510,7 @@ window.App = (function () {
           }
         }, 300);
       }, 3000);
-      
+
       console.log('UI Success:', message);
     },
 
@@ -2224,7 +2534,7 @@ window.App = (function () {
       const currentUrl = new URL(window.location);
       currentUrl.searchParams.set('favorite', favoriteId);
       const shareUrl = currentUrl.toString();
-      
+
       // Create a temporary toast notification
       const toast = document.createElement('div');
       toast.className = 'favorite-toast';
@@ -2247,7 +2557,7 @@ window.App = (function () {
         word-break: break-all;
         cursor: pointer;
       `;
-      
+
       toast.innerHTML = `
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="color: #ff6b6b;">♥</span>
@@ -2258,7 +2568,7 @@ window.App = (function () {
           </div>
         </div>
       `;
-      
+
       // Add click handler to copy URL to clipboard
       toast.addEventListener('click', async () => {
         try {
@@ -2276,15 +2586,15 @@ window.App = (function () {
           console.warn('Failed to copy to clipboard:', error);
         }
       });
-      
+
       document.body.appendChild(toast);
-      
+
       // Animate in
       requestAnimationFrame(() => {
         toast.style.opacity = '1';
         toast.style.transform = 'translateX(0)';
       });
-      
+
       // Auto-remove after 4 seconds
       setTimeout(() => {
         toast.style.opacity = '0';
@@ -2295,7 +2605,7 @@ window.App = (function () {
           }
         }, 300);
       }, 4000);
-      
+
       console.log(`UI: Showed favorite success toast for ${favoriteId}`);
     },
 
@@ -2328,7 +2638,7 @@ window.App = (function () {
         console.warn('MatteBorderManager: Border element not found');
         return;
       }
-      
+
       console.log('MatteBorderManager: Border element found:', this.borderElement);
       console.log('MatteBorderManager: Initial element styles:', {
         display: getComputedStyle(this.borderElement).display,
@@ -2336,28 +2646,28 @@ window.App = (function () {
         opacity: getComputedStyle(this.borderElement).opacity,
         border: getComputedStyle(this.borderElement).border
       });
-      
+
       // Initialize border element with basic styles
       this.borderElement.style.display = 'block';
       this.borderElement.style.opacity = '1';
       this.borderElement.style.visibility = 'visible';
-      
+
       console.log('MatteBorderManager: Forced border styles applied');
-      
+
       // Set up mutation observer to track changes
       this.setupMutationObserver();
-      
+
       // For now, always use default configuration to bypass API issues
       console.log('MatteBorderManager: Bypassing API, using default configuration');
       this.setDefaultConfiguration();
-      
+
       // Also try to load from API for debugging
       this.loadConfiguration();
     },
-    
+
     setupMutationObserver() {
       if (!this.borderElement) return;
-      
+
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.type === 'attributes') {
@@ -2371,10 +2681,10 @@ window.App = (function () {
           }
         });
       });
-      
-      observer.observe(this.borderElement, { 
-        attributes: true, 
-        attributeFilter: ['style', 'class'] 
+
+      observer.observe(this.borderElement, {
+        attributes: true,
+        attributeFilter: ['style', 'class']
       });
     },
 
@@ -2382,21 +2692,21 @@ window.App = (function () {
       try {
         const response = await fetch('/api/config');
         const configData = await response.json();
-        
+
         console.log('MatteBorderManager: Full API response:', configData);
         console.log('MatteBorderManager: matte_border section:', configData.matte_border);
-        
+
         this.config = configData.matte_border || {};
-        
+
         // If config is empty, use default configuration
         if (Object.keys(this.config).length === 0) {
           console.warn('MatteBorderManager: No matte_border config found, using defaults');
           this.setDefaultConfiguration();
           return;
         }
-        
+
         console.log('MatteBorderManager: Configuration loaded', this.config);
-        
+
         // Delay application to ensure DOM is ready
         setTimeout(() => {
           this.applyConfiguration();
@@ -2418,7 +2728,7 @@ window.App = (function () {
           aspect_ratio: '1:1'
         }
       };
-      
+
       // Delay application to ensure DOM is ready
       setTimeout(() => {
         this.applyConfiguration();
@@ -2441,10 +2751,10 @@ window.App = (function () {
       }
 
       this.borderElement.classList.remove('disabled');
-      
+
       // Apply style class
       this.borderElement.className = `matte-border ${this.config.style || 'classic'}`;
-      
+
       // Calculate and apply the matte canvas with proper aspect ratio
       const matteCanvas = this.calculateMatteCanvas();
       this.applyMatteCanvas(matteCanvas);
@@ -2454,23 +2764,23 @@ window.App = (function () {
       // Get viewport dimensions
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      
+
       // Get aspect ratio from config
-      let aspectRatio = '1:1'; // Default to square
-      
+      let aspect_ratio = '1:1'; // Default to square
+
       // Check for aspect ratio in client-side config first
-      if (window.APP_CONFIG && window.APP_CONFIG.matteBorder && window.APP_CONFIG.matteBorder.imageArea) {
-        aspectRatio = window.APP_CONFIG.matteBorder.imageArea.aspectRatio;
+      if (window.APP_CONFIG && window.APP_CONFIG.matte_border && window.APP_CONFIG.matte_border.image_area) {
+        aspect_ratio = window.APP_CONFIG.matte_border.image_area.aspect_ratio;
       }
       // Fallback to server config if available
       else if (this.config && this.config.image_area && this.config.image_area.aspect_ratio) {
-        aspectRatio = this.config.image_area.aspect_ratio;
+        aspect_ratio = this.config.image_area.aspect_ratio;
       }
 
       // Parse aspect ratio (e.g., "16:9", "4:3", "1:1")
-      const [widthRatio, heightRatio] = aspectRatio.split(':').map(n => parseFloat(n));
+      const [widthRatio, heightRatio] = aspect_ratio.split(':').map(n => parseFloat(n));
       if (!widthRatio || !heightRatio) {
-        console.warn('MatteBorderManager: Invalid aspect ratio format:', aspectRatio);
+        console.warn('MatteBorderManager: Invalid aspect ratio format:', aspect_ratio);
         return this.getFallbackCanvas();
       }
 
@@ -2491,21 +2801,21 @@ window.App = (function () {
       }
 
       // Get border percentage from config
-      let borderPercent = 10; // Default
-      
+      let border_percent = 10; // Default
+
       // Check client-side config first
-      if (window.APP_CONFIG && window.APP_CONFIG.matteBorder && window.APP_CONFIG.matteBorder.borderPercent) {
-        borderPercent = window.APP_CONFIG.matteBorder.borderPercent;
+      if (window.APP_CONFIG && window.APP_CONFIG.matte_border && window.APP_CONFIG.matte_border.border_percent) {
+        border_percent = window.APP_CONFIG.matte_border.border_percent;
       }
       // Fallback to server config if available
       else if (this.config && this.config.border_percent) {
-        borderPercent = this.config.border_percent;
+        border_percent = this.config.border_percent;
       }
-      
+
       // Calculate border size as percentage of the smaller canvas dimension
       const smallerCanvasDimension = Math.min(canvasWidth, canvasHeight);
-      const borderSize = Math.round((borderPercent / 100) * smallerCanvasDimension);
-      
+      const borderSize = Math.round((border_percent / 100) * smallerCanvasDimension);
+
       // Ensure minimum and maximum border sizes
       const finalBorderSize = Math.max(20, Math.min(200, borderSize));
 
@@ -2514,35 +2824,35 @@ window.App = (function () {
       const canvasTop = (viewportHeight - canvasHeight) / 2;
 
       // Calculate image area (canvas minus borders)
-      const imageAreaWidth = canvasWidth - (finalBorderSize * 2);
-      const imageAreaHeight = canvasHeight - (finalBorderSize * 2);
-      const imageAreaLeft = canvasLeft + finalBorderSize;
-      const imageAreaTop = canvasTop + finalBorderSize;
+      const image_areaWidth = canvasWidth - (finalBorderSize * 2);
+      const image_areaHeight = canvasHeight - (finalBorderSize * 2);
+      const image_areaLeft = canvasLeft + finalBorderSize;
+      const image_areaTop = canvasTop + finalBorderSize;
 
       const result = {
         // Viewport info
         viewportWidth,
         viewportHeight,
-        
+
         // Aspect ratio info
-        aspectRatio,
+        aspect_ratio,
         targetAspectRatio,
-        
+
         // Canvas dimensions and position
         canvasWidth,
         canvasHeight,
         canvasLeft,
         canvasTop,
-        
+
         // Border info
-        borderPercent,
+        border_percent,
         borderSize: finalBorderSize,
-        
+
         // Image area dimensions and position
-        imageAreaWidth,
-        imageAreaHeight,
-        imageAreaLeft,
-        imageAreaTop
+        image_areaWidth,
+        image_areaHeight,
+        image_areaLeft,
+        image_areaTop
       };
 
       console.log('MatteBorderManager: Calculated matte canvas:', result);
@@ -2554,28 +2864,28 @@ window.App = (function () {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const borderSize = 50; // Fixed fallback border
-      
+
       return {
         viewportWidth,
         viewportHeight,
-        aspectRatio: '1:1',
+        aspect_ratio: '1:1',
         targetAspectRatio: 1.0,
         canvasWidth: Math.min(viewportWidth, viewportHeight),
         canvasHeight: Math.min(viewportWidth, viewportHeight),
         canvasLeft: (viewportWidth - Math.min(viewportWidth, viewportHeight)) / 2,
         canvasTop: (viewportHeight - Math.min(viewportWidth, viewportHeight)) / 2,
-        borderPercent: 10,
+        border_percent: 10,
         borderSize,
-        imageAreaWidth: Math.min(viewportWidth, viewportHeight) - (borderSize * 2),
-        imageAreaHeight: Math.min(viewportWidth, viewportHeight) - (borderSize * 2),
-        imageAreaLeft: (viewportWidth - Math.min(viewportWidth, viewportHeight)) / 2 + borderSize,
-        imageAreaTop: (viewportHeight - Math.min(viewportWidth, viewportHeight)) / 2 + borderSize
+        image_areaWidth: Math.min(viewportWidth, viewportHeight) - (borderSize * 2),
+        image_areaHeight: Math.min(viewportWidth, viewportHeight) - (borderSize * 2),
+        image_areaLeft: (viewportWidth - Math.min(viewportWidth, viewportHeight)) / 2 + borderSize,
+        image_areaTop: (viewportHeight - Math.min(viewportWidth, viewportHeight)) / 2 + borderSize
       };
     },
 
     applyMatteCanvas(canvas) {
       const borderColor = this.config.color || '#F8F8F8';
-      
+
       // Position and size the matte border element to fill the entire viewport
       // The matte paper texture should cover everything except the image area
       this.borderElement.style.setProperty('position', 'absolute', 'important');
@@ -2584,28 +2894,28 @@ window.App = (function () {
       this.borderElement.style.setProperty('width', '100vw', 'important');
       this.borderElement.style.setProperty('height', '100vh', 'important');
       this.borderElement.style.setProperty('box-sizing', 'border-box', 'important');
-      
+
       // Set background to matte color with paper texture (from CSS)
       this.borderElement.style.setProperty('background-color', borderColor, 'important');
-      
+
       // Remove any border since we're not using CSS border approach anymore
       this.borderElement.style.setProperty('border', 'none', 'important');
-      
+
 
       // Create a transparent cutout for the image area using clip-path
       this.createImageAreaCutout(canvas);
-      
+
       // Create 3D bevel frame around the image cutout
       this.create3DBevelFrame(canvas);
-      
+
       // Position the image layers container within the image cutout area
       this.positionImageLayers(canvas);
-      
+
       // Ensure visibility
       this.borderElement.style.opacity = '1';
       this.borderElement.style.visibility = 'visible';
-      
-      console.log(`MatteBorderManager: Applied ${this.config.style} matte overlay with image cutout: ${canvas.imageAreaWidth}x${canvas.imageAreaHeight}`);
+
+      console.log(`MatteBorderManager: Applied ${this.config.style} matte overlay with image cutout: ${canvas.image_areaWidth}x${canvas.image_areaHeight}`);
     },
 
     createImageAreaCutout(canvas) {
@@ -2614,7 +2924,7 @@ window.App = (function () {
       const imageTop = canvas.canvasTop + canvas.borderSize;
       const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
       const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
-      
+
       // Create a clip-path that cuts out the image area from the matte overlay
       // This creates a "window" in the matte where images can show through
       const clipPath = `polygon(
@@ -2629,9 +2939,9 @@ window.App = (function () {
         100% 100%, 
         100% 0%
       )`;
-      
+
       this.borderElement.style.setProperty('clip-path', clipPath, 'important');
-      
+
       console.log('MatteBorderManager: Created image area cutout:', {
         imageLeft,
         imageTop,
@@ -2665,12 +2975,12 @@ window.App = (function () {
       bevelFrame.style.top = `${imageTop - bevelWidth}px`;
       bevelFrame.style.width = `${imageWidth + (bevelWidth * 2)}px`;
       bevelFrame.style.height = `${imageHeight + (bevelWidth * 2)}px`;
-      
+
       // Create transparent frame with border that matches matte color
       bevelFrame.style.border = `${bevelWidth}px solid #F8F8F8`;
       bevelFrame.style.background = 'transparent'; // Transparent so images show through
       bevelFrame.style.boxSizing = 'border-box';
-      
+
       // Apply 3D bevel effect based on style
       const style = this.config.style || 'classic';
       if (style === 'thick') {
@@ -2723,7 +3033,7 @@ window.App = (function () {
       imageLayersContainer.style.width = '100vw';
       imageLayersContainer.style.height = '100vh';
       imageLayersContainer.style.boxSizing = 'border-box';
-      
+
       // Apply CSS clip-path to create matte border effect
       if (canvas && this.config && this.config.enabled !== false) {
         const clipPath = this.createMatteClipPath(canvas);
@@ -2761,19 +3071,19 @@ window.App = (function () {
       const innerTop = canvas.canvasTop + canvas.borderSize + shadowInset;
       const innerRight = innerLeft + (canvas.canvasWidth - (canvas.borderSize * 2) - (shadowInset * 2));
       const innerBottom = innerTop + (canvas.canvasHeight - (canvas.borderSize * 2) - (shadowInset * 2));
-      
+
       // Convert to percentages for CSS clip-path
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      
+
       const leftPercent = (innerLeft / viewportWidth) * 100;
       const topPercent = (innerTop / viewportHeight) * 100;
       const rightPercent = (innerRight / viewportWidth) * 100;
       const bottomPercent = (innerBottom / viewportHeight) * 100;
-      
+
       // Create rectangular clip path for the image area
       const clipPath = `polygon(${leftPercent}% ${topPercent}%, ${rightPercent}% ${topPercent}%, ${rightPercent}% ${bottomPercent}%, ${leftPercent}% ${bottomPercent}%)`;
-      
+
       console.log('MatteBorderManager: Created clip path:', clipPath);
       return clipPath;
     },
@@ -2832,15 +3142,15 @@ window.App = (function () {
       // Reset body and canvas container backgrounds to original colors
       const body = document.body;
       const canvasContainer = document.getElementById('canvas-container');
-      
+
       if (body) {
         body.style.backgroundColor = ''; // Remove inline style, let CSS take over
       }
-      
+
       if (canvasContainer) {
         canvasContainer.style.backgroundColor = ''; // Remove inline style, let CSS take over
       }
-      
+
       console.log('MatteBorderManager: Reset viewport background to original');
     }
   };
@@ -2858,9 +3168,20 @@ window.App = (function () {
       try {
         console.log('Initializing Many Paintings App...');
 
-        // Set configuration
-        config = { ...window.APP_CONFIG, ...options };
+        // Load configuration from API
+        console.log('Loading configuration from /api/config...');
+        const configResponse = await fetch('/api/config');
+        if (!configResponse.ok) {
+          throw new Error(`Failed to load config: ${configResponse.status}`);
+        }
+        const apiConfig = await configResponse.json();
+        
+        // Merge with any options passed in
+        config = { ...apiConfig, ...options };
+        window.APP_CONFIG = config; // Keep for backward compatibility
         kioskMode = options.kioskMode || false;
+        
+        console.log('Configuration loaded:', config);
 
         // Initialize modules in sequence
         UI.init();
@@ -2869,10 +3190,10 @@ window.App = (function () {
         await ImageManager.init();
         AnimationEngine.init();
         AudioManager.init();
-        
+
         // Initialize matte border after other modules are ready
         MatteBorderManager.init();
-        
+
         await PatternManager.init();
 
         AnimationEngine.start();
@@ -2895,21 +3216,21 @@ window.App = (function () {
       // Check URL parameters for favorite ID
       const urlParams = new URLSearchParams(window.location.search);
       const favoriteId = urlParams.get('favorite');
-      
+
       if (favoriteId) {
         console.log(`App: Found favorite parameter in URL: ${favoriteId}`);
-        
+
         // Wait a shorter time for initialization, then load favorite
         setTimeout(async () => {
           try {
             await FavoritesManager.loadFavorite(favoriteId);
             console.log(`App: Successfully loaded favorite from URL: ${favoriteId}`);
-            
+
             // Optionally clean the URL (remove the parameter)
             const newUrl = new URL(window.location);
             newUrl.searchParams.delete('favorite');
             window.history.replaceState({}, document.title, newUrl);
-            
+
           } catch (error) {
             console.error(`App: Failed to load favorite from URL: ${favoriteId}`, error);
             UI.showError(`Failed to load favorite: ${error.message}`);

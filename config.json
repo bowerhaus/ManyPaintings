@@ -38,11 +38,25 @@
     },
     "scale": {
       "enabled": true,
-      "min_factor": 0.85,
-      "max_factor": 1.75
+      "min_factor": 0.5,
+      "max_factor": 1.1
     },
     "translation": {
-      "enabled": true
+      "enabled": true,
+      "layout_mode": "rule_of_thirds_and_centre",
+      "minimum_visible_percent": 60,
+      "rule_of_thirds": {
+        "max_horizontal_deviation_percent": 5,
+        "max_vertical_deviation_percent": 5
+      },
+      "rule_of_thirds_and_centre": {
+        "max_horizontal_deviation_percent": 5,
+        "max_vertical_deviation_percent": 5
+      },
+      "random": {
+        "respect_matte_border": true,
+        "distribution_method": "uniform"
+      }
     },
     "best_fit_scaling": {
       "enabled": false

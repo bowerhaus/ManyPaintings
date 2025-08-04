@@ -38,10 +38,10 @@ This document outlines the Product Requirements for a generative art application
 
 *   **Intelligent Image Selection:** ✅ **NEW FEATURE** - Advanced weighted random distribution system that balances natural randomness with equitable representation of all images over time.
 
-*   **Enhanced Image Transformations:** ✅ **IMPROVED FEATURE** - Advanced transformation system with intelligent spatial distribution:
+*   **Enhanced Image Transformations:** ✅ **IMPROVED FEATURE** - Advanced transformation system with multiple layout modes:
     *   **Rotation:** Images may be rotated by random angles with deterministic seeded generation
     *   **Scaling:** Images may be scaled up or down within defined limits
-    *   **Grid-Based Positioning:** ✅ **NEW** - Intelligent 4×3 grid system ensures balanced spatial distribution while maintaining natural, organic positioning
+    *   **Multi-Mode Layout System:** ✅ **NEW** - Three positioning strategies: Rule of Thirds (4 points), Rule of Thirds + Center (5 points), and Random distribution with matte border awareness
     *   **Color Remapping:** Images may have their colors dynamically shifted for visual variety
 
 *   **Configurable Animation Parameters:** The animation system should support fine-tuned control through configuration:
@@ -73,7 +73,8 @@ The application should provide extensive configuration options to fine-tune the 
 *   `scale.enabled` - Enable random scaling (default: true)
 *   `scale.min_factor` - Minimum scale multiplier (default: 0.5)
 *   `scale.max_factor` - Maximum scale multiplier (default: 1.0)
-*   `translation.enabled` - Enable grid-based positioning (default: true)
+*   `translation.enabled` - Enable positioning system (default: true)
+*   `translation.layout_mode` - Positioning strategy: "rule_of_thirds", "rule_of_thirds_and_centre", or "random" (default: "rule_of_thirds_and_centre")
 *   `translation.minimum_visible_percent` - Minimum image visibility percentage (default: 60%)
 *   `best_fit_scaling.enabled` - Enable automatic image scaling to fit within image area (default: true)
 
@@ -196,80 +197,101 @@ Where:
 *   **Scalability:** Efficient with large collections (tested with 1000+ images)
 *   **Real-time Updates:** Selection calculations happen instantly during animation
 
-### 3.6. Enhanced Image Positioning System ✅ RECENT IMPROVEMENT
+### 3.6. Multi-Mode Layout System ✅ RECENT IMPROVEMENT
 
-The application now features an advanced **Grid-Based Spatial Positioning System** that revolutionizes how images are distributed across the canvas, providing superior visual balance and professional presentation quality.
+The application now features a sophisticated **Multi-Mode Layout System** with three distinct positioning strategies that provide different visual experiences and use cases.
 
-#### The Problem with Traditional Random Positioning
-Standard random positioning often creates problematic visual clustering:
-*   **Hot Spots:** Multiple images appearing in the same region
-*   **Dead Zones:** Large empty areas with no visual content
-*   **Unpredictable Balance:** Inconsistent spatial distribution across viewing sessions
-*   **Amateur Appearance:** Chaotic positioning that lacks professional gallery aesthetics
+#### Available Layout Modes
 
-#### Intelligent Grid Solution
-Our new system uses a sophisticated 4×3 virtual grid (12 zones) that provides:
-*   **Balanced Coverage:** Images distribute evenly across the entire canvas over time
-*   **Natural Positioning:** Maintains organic, non-mechanical feel despite grid-based logic
-*   **Professional Aesthetics:** Gallery-quality spatial composition
-*   **Adaptive Distribution:** Real-time adjustment based on current image density per zone
+##### 1. Rule of Thirds (`rule_of_thirds`)
+**Purpose:** Structured, aesthetically pleasing positioning based on photography composition principles
+*   **Positioning:** Images cycle through the 4 rule of thirds intersection points
+*   **Pattern:** Top-left → Top-right → Bottom-left → Bottom-right (round-robin)
+*   **Visual Effect:** Classic photographic composition with balanced positioning
+*   **Grid Visualization:** Shows red grid lines and yellow intersection points when enabled (G key)
 
-#### Technical Architecture
-*   **Virtual Grid System:** 4 columns × 3 rows covering entire canvas
-*   **Density Tracking:** Real-time monitoring of image count per grid zone
-*   **Weighted Selection:** Less-populated zones receive higher placement probability
-*   **Multi-Zone Coverage:** Accounts for large/rotated images spanning multiple zones
-*   **Dynamic Rebalancing:** Automatic density adjustment as images appear and disappear
+##### 2. Rule of Thirds + Center (`rule_of_thirds_and_centre`)
+**Purpose:** Expanded structured positioning including the viewport center
+*   **Positioning:** Images cycle through 5 positions: 4 rule of thirds points + center point
+*   **Pattern:** Top-left → Top-right → Bottom-left → Bottom-right → Center (round-robin)
+*   **Visual Effect:** More variety while maintaining compositional structure
+*   **Grid Visualization:** Shows rule of thirds grid + center dot when enabled (G key)
 
-#### Mathematical Model
+##### 3. Random (`random`)
+**Purpose:** Natural, unpredictable positioning across the entire visible area
+*   **Positioning:** True random distribution within matte border bounds
+*   **Pattern:** No pattern - each image gets completely random placement
+*   **Visual Effect:** Organic, unpredictable compositions
+*   **Grid Visualization:** Grid lines hidden (irrelevant), G key toggles debug borders only
+
+#### Technical Implementation
+
+##### Viewport-Relative Positioning
+All layout modes use viewport units (`vw`, `vh`) for consistent positioning:
+
+```javascript
+// Rule of thirds calculation
+const viewportOffsetX = (point.x - 0.5) * 100; // -16.7vw or +16.7vw
+const viewportOffsetY = (point.y - 0.5) * 100; // -16.7vh or +16.7vh
+
+// Random positioning with matte border awareness
+const actualImageArea = this.getActualImageAreaBounds();
+const maxRangeX = (actualImageArea.width / window.innerWidth) * 100;
+const maxRangeY = (actualImageArea.height / window.innerHeight) * 100;
 ```
-Zone Weight = max(0.1, 1.0 - (currentDensity × 0.2))
 
-Zone Selection Probability:
-- Empty zones: 100% relative weight
-- 1 image: 80% relative weight  
-- 2 images: 60% relative weight
-- 3 images: 40% relative weight
-- 4+ images: 20% relative weight (minimum 10%)
+##### Matte Border Integration
+Random mode automatically calculates and respects matte border boundaries:
+
+```javascript
+getActualImageAreaBounds() {
+  // Reads actual border configuration
+  const borderPercent = window.APP_CONFIG.matteBorder.borderPercent;
+  
+  // Calculates usable image area within border
+  const borderSize = (borderPercent / 100) * smallerCanvasDimension;
+  const imageWidth = canvasWidth - (borderSize * 2);
+  
+  // Returns precise bounds for random distribution
+  return { left, top, width, height };
+}
 ```
 
-#### Advanced Features
-*   **Bounding Box Calculation:** Accounts for rotation creating larger image footprints
-*   **Coverage Detection:** Tracks which zones are actually covered by transformed images
-*   **Automatic Cleanup:** Decrements zone density when images fade out or are removed
-*   **Deterministic Reproduction:** Grid positions cache with pattern seeds for identical recreation
+##### Smart Grid Visualization
+Grid behavior adapts to the active layout mode:
 
-#### Visual Experience Benefits
-*   **Short Sessions:** Natural variety with subtle balance improvements
-*   **Medium Sessions:** Noticeable balanced coverage without geometric rigidity  
-*   **Long Sessions:** Professional gallery-like spatial distribution
-*   **Pattern Consistency:** Same pattern codes reproduce identical spatial layouts
+- **Structured Modes** (`rule_of_thirds`, `rule_of_thirds_and_centre`):
+  - G key toggles full grid with lines, dots, and image borders
+  - Shows intersection points and center dot (when applicable)
+  - Provides visual debugging for structured positioning
 
-#### Integration with Existing Systems
-*   **Deterministic Patterns:** Grid positioning integrates seamlessly with pattern seed system
-*   **Favorites System:** Saved favorites include exact grid-based positions for accurate reproduction
-*   **Transformation Cache:** Grid positions cached alongside rotation, scale, and color data
-*   **Real-time Controls:** Speed and layer controls work perfectly with grid system
-*   **Responsive Design:** Grid scales appropriately across different screen sizes and orientations
+- **Random Mode**:
+  - G key toggles image borders only (grid lines irrelevant)
+  - Grid automatically hidden (not useful for random positioning)
+  - Debug borders help visualize random distribution
 
-#### Configuration Control
+#### Configuration Integration
 ```json
 "transformations": {
   "translation": {
     "enabled": true,
-    "minimum_visible_percent": 60  // Ensures at least 60% of each image remains visible
-  },
-  "best_fit_scaling": {
-    "enabled": true  // Pre-scales images to fit within image area before transformations
+    "layout_mode": "rule_of_thirds_and_centre"  // Options: rule_of_thirds, rule_of_thirds_and_centre, random
   }
 }
 ```
 
-#### Performance Optimization
-*   **Minimal Overhead:** Simple zone calculations and Map lookups
-*   **Memory Efficient:** Lightweight tracking structure (12 zone counters)
-*   **Real-time Performance:** Zero impact on 30+ FPS animation targets
-*   **Scalable Architecture:** Efficient with any number of concurrent layers
+#### Performance Characteristics
+- **Viewport Units:** Hardware-accelerated CSS transforms using `vw`/`vh`
+- **Deterministic Patterns:** Structured modes use seeded random for reproducibility  
+- **Matte Border Awareness:** Automatic boundary calculation with minimal overhead
+- **Real-time Adaptation:** Layout responds to viewport size changes and configuration updates
+
+#### Visual Impact Benefits
+- **Compositional Control:** Choose between structured aesthetics or organic randomness
+- **Professional Presentation:** Rule of thirds provides gallery-quality composition
+- **Visual Variety:** Center mode adds more positioning options while maintaining structure
+- **Natural Distribution:** Random mode provides authentic unpredictable placement
+- **Flexible Debugging:** Appropriate visualization tools for each layout type
 
 #### Fullscreen Mode Support ✅ IMPLEMENTED
 *   **Consistent Positioning:** Image layers maintain identical visual positioning between windowed and fullscreen modes
@@ -555,7 +577,9 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 - **N:** Generate new pattern
 - **B:** Toggle background (black/white)
 - **A:** Toggle audio playback
+- **G:** Toggle rule of thirds grid / debug borders
 - **F:** Save current painting as favorite
+- **V:** View favorites gallery
 
 #### Control Panel Features
 - **Real-time adjustments:** All changes take effect immediately
@@ -623,6 +647,7 @@ The application is configured using a **JSON-based configuration system** (`conf
     },
     "translation": {
       "enabled": true,
+      "layout_mode": "rule_of_thirds_and_centre",
       "minimum_visible_percent": 60
     },
     "best_fit_scaling": {

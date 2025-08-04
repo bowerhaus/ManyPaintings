@@ -11,6 +11,7 @@
     "preload_buffer_size": 5,
     "animation_fps": 30,
     "pattern_seed": "auto",
+    "initial_pattern_code": null,
     "enable_caching": true,
     "cache_max_age": 3600,
     "lazy_loading": true
@@ -26,7 +27,8 @@
   },
   "layer_management": {
     "max_concurrent_layers": 3,
-    "max_opacity": 0.7
+    "max_opacity": 0.7,
+    "min_opacity": 0.5
   },
   "transformations": {
     "rotation": {
@@ -41,15 +43,52 @@
     },
     "translation": {
       "enabled": true,
-      "minimum_visible_percent": 60
+      "layout_mode": "rule_of_thirds",
+      "minimum_visible_percent": 60,
+      "rule_of_thirds": {
+        "max_horizontal_deviation_percent": 10,
+        "max_vertical_deviation_percent": 10
+      },
+      "rule_of_thirds_and_centre": {
+        "max_horizontal_deviation_percent": 10,
+        "max_vertical_deviation_percent": 10
+      },
+      "random": {
+        "respect_matte_border": true,
+        "distribution_method": "uniform"
+      }
     },
     "best_fit_scaling": {
       "enabled": true
     }
   },
+  "color_remapping": {
+    "enabled": true,
+    "probability": 0.5,
+    "hue_shift_range": {
+      "min_degrees": 0,
+      "max_degrees": 360
+    }
+  },
   "performance": {
     "animation_quality": "high",
     "preload_transform_cache": true
+  },
+  "audio": {
+    "enabled": true,
+    "file_path": "static/audio/Ethereal Strokes Loop.mp3",
+    "volume": 0.7,
+    "loop": true,
+    "autoplay": false
+  },
+  "matte_border": {
+    "enabled": true,
+    "border_percent": 15,
+    "color": "#F0F0F0",
+    "style": "classic",
+    "image_area": {
+      "aspect_ratio": "1:1"
+    }
   },
   "environments": {
     "development": {

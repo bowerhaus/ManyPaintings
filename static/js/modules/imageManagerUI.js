@@ -108,7 +108,15 @@ export const ImageManagerUI = {
     this.showLoading();
     
     try {
-      const response = await fetch('/api/images');
+      // Add cache-busting parameter to prevent stale data
+      const cacheBuster = Date.now();
+      const response = await fetch(`/api/images?_t=${cacheBuster}`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
       
       if (data.images && data.images.length > 0) {
@@ -227,6 +235,18 @@ export const ImageManagerUI = {
     this.hideUploadProgress();
     await this.loadImages(); // Refresh the grid
     
+    // Refresh the main ImageManager catalog so new images appear in the animation sequence
+    if (window.App && window.App.ImageManager) {
+      await window.App.ImageManager.init();
+      console.log('ImageManagerUI: Refreshed main ImageManager catalog after upload');
+      
+      // Regenerate the pattern sequence to include newly uploaded images
+      if (window.App.PatternManager) {
+        await window.App.PatternManager.generateNewPattern(window.App.PatternManager.currentSeed);
+        console.log('ImageManagerUI: Regenerated pattern sequence to include new images');
+      }
+    }
+    
     // Clear the input
     if (this.uploadInput) {
       this.uploadInput.value = '';
@@ -253,6 +273,13 @@ export const ImageManagerUI = {
 
   async deleteImage(filename) {
     try {
+      // Find and disable the delete button to prevent double-clicks
+      const deleteBtn = document.querySelector(`[data-filename="${filename}"]`);
+      if (deleteBtn) {
+        deleteBtn.disabled = true;
+        deleteBtn.style.opacity = '0.5';
+      }
+
       const response = await fetch(`/api/images/${encodeURIComponent(filename)}`, {
         method: 'DELETE'
       });
@@ -263,17 +290,41 @@ export const ImageManagerUI = {
         throw new Error(result.error || 'Delete failed');
       }
 
-      // Refresh the grid
-      await this.loadImages();
-      
-      // Refresh the main image catalog if ImageManager is available
+      console.log(`ImageManagerUI: Successfully deleted ${filename}`);
+
+      // Show success toast
+      if (window.App && window.App.UI) {
+        window.App.UI.showSuccess(`Image "${filename}" deleted successfully`);
+      }
+
+      // Clear any cached images from ImageManager
       if (window.App && window.App.ImageManager) {
+        // Clear the specific image from loaded images cache
+        const imageInfo = Array.from(window.App.ImageManager.images.values())
+          .find(img => img.filename === filename);
+        if (imageInfo) {
+          window.App.ImageManager.loadedImages.delete(imageInfo.id);
+        }
+        
+        // Refresh the main image catalog
         await window.App.ImageManager.init();
       }
+
+      // Refresh the grid with a short delay to ensure backend is updated
+      setTimeout(async () => {
+        await this.loadImages();
+      }, 100);
 
     } catch (error) {
       console.error('Failed to delete image:', error);
       alert(`Failed to delete image: ${error.message}`);
+      
+      // Re-enable the delete button on error
+      const deleteBtn = document.querySelector(`[data-filename="${filename}"]`);
+      if (deleteBtn) {
+        deleteBtn.disabled = false;
+        deleteBtn.style.opacity = '1';
+      }
     }
   },
 

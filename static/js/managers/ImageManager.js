@@ -12,7 +12,15 @@ export const ImageManager = {
 
   async init() {
     try {
-      const response = await fetch('/api/images');
+      // Add cache-busting parameter to prevent stale data
+      const cacheBuster = Date.now();
+      const response = await fetch(`/api/images?_t=${cacheBuster}`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
 
       this.images.clear();

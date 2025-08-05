@@ -62,3 +62,6 @@ pip install -r requirements.txt
 - **html2canvas**: Used for thumbnail generation in favorites system
 - **No Build Tools**: Pure JavaScript with ES6 modules
 - **Flask Backend**: Simple Python server for API and static file serving
+
+### UI Interaction Notes
+- **Delete Operations**: Don't show confirmation alerts when a delete operation occurs. Just show a toast notification.

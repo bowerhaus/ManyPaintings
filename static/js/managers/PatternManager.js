@@ -118,7 +118,9 @@ export const PatternManager = {
     const counts = Object.values(usageCounts);
     const minCount = Math.min(...counts);
     const maxCount = Math.max(...counts);
-    console.log(`PatternManager: Generated weighted sequence - min appearances: ${minCount}, max appearances: ${maxCount}, range: ${maxCount - minCount}`);
+    const uniqueImagesInSequence = new Set(sequence).size;
+    console.log(`PatternManager: Generated weighted sequence - total images available: ${allImageIds.length}, unique in sequence: ${uniqueImagesInSequence}`);
+    console.log(`PatternManager: Usage distribution - min appearances: ${minCount}, max appearances: ${maxCount}, range: ${maxCount - minCount}`);
     console.log(`PatternManager: First 10 images in sequence: ${sequence.slice(0, 10).join(', ')}`);
 
     // Test deterministic behavior - log a checksum of the first 20 items for reproducibility testing

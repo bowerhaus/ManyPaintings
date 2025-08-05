@@ -37,21 +37,21 @@
       "max_degrees": 60
     },
     "scale": {
-      "enabled": true,
+      "enabled": false,
       "min_factor": 0.5,
       "max_factor": 1.1
     },
     "translation": {
       "enabled": true,
-      "layout_mode": "random",
+      "layout_mode": "rule_of_thirds_and_centre",
       "minimum_visible_percent": 60,
       "rule_of_thirds": {
-        "max_horizontal_deviation_percent": 5,
-        "max_vertical_deviation_percent": 5
+        "max_horizontal_deviation_percent": 10,
+        "max_vertical_deviation_percent": 10
       },
       "rule_of_thirds_and_centre": {
-        "max_horizontal_deviation_percent": 5,
-        "max_vertical_deviation_percent": 5
+        "max_horizontal_deviation_percent": 10,
+        "max_vertical_deviation_percent": 10
       },
       "random": {
         "distribution_method": "uniform"

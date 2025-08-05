@@ -89,8 +89,8 @@
                         <div class="control-group">
                             <label>Speed</label>
                             <div class="control-input">
-                                <input type="range" id="speed-slider" min="1" max="10" step="1" value="5">
-                                <span id="speed-value">5</span>
+                                <input type="range" id="speed-slider" min="1" max="10" step="1" value="1">
+                                <span id="speed-value">1</span>
                             </div>
                         </div>
                         
@@ -245,7 +245,6 @@
         
         // Fullscreen functionality
         const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const favoriteBtn = document.getElementById('favorite-btn');
         
         function enterFullscreen() {
             const elem = document.documentElement;
@@ -290,34 +289,9 @@
             enterFullscreen();
         });
         
-        // Favorite functionality
-        if (favoriteBtn) {
-            favoriteBtn.addEventListener('click', function() {
-                if (window.App && window.App.UI) {
-                    window.App.UI.saveFavorite();
-                }
-            });
-        }
+        // Favorite functionality is handled by the UI module
         
-        // Favorites Gallery functionality
-        const favoritesGalleryBtn = document.getElementById('favorites-gallery-btn');
-        if (favoritesGalleryBtn) {
-            favoritesGalleryBtn.addEventListener('click', function() {
-                if (window.App && window.App.UI) {
-                    window.App.UI.showFavoritesGallery();
-                }
-            });
-        }
-        
-        // Image Manager functionality
-        const imageManagerBtn = document.getElementById('image-manager-btn');
-        if (imageManagerBtn) {
-            imageManagerBtn.addEventListener('click', function() {
-                if (window.App && window.App.UI) {
-                    window.App.UI.showImageManager();
-                }
-            });
-        }
+        // Favorites Gallery and Image Manager functionality is handled by the UI module
         
         // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', updateFullscreenButton);

@@ -6,7 +6,8 @@
       "Bash(pip install:*)",
       "Bash(curl:*)",
       "Bash(dir:*)",
-      "Bash(venvScriptsactivate.bat)"
+      "Bash(venvScriptsactivate.bat)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

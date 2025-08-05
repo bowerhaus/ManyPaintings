@@ -48,14 +48,15 @@ body.white-background .image-layer {
 }
 
 .image-layer img {
-    width: 66.666%;
-    height: 66.666%;
-    object-fit: contain;
-    object-position: center;
+    /* Default: images use their natural size */
     display: block;
     position: absolute;
-    top: 16.666%;
-    left: 16.666%;
+    /* Center the image initially */
+    top: 50%;
+    left: 50%;
+    /* Transform origin at center for rotations and scaling */
+    transform-origin: center;
+    /* These will be overridden by JS when best_fit_scaling is enabled */
     max-width: none;
     max-height: none;
 }
@@ -638,8 +639,12 @@ body.white-background #kiosk-controls button:hover {
     }
 }
 
-.image-card {
+/* Image card container for positioning delete button */
+.image-card-container {
     position: relative;
+}
+
+.image-card {
     background: white;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 0.5rem;
@@ -1214,74 +1219,7 @@ body.white-background #kiosk-controls button:hover {
     opacity: 1;
 }
 
-/* Preview layer styles */
-.preview-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    transform-origin: center;
-}
-
-.preview-layer img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    mix-blend-mode: normal;
-}
-
-.preview-no-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(0, 0, 0, 0.3);
-    font-size: 0.75rem;
-}
-
-.preview-fallback {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-}
-
-.preview-fallback.blue { background: #93c5fd; }
-.preview-fallback.purple { background: #c4b5fd; }
-.preview-fallback.pink { background: #f9a8d4; }
-.preview-fallback.green { background: #86efac; }
-.preview-fallback.yellow { background: #fde047; }
-
-.preview-fallback-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.75rem;
-}
-
-.preview-error {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #dbeafe, #e0e7ff, #fce7f3);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.75rem;
-}
+/* Canvas thumbnails only - no complex preview layer styles needed */
 
 /* Kiosk specific styles */
 .kiosk-controls {
@@ -1389,4 +1327,11 @@ body.white-background #kiosk-controls button:hover {
     pointer-events: none !important;
     box-shadow: 0 0 4px rgba(255, 0, 255, 0.6) !important;
     opacity: 1 !important;
+}
+
+/* Background toggle button active state indicator */
+#background-toggle-btn.white-bg-active {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
 }

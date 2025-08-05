@@ -118,23 +118,31 @@ def create_app(config_name=None):
     def save_favorite():
         """Save a painting state as a favorite."""
         try:
-            # Get the painting state from request
-            state_data = request.get_json()
+            # Get the favorite data from request
+            favorite_request = request.get_json()
+            
+            if not favorite_request:
+                return jsonify({'error': 'No favorite data provided'}), 400
+            
+            # Extract state and thumbnail from request
+            state_data = favorite_request.get('state')
+            thumbnail_data = favorite_request.get('thumbnail')
             
             if not state_data:
                 return jsonify({'error': 'No state data provided'}), 400
-            
+                
             if not state_data.get('layers'):
                 return jsonify({'error': 'No layers in state data'}), 400
             
             # Generate a unique ID for this favorite
             favorite_id = str(uuid.uuid4())
             
-            # Add metadata
+            # Add metadata including thumbnail
             favorite_data = {
                 'id': favorite_id,
-                'created_at': datetime.utcnow().isoformat(),
-                'state': state_data
+                'created_at': datetime.now().isoformat(),
+                'state': state_data,
+                'thumbnail': thumbnail_data  # Store base64 thumbnail data
             }
             
             # Load existing favorites or create new file
@@ -244,10 +252,7 @@ def create_app(config_name=None):
                     'id': favorite_id,
                     'created_at': favorite_data.get('created_at'),
                     'layer_count': len(favorite_data.get('state', {}).get('layers', [])),
-                    # Generate a simple thumbnail description based on layers
-                    'preview': {
-                        'layers': favorite_data.get('state', {}).get('layers', [])[:4]  # First 4 layers for preview
-                    }
+                    'thumbnail': favorite_data.get('thumbnail')  # Base64 canvas thumbnail
                 })
             
             # Sort by creation date (newest first)

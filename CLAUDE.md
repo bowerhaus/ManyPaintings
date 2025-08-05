@@ -45,4 +45,20 @@ pip install -r requirements.txt
 ### Important Guidance
  - IMPORTANT - Dont ever start the server. Ask me to do it
 
-(Rest of the file remains unchanged)
+## Key Features
+
+### Favorites System
+- **Save Favorites**: Press F key or click heart button to save current painting state
+- **Thumbnail Generation**: Uses html2canvas library to capture pixel-perfect thumbnails
+- **Storage**: Favorites saved as JSON with base64 thumbnail data
+- **Gallery**: Press V key or click gallery button to view/load saved favorites
+
+### JavaScript Architecture
+- **Modular Design**: Separated into managers (ImageManager, PatternManager, etc.) and UI components
+- **ES6 Modules**: Uses native JavaScript modules, no build tools required
+- **Main Entry**: `main.js` is the entry point that initializes all modules
+
+### Dependencies
+- **html2canvas**: Used for thumbnail generation in favorites system
+- **No Build Tools**: Pure JavaScript with ES6 modules
+- **Flask Backend**: Simple Python server for API and static file serving

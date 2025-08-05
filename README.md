@@ -28,7 +28,7 @@ This document outlines the Product Requirements for a generative art application
 *   **Background Audio:** Continuous ambient MP3 audio playback with volume control, play/pause functionality, and browser autoplay handling for an immersive audiovisual experience.
 *   **Kiosk Mode:** The application will have a kiosk mode that displays the generative art in full-screen, hiding all browser UI elements. On Raspberry Pi, this mode will also disable user input to prevent accidental interruption.
 *   **Pattern Identification Code:** The sequence should be deterministic being derived from a random seed. A unique code will be displayed on the screen, representing the current sequence of images and their current animation state. This code can be used to restart the application with the same visual pattern if required.
-*   **Favouriting System:** ✅ **NEW FEATURE** - Save and share specific painting moments with exact layer states, transformations, and opacity values. Generate shareable URLs that recreate favorite paintings across different devices and screen sizes.
+*   **Favouriting System:** ✅ **NEW FEATURE** - Save and share specific painting moments with exact layer states, transformations, and opacity values. Generate shareable URLs that recreate favorite paintings across different devices and screen sizes. Features pixel-perfect thumbnail generation using html2canvas library.
 
 ### 3.2. Animation System
 
@@ -116,7 +116,8 @@ The application now includes a comprehensive favouriting system that allows user
 
 **Core Features:**
 *   **State Capture:** Saves exact painting moments with all visible layer properties including image IDs, opacity levels, transformations (rotation, scale, translation, hue shift), and animation phases
-*   **Server-Side Storage:** Persistent JSON database storage with UUID identifiers for reliable retrieval across browser sessions
+*   **Pixel-Perfect Thumbnails:** Uses html2canvas library to capture exact visual state as 200x200px thumbnails, handling all CSS transforms and effects automatically
+*   **Server-Side Storage:** Persistent JSON database storage with UUID identifiers and base64 thumbnail data for reliable retrieval across browser sessions
 *   **URL Sharing:** Generate shareable links that recreate favorite paintings exactly, enabling easy sharing via email, social media, or bookmarks
 *   **Cross-Viewport Compatibility:** Favorites automatically adapt to different screen sizes and aspect ratios using responsive positioning
 *   **Staggered Restoration:** Natural fade-out timing when loading favorites, with layers disappearing at different intervals for smooth transition back to normal generation

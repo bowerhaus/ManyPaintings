@@ -1,5 +1,6 @@
 /**
  * Image Manager - Handles loading, caching, and memory management
+ * Extracted from main.js for better modularity
  */
 export const ImageManager = {
   images: new Map(),
@@ -23,10 +24,9 @@ export const ImageManager = {
       return data.images;
     } catch (error) {
       console.error('ImageManager: Failed to load image catalog:', error);
-      // UI will be available through the global window.App.UI
-      if (window.App && window.App.UI) {
-        window.App.UI.showError('Failed to load image catalog');
-      }
+      // Import UI dynamically to avoid circular dependency
+      const { UI } = await import('../ui/UI.js');
+      UI.showError('Failed to load image catalog');
       throw error;
     }
   },
@@ -87,8 +87,9 @@ export const ImageManager = {
   },
 
   cleanupMemory() {
-    const config = window.App?.config || {};
-    if (this.loadedImages.size <= (config.application?.max_concurrent_images || 10)) {
+    // Access config through window.APP_CONFIG
+    const maxImages = window.APP_CONFIG?.application?.max_concurrent_images || 10;
+    if (this.loadedImages.size <= maxImages) {
       return;
     }
 

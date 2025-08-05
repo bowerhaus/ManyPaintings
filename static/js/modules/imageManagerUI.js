@@ -143,36 +143,35 @@ export const ImageManagerUI = {
     this.grid.innerHTML = '';
     
     images.forEach(image => {
-      // Create container like favorites manager
+      // Create container for positioning delete button
       const cardContainer = document.createElement('div');
-      cardContainer.className = 'favorite-card-container';
+      cardContainer.className = 'image-card-container';
       
       // Create the main card
       const card = document.createElement('div');
-      card.className = 'bg-white border border-black/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow';
+      card.className = 'image-card';
       card.innerHTML = `
-        <div class="aspect-square bg-gray-100 relative">
+        <div class="image-card-thumbnail">
           <img 
             src="${image.path}" 
             alt="${image.filename}"
-            class="w-full h-full object-cover"
             loading="lazy"
           />
         </div>
-        <div class="p-3">
-          <p class="text-black/80 text-sm font-medium truncate" title="${image.filename}">
+        <div class="image-card-info">
+          <p class="image-card-filename" title="${image.filename}">
             ${image.filename}
           </p>
-          <div class="text-black/50 text-xs mt-1 flex justify-between">
+          <div class="image-card-details">
             <span>${image.width}×${image.height}</span>
             <span>${this.formatFileSize(image.size)}</span>
           </div>
         </div>
       `;
       
-      // Create delete button as separate element like favorites manager
+      // Create delete button as separate element
       const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'favorite-delete-btn';
+      deleteBtn.className = 'image-delete-btn';
       deleteBtn.title = 'Delete image';
       deleteBtn.dataset.filename = image.filename;
       deleteBtn.innerHTML = `

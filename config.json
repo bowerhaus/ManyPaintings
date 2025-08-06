@@ -38,32 +38,32 @@
     },
     "scale": {
       "enabled": true,
-      "min_factor": 0.5,
+      "min_factor": 0.9,
       "max_factor": 1.1
     },
     "translation": {
       "enabled": true,
-      "layout_mode": "random",
+      "layout_mode": "rule_of_thirds_and_centre",
       "minimum_visible_percent": 60,
       "rule_of_thirds": {
-        "max_horizontal_deviation_percent": 5,
-        "max_vertical_deviation_percent": 5
+        "max_horizontal_deviation_percent": 0,
+        "max_vertical_deviation_percent": 0
       },
       "rule_of_thirds_and_centre": {
-        "max_horizontal_deviation_percent": 5,
-        "max_vertical_deviation_percent": 5
+        "max_horizontal_deviation_percent": 0,
+        "max_vertical_deviation_percent": 0
       },
       "random": {
         "distribution_method": "uniform"
       }
     },
     "best_fit_scaling": {
-      "enabled": false
+      "enabled": true
     }
   },
   "color_remapping": {
     "enabled": true,
-    "probability": 0.3,
+    "probability": 0.2,
     "hue_shift_range": {
       "min_degrees": 0,
       "max_degrees": 360

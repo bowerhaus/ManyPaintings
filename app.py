@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 from datetime import datetime
+from pathlib import Path
 from flask import Flask, render_template, jsonify, send_from_directory, request
 from config import config
 
@@ -40,10 +41,15 @@ def create_app(config_name=None):
         image_manager = ImageManager(app.config['IMAGE_DIRECTORY'], base_config=dict(app.config))
         catalog = image_manager.get_image_catalog()
         
-        # Add cache headers for performance
+        # Add cache headers for performance, but not if cache-busting timestamp is present
         response = jsonify(catalog)
-        if app.config['ENABLE_CACHING']:
+        if app.config['ENABLE_CACHING'] and 't' not in request.args:
             response.headers['Cache-Control'] = f'public, max-age={app.config["CACHE_MAX_AGE"]}'
+        else:
+            # Disable caching for cache-busting requests
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
         
         return response
     
@@ -112,23 +118,31 @@ def create_app(config_name=None):
     def save_favorite():
         """Save a painting state as a favorite."""
         try:
-            # Get the painting state from request
-            state_data = request.get_json()
+            # Get the favorite data from request
+            favorite_request = request.get_json()
+            
+            if not favorite_request:
+                return jsonify({'error': 'No favorite data provided'}), 400
+            
+            # Extract state and thumbnail from request
+            state_data = favorite_request.get('state')
+            thumbnail_data = favorite_request.get('thumbnail')
             
             if not state_data:
                 return jsonify({'error': 'No state data provided'}), 400
-            
+                
             if not state_data.get('layers'):
                 return jsonify({'error': 'No layers in state data'}), 400
             
             # Generate a unique ID for this favorite
             favorite_id = str(uuid.uuid4())
             
-            # Add metadata
+            # Add metadata including thumbnail
             favorite_data = {
                 'id': favorite_id,
-                'created_at': datetime.utcnow().isoformat(),
-                'state': state_data
+                'created_at': datetime.now().isoformat(),
+                'state': state_data,
+                'thumbnail': thumbnail_data  # Store base64 thumbnail data
             }
             
             # Load existing favorites or create new file
@@ -238,10 +252,7 @@ def create_app(config_name=None):
                     'id': favorite_id,
                     'created_at': favorite_data.get('created_at'),
                     'layer_count': len(favorite_data.get('state', {}).get('layers', [])),
-                    # Generate a simple thumbnail description based on layers
-                    'preview': {
-                        'layers': favorite_data.get('state', {}).get('layers', [])[:4]  # First 4 layers for preview
-                    }
+                    'thumbnail': favorite_data.get('thumbnail')  # Base64 canvas thumbnail
                 })
             
             # Sort by creation date (newest first)
@@ -251,6 +262,88 @@ def create_app(config_name=None):
             
         except (json.JSONDecodeError, IOError) as e:
             return jsonify({'error': f'Failed to load favorites: {str(e)}'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/images/upload', methods=['POST'])
+    def upload_image():
+        """Upload a new image to the image directory."""
+        try:
+            if 'file' not in request.files:
+                return jsonify({'error': 'No file provided'}), 400
+            
+            file = request.files['file']
+            
+            if file.filename == '':
+                return jsonify({'error': 'No file selected'}), 400
+            
+            # Check file extension
+            allowed_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+            filename = file.filename.lower()
+            if not any(filename.endswith(ext) for ext in allowed_extensions):
+                return jsonify({'error': 'Invalid file type. Supported formats: PNG, JPG, JPEG, GIF, WEBP'}), 400
+            
+            # Save the file
+            image_dir = Path(app.config['IMAGE_DIRECTORY'])
+            image_dir.mkdir(exist_ok=True)
+            
+            file_path = image_dir / file.filename
+            
+            # Check if file already exists
+            if file_path.exists():
+                return jsonify({'error': 'File with this name already exists'}), 409
+            
+            file.save(str(file_path))
+            
+            # Validate the uploaded image
+            from utils.image_manager import ImageManager
+            image_manager = ImageManager(app.config['IMAGE_DIRECTORY'])
+            
+            if not image_manager.validate_image(file_path):
+                # Delete invalid file
+                file_path.unlink()
+                return jsonify({'error': 'Invalid or corrupted image file'}), 400
+            
+            # Get image info for response
+            image_info = image_manager._get_image_info(file_path)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Image uploaded successfully',
+                'image': image_info
+            })
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/images/<filename>', methods=['DELETE'])
+    def delete_image(filename):
+        """Delete an image from the image directory."""
+        try:
+            image_dir = Path(app.config['IMAGE_DIRECTORY'])
+            file_path = image_dir / filename
+            
+            if not file_path.exists():
+                return jsonify({'error': 'Image not found'}), 404
+            
+            # Check if it's actually an image file
+            allowed_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+            if not any(filename.lower().endswith(ext) for ext in allowed_extensions):
+                return jsonify({'error': 'Not an image file'}), 400
+            
+            # Delete the image file
+            file_path.unlink()
+            
+            # Also delete associated JSON config file if exists
+            config_path = file_path.with_suffix('.json')
+            if config_path.exists():
+                config_path.unlink()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Image deleted successfully'
+            })
+            
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     

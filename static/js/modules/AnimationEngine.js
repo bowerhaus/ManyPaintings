@@ -244,8 +244,10 @@ export const AnimationEngine = {
 
       console.log(`AnimationEngine: Speed ${speedMultiplier}x - fadeIn: ${fadeInDuration}ms, hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms`);
 
-      const transformations = this.generateTransformations(img, imageId, options.seed);
-      const layer = this.createLayer(imageId, img, transformations);
+      // Calculate scaled dimensions first if best fit is enabled
+      const scaledDimensions = this.calculateScaledDimensions(img);
+      const transformations = this.generateTransformations(img, imageId, options.seed, scaledDimensions);
+      const layer = this.createLayer(imageId, img, transformations, scaledDimensions);
 
       this.layersContainer.appendChild(layer);
 
@@ -378,7 +380,42 @@ export const AnimationEngine = {
     }
   },
 
-  generateTransformations(img, imageId, seed = null) {
+  calculateScaledDimensions(img) {
+    const config = window.APP_CONFIG || {};
+    const originalWidth = img.naturalWidth || img.width;
+    const originalHeight = img.naturalHeight || img.height;
+    
+    if (config.transformations?.best_fit_scaling?.enabled === true) {
+      // Get the image area from MatteBorderManager
+      const MatteBorderManager = window.App?.MatteBorderManager;
+      const imageArea = MatteBorderManager ? 
+        MatteBorderManager.getImageArea() : 
+        { width: window.innerWidth, height: window.innerHeight };
+      
+      // Calculate scale factors needed to fit image area
+      const scaleX = imageArea.width / originalWidth;
+      const scaleY = imageArea.height / originalHeight;
+      const scaleFactor = Math.min(scaleX, scaleY);
+      
+      // Only scale down (scaleFactor < 1), never scale up
+      if (scaleFactor < 1) {
+        return {
+          width: originalWidth * scaleFactor,
+          height: originalHeight * scaleFactor,
+          scaled: true
+        };
+      }
+    }
+    
+    // Return original dimensions
+    return {
+      width: originalWidth,
+      height: originalHeight,
+      scaled: false
+    };
+  },
+
+  generateTransformations(img, imageId, seed = null, scaledDimensions = null) {
     const config = window.APP_CONFIG || {};
     const transformSeed = seed ? `${imageId}-${seed}` : imageId;
 
@@ -535,8 +572,13 @@ export const AnimationEngine = {
       }
     }
 
-    if (config.transformations?.color_remapping?.enabled) {
-      transformations.hueShift = random() * 360;
+    if (config.color_remapping?.enabled) {
+      const probability = config.color_remapping.probability || 1.0;
+      if (random() < probability) {
+        const minDegrees = config.color_remapping.hue_shift_range?.min_degrees || 0;
+        const maxDegrees = config.color_remapping.hue_shift_range?.max_degrees || 360;
+        transformations.hueShift = random() * (maxDegrees - minDegrees) + minDegrees;
+      }
     }
 
     if (config.preloadTransformCache) {
@@ -546,7 +588,7 @@ export const AnimationEngine = {
     return transformations;
   },
 
-  createLayer(imageId, img, transformations) {
+  createLayer(imageId, img, transformations, scaledDimensions = null) {
     const config = window.APP_CONFIG || {};
     const layer = document.createElement('div');
     layer.className = 'image-layer';
@@ -583,18 +625,17 @@ export const AnimationEngine = {
       imageElement.style.filter = `hue-rotate(${hueShift}deg)`;
     }
 
-    // Apply best fit scaling if enabled
-    if (config.transformations?.best_fit_scaling?.enabled === true) {
-      imageElement.style.maxWidth = '100vw';
-      imageElement.style.maxHeight = '100vh';
-      imageElement.style.objectFit = 'contain';
-    } else {
-      // When best fit scaling is disabled, set explicit dimensions
-      const originalWidth = img.naturalWidth || img.width;
-      const originalHeight = img.naturalHeight || img.height;
-      imageElement.style.width = `${originalWidth}px`;
-      imageElement.style.height = `${originalHeight}px`;
-    }
+    // Apply mix-blend-mode to remove white backgrounds
+    imageElement.style.mixBlendMode = 'multiply';
+
+    // Apply dimensions (either scaled or original)
+    const dimensions = scaledDimensions || {
+      width: img.naturalWidth || img.width,
+      height: img.naturalHeight || img.height
+    };
+    
+    imageElement.style.width = `${dimensions.width}px`;
+    imageElement.style.height = `${dimensions.height}px`;
 
     // Add debug border if grid is visible
     const grid = document.getElementById('rule-of-thirds-grid');
@@ -622,7 +663,8 @@ export const AnimationEngine = {
         throw new Error('No favorite data provided');
       }
 
-      const layer = this.createLayer(imageId, img, favoriteData.transformations);
+      const scaledDimensions = this.calculateScaledDimensions(img);
+      const layer = this.createLayer(imageId, img, favoriteData.transformations, scaledDimensions);
       
       // Set initial opacity to saved opacity
       layer.style.opacity = favoriteData.opacity;

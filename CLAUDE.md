@@ -54,9 +54,15 @@ pip install -r requirements.txt
 - **Gallery**: Press V key or click gallery button to view/load saved favorites
 
 ### JavaScript Architecture
-- **Modular Design**: Separated into managers (ImageManager, PatternManager, etc.) and UI components
-- **ES6 Modules**: Uses native JavaScript modules, no build tools required
-- **Main Entry**: `main.js` is the entry point that initializes all modules
+- **Modular Design**: Refactored from 3,684-line monolith into manageable ES6 modules
+- **ES6 Modules**: Native JavaScript modules with zero compilation required
+- **Module Structure**:
+  - `main.js` (105 lines) - Entry point and initialization
+  - `managers/` - Core system managers (ImageManager, PatternManager, AudioManager, FavoritesManager, MatteBorderManager)
+  - `modules/` - Animation engine and specialized components
+  - `ui/` - User interface components (UI, FavoritesGallery, imageManagerUI)
+  - `utils/` - Utility modules (GridManager)
+- **No Build Tools**: Pure JavaScript with immediate browser compatibility
 
 ### Dependencies
 - **html2canvas**: Used for thumbnail generation in favorites system
@@ -65,3 +71,6 @@ pip install -r requirements.txt
 
 ### UI Interaction Notes
 - **Delete Operations**: Don't show confirmation alerts when a delete operation occurs. Just show a toast notification.
+- **Image Management**: Use I key or click image manager button to access upload/delete functionality
+- **Favorites Gallery**: Use V key or click gallery button to browse saved favorites with thumbnails
+- **Debug Grid**: Use G key to toggle rule of thirds grid visualization for positioning debugging

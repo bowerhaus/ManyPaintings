@@ -7,35 +7,34 @@
 {% block content %}
 <div id="kiosk-container" class="kiosk-container">
     <div id="canvas-container" class="canvas-container">
-        <div id="image-layers" class="image-layers-container">
-            <!-- Kiosk controls positioned inside the actual image viewing area -->
-            <div id="kiosk-controls" class="kiosk-controls">
-        <button id="audio-toggle-btn" class="kiosk-control-button" title="Toggle Audio (A)">
-            <svg viewBox="0 0 24 24" class="kiosk-icon">
-                <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.03C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
-            </svg>
-        </button>
-        <button id="background-toggle-btn" class="kiosk-control-button" title="Toggle Background (B)">
-            <svg viewBox="0 0 24 24" class="kiosk-icon">
-                <path d="M12,18.5A6.5,6.5 0 0,1 5.5,12A6.5,6.5 0 0,1 12,5.5A6.5,6.5 0 0,1 18.5,12A6.5,6.5 0 0,1 12,18.5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
-            </svg>
-        </button>
-        <button id="favorite-btn" class="kiosk-control-button favorite" title="Save Favorite (F)">
-            <svg viewBox="0 0 24 24" class="kiosk-icon">
-                <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
-            </svg>
-        </button>
-        <button id="favorites-gallery-btn" class="kiosk-control-button" title="View Favorites (G)">
-            <svg viewBox="0 0 24 24" class="kiosk-icon">
-                <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
-            </svg>
-        </button>
-        <button id="fullscreen-btn" class="kiosk-control-button" title="Enter Fullscreen">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="kiosk-icon">
-                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-            </svg>
-        </button>
-            </div>
+        <div id="image-layers" class="image-layers-container"></div>
+        <!-- Kiosk controls positioned outside image-layers to prevent deletion -->
+        <div id="kiosk-controls" class="kiosk-controls">
+            <button id="audio-toggle-btn" class="kiosk-control-button" title="Toggle Audio (A)">
+                <svg viewBox="0 0 24 24" class="kiosk-icon">
+                    <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16.03C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
+                </svg>
+            </button>
+            <button id="background-toggle-btn" class="kiosk-control-button" title="Toggle Background (B)">
+                <svg viewBox="0 0 24 24" class="kiosk-icon">
+                    <path d="M12,18.5A6.5,6.5 0 0,1 5.5,12A6.5,6.5 0 0,1 12,5.5A6.5,6.5 0 0,1 18.5,12A6.5,6.5 0 0,1 12,18.5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                </svg>
+            </button>
+            <button id="favorite-btn" class="kiosk-control-button favorite" title="Save Favorite (F)">
+                <svg viewBox="0 0 24 24" class="kiosk-icon">
+                    <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
+                </svg>
+            </button>
+            <button id="favorites-gallery-btn" class="kiosk-control-button" title="View Favorites (G)">
+                <svg viewBox="0 0 24 24" class="kiosk-icon">
+                    <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
+                </svg>
+            </button>
+            <button id="fullscreen-btn" class="kiosk-control-button" title="Enter Fullscreen">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="kiosk-icon">
+                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                </svg>
+            </button>
         </div>
         <div class="matte-border-container">
             <div id="matte-border" class="matte-border classic"></div>
@@ -169,6 +168,8 @@
                 console.log('Kiosk: Showing all kiosk controls');
                 if (kioskControls) {
                     kioskControls.style.display = 'flex';
+                    kioskControls.style.visibility = 'visible';
+                    kioskControls.style.opacity = '1';
                 }
                 
                 // Reset fullscreen button content

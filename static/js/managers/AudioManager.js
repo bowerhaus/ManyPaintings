@@ -2,6 +2,8 @@
  * Audio Manager - Handles background audio playback
  * Extracted from main.js for better modularity
  */
+import { userPreferences } from './UserPreferences.js';
+
 export const AudioManager = {
   audioElement: null,
   isEnabled: false,
@@ -19,7 +21,7 @@ export const AudioManager = {
     }
 
     this.isEnabled = config.audio.enabled;
-    this.volume = config.audio.volume || 0.5;
+    this.volume = userPreferences.get('volume') || config.audio.volume || 0.5;
     this.filePath = config.audio.file_path || 'static/audio/ambient.mp3';
 
     console.log(`AudioManager: Initialized with file: ${this.filePath}, volume: ${this.volume}`);
@@ -171,6 +173,10 @@ export const AudioManager = {
 
     this.volume = Math.max(0, Math.min(1, volume));
     this.audioElement.volume = this.volume;
+    
+    // Save to user preferences
+    userPreferences.set('volume', this.volume);
+    
     console.log(`AudioManager: Volume set to ${this.volume}`);
   },
 

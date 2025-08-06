@@ -9,6 +9,7 @@ import { PatternManager } from './managers/PatternManager.js';
 import { AudioManager } from './managers/AudioManager.js';
 import { FavoritesManager } from './managers/FavoritesManager.js';
 import { MatteBorderManager } from './managers/MatteBorderManager.js';
+import { userPreferences } from './managers/UserPreferences.js';
 import { UI } from './ui/UI.js';
 import { FavoritesGallery } from './ui/FavoritesGallery.js';
 import { ImageManagerUI } from './modules/imageManagerUI.js';
@@ -48,6 +49,9 @@ const App = {
       window.kioskMode = kioskMode; // Make available globally
       
       console.log('Configuration loaded:', config);
+      
+      // UserPreferences is automatically initialized when imported
+      console.log('UserPreferences loaded with preferences:', userPreferences.getAll());
 
       // Initialize modules in sequence
       UI.init();
@@ -68,6 +72,13 @@ const App = {
 
       AnimationEngine.start();
       isInitialized = true;
+
+      // Re-apply user preferences after all modules are initialized
+      // This ensures background preference is not overridden by other modules
+      if (UI && UI.applyUserPreferences) {
+        console.log('App: Re-applying user preferences after all modules initialized');
+        UI.applyUserPreferences();
+      }
 
       // Set up window resize event listener
       this.setupResizeHandler();
@@ -141,7 +152,8 @@ const App = {
   FavoritesGallery,
   ImageManagerUI,
   UI,
-  GridManager
+  GridManager,
+  userPreferences
 };
 
 // Expose App to global scope for template scripts

@@ -58,11 +58,28 @@ pip install -r requirements.txt
 - **ES6 Modules**: Native JavaScript modules with zero compilation required
 - **Module Structure**:
   - `main.js` (105 lines) - Entry point and initialization
-  - `managers/` - Core system managers (ImageManager, PatternManager, AudioManager, FavoritesManager, MatteBorderManager)
+  - `managers/` - Core system managers (ImageManager, PatternManager, AudioManager, FavoritesManager, MatteBorderManager, UserPreferences)
   - `modules/` - Animation engine and specialized components
   - `ui/` - User interface components (UI, FavoritesGallery, imageManagerUI)
   - `utils/` - Utility modules (GridManager)
 - **No Build Tools**: Pure JavaScript with immediate browser compatibility
+
+### User Preferences System
+- **LocalStorage Integration**: Comprehensive browser localStorage for persistent user settings
+- **UserPreferences Module**: Centralized preferences management with validation and error handling
+- **Settings Persisted**: Speed multiplier (1-10), max layers (1-8), audio volume (0-100%), background color (black/white)
+- **Auto-Save**: All control panel changes saved instantly without user action
+- **Smart Restoration**: Preferences applied during initialization and after all modules loaded
+- **Error Resilience**: Graceful fallbacks when localStorage unavailable or corrupted
+
+### Pattern Behavior System
+- **Config-Driven Logic**: Pattern generation strictly follows configuration settings
+- **No LocalStorage**: Pattern codes are never saved to browser storage
+- **Behavior Rules**:
+  - `initial_pattern_code: null` in config → Fresh random pattern each refresh
+  - `initial_pattern_code: "code"` in config → Always use that specific pattern
+- **Deterministic**: Same config produces same pattern sequences
+- **Enhanced Logging**: Clear console messages indicate pattern behavior and generation strategy
 
 ### Dependencies
 - **html2canvas**: Used for thumbnail generation in favorites system

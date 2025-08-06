@@ -247,6 +247,23 @@ Press **G** to toggle grid visualization and see how images are positioned.
 *   **Audio Controls:** Volume and play/pause
 *   **Background Toggle:** Switch between black and white backgrounds
 *   **Pattern Display:** Shows current pattern code for reproducibility
+*   **Image Management:** ✅ **NEW FEATURE** - Upload, browse, and delete images through web interface
+*   **Favorites Gallery:** ✅ **NEW FEATURE** - Visual gallery with thumbnails to browse and manage saved favorites
+
+#### 3.7.1 User Preferences ✅ **NEW FEATURE**
+The application automatically saves and restores user preferences across browser sessions using localStorage:
+*   **Auto-Save:** All control panel changes saved instantly without user action
+*   **Cross-Session:** Settings persist when browser is closed and reopened  
+*   **Settings Saved:** Speed multiplier, max layers, audio volume, background color
+*   **Smart Defaults:** Graceful fallbacks if localStorage unavailable
+*   **No Configuration:** Works automatically with no setup required
+
+#### 3.7.2 Pattern Behavior ✅ **CONFIG-DRIVEN**
+Pattern generation follows strict configuration-based logic:
+*   **Config `initial_pattern_code: null`** → Fresh random pattern each refresh
+*   **Config `initial_pattern_code: "code"`** → Always use that specific pattern
+*   **No LocalStorage:** Pattern codes never saved to browser storage
+*   **Deterministic:** Same config produces same pattern sequences
 
 ### 3.8. Keyboard Shortcuts
 *   **Spacebar:** Play/Pause animations
@@ -756,6 +773,9 @@ The project includes comprehensive VS Code support:
 ## 10. Future Enhancements
 
 ### ✅ Recently Completed
+*   **User Preferences & LocalStorage:** ✅ COMPLETED - Comprehensive browser localStorage system for persisting user settings
+*   **Pattern Behavior System:** ✅ COMPLETED - Config-driven pattern generation with no localStorage interference
+*   **Background Preference Fix:** ✅ COMPLETED - Proper background color restoration with !important styling priority
 *   **JavaScript Modularization:** ✅ COMPLETED - Refactored 3,684-line main.js into manageable ES6 modules
 *   **Image Management System:** ✅ COMPLETED - Web-based image upload, browse, and delete functionality
 *   **Enhanced Favorites Gallery:** ✅ COMPLETED - Visual thumbnails using html2canvas for pixel-perfect previews

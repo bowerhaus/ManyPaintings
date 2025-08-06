@@ -27,14 +27,16 @@ export const PatternManager = {
         }
       });
       const configData = await response.json();
+      
+      // Use config pattern if set, otherwise will generate random
       this.initialPatternCode = configData.initial_pattern_code;
 
       console.log(`PatternManager: Config loaded - initial_pattern_code: ${this.initialPatternCode}`);
 
       if (this.initialPatternCode) {
-        console.log(`PatternManager: Using initial pattern code: ${this.initialPatternCode}`);
+        console.log(`PatternManager: Using fixed pattern code from config: ${this.initialPatternCode}`);
       } else {
-        console.log('PatternManager: No initial pattern code configured, will generate random seed');
+        console.log('PatternManager: No initial pattern code configured, will generate random seed on each refresh');
       }
     } catch (error) {
       console.error('PatternManager: Failed to load initial pattern code:', error);

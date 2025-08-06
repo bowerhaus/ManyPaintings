@@ -505,19 +505,31 @@ export const MatteBorderManager = {
   },
 
   resetViewportBackground() {
-    // Reset body and canvas container backgrounds to original colors
+    // Reset body and canvas container backgrounds, but respect user preferences
     const body = document.body;
     const canvasContainer = document.getElementById('canvas-container');
+    
+    // Get user's background preference from UI module
+    const UI = window.App?.UI;
+    const userWantsWhite = UI?.isWhiteBackground || false;
+    
+    console.log(`MatteBorderManager: Resetting background, user preference is ${userWantsWhite ? 'white' : 'black'}`);
 
     if (body) {
-      body.style.backgroundColor = ''; // Remove inline style, let CSS take over
+      // Apply user's preferred background instead of clearing it
+      body.style.backgroundColor = userWantsWhite ? 'white' : 'black';
+      if (userWantsWhite) {
+        body.classList.add('white-background');
+      } else {
+        body.classList.remove('white-background');
+      }
     }
 
     if (canvasContainer) {
       canvasContainer.style.backgroundColor = ''; // Remove inline style, let CSS take over
     }
 
-    console.log('MatteBorderManager: Reset viewport background to original');
+    console.log('MatteBorderManager: Reset viewport background to user preference');
   },
 
   // Get the current effective image area (viewport or matte-clipped area)

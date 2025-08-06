@@ -2,7 +2,47 @@
 
 **Last Updated:** August 6, 2025
 
-## 🚀 Latest Updates (August 2025) - Feature Complete Modular Architecture ✅
+## 🚀 Latest Updates (August 2025) - User Preferences & LocalStorage ✅
+
+### User Preferences System - COMPLETED
+- **LocalStorage Integration**: Comprehensive browser localStorage system for persisting user settings across sessions
+- **UserPreferences Module**: Centralized preferences management with validation and error handling
+  - **Settings Saved**: Speed multiplier, max layers, audio volume, background color
+  - **Smart Validation**: Range validation for all settings with fallback to defaults
+  - **Error Resilience**: Graceful fallbacks when localStorage is unavailable or corrupted
+  - **Version Management**: Future-proof preferences with version tracking for migrations
+
+- **Seamless Integration**: All UI controls automatically save changes to localStorage
+  - **Speed Slider**: Saves speed multiplier (1-10) immediately on change
+  - **Layer Control**: Saves max concurrent layers (1-8) with live updates
+  - **Volume Slider**: Audio volume (0-100%) persisted across sessions
+  - **Background Toggle**: Black/white background preference remembered with !important styling
+
+- **Auto-Restore Functionality**: Settings automatically restored on page load
+  - **UI Initialization**: Sliders and controls reflect saved preferences
+  - **Background State**: Correct background color applied after all modules initialize
+  - **Volume Level**: Audio manager loads saved volume preference
+  - **Dual Application**: Preferences applied during init and after all modules loaded
+
+- **Enhanced User Experience**: No configuration required - settings "just work"
+  - **Immediate Persistence**: Changes saved instantly without user action
+  - **Cross-Session Consistency**: Same experience every time the app is opened
+  - **Device-Specific**: Preferences stored per browser/device combination
+  - **No Impact on Sharing**: URLs and favorites work independently of saved preferences
+
+### Pattern Behavior System - CONFIG-DRIVEN
+- **Configuration-Based Logic**: Pattern behavior now strictly follows config.json settings
+  - **Config Pattern = null**: Fresh random pattern generated on each page refresh
+  - **Config Pattern = "code"**: Always uses that specific deterministic pattern
+  - **No LocalStorage**: Pattern codes are never saved to browser storage
+  - **Refresh Behavior**: Predictable pattern generation based solely on configuration
+
+- **Enhanced Logging**: Clear console messages indicate pattern behavior
+  - Shows whether using config pattern or generating random
+  - Displays pattern codes and generation strategy
+  - No localStorage interference or legacy pattern restoration
+
+## 🚀 Previous Updates (August 2025) - Feature Complete Modular Architecture ✅
 
 ### JavaScript Modularization Project - COMPLETED
 - **Massive Refactoring**: Successfully broke down 3,684-line main.js monolith into manageable ES6 modules

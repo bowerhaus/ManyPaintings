@@ -2,6 +2,8 @@
  * UI Manager - Handles main user interface, controls, and user interactions
  * Extracted from main.js for better modularity
  */
+import { userPreferences } from '../managers/UserPreferences.js';
+
 export const UI = {
   errorElement: null,
   loadingElement: null,
@@ -22,18 +24,25 @@ export const UI = {
       controlsTriggerArea: !!this.controlsTriggerArea
     });
 
-    // Initialize UI values from config
+    // Initialize UI values from config and user preferences
     const config = window.APP_CONFIG || {};
-    this.maxLayers = config.layer_management?.max_concurrent_layers || 4;
-    console.log(`UI: Initialized with maxLayers: ${this.maxLayers}, config.layer_management.max_concurrent_layers: ${config.layer_management?.max_concurrent_layers}`);
-
-    // Background preference will default to black (no persistence)
-    this.isWhiteBackground = false;
-    // Set initial background state
-    document.body.style.backgroundColor = 'black';
-    document.body.classList.remove('white-background');
-    // Always update the background toggle button state
-    this.updateBackgroundToggle();
+    
+    // Load user preferences
+    this.speedMultiplier = userPreferences.get('speed');
+    this.maxLayers = userPreferences.get('maxLayers');
+    this.isWhiteBackground = userPreferences.get('isWhiteBackground');
+    
+    console.log(`UI: Loaded preferences from userPreferences - speed: ${this.speedMultiplier}, maxLayers: ${this.maxLayers}, isWhiteBackground: ${this.isWhiteBackground}`);
+    
+    // Override with config if maxLayers not set in preferences
+    if (this.maxLayers === userPreferences.defaults.maxLayers) {
+      this.maxLayers = config.layer_management?.max_concurrent_layers || 4;
+    }
+    
+    console.log(`UI: Initialized with preferences - speed: ${this.speedMultiplier}, maxLayers: ${this.maxLayers}, background: ${this.isWhiteBackground ? 'white' : 'black'}`);
+    
+    // Apply loaded preferences to UI elements
+    this.applyUserPreferences();
 
     this.setupEventListeners();
     this.setupOnscreenControls();
@@ -49,6 +58,70 @@ export const UI = {
 
     this.showMainControls();
     this.hideLoading();
+  },
+
+  applyUserPreferences() {
+    // Apply background preference
+    console.log(`UI: Applying background preference - isWhiteBackground: ${this.isWhiteBackground}`);
+    
+    // Use !important to ensure our preference takes priority
+    if (this.isWhiteBackground) {
+      document.body.style.setProperty('background-color', 'white', 'important');
+      document.body.classList.add('white-background');
+      console.log('UI: Applied white background with !important');
+    } else {
+      document.body.style.setProperty('background-color', 'black', 'important');
+      document.body.classList.remove('white-background');
+      console.log('UI: Applied black background with !important');
+    }
+    
+    // Verify the changes were applied after a small delay
+    setTimeout(() => {
+      const actualBgColor = getComputedStyle(document.body).backgroundColor;
+      const hasWhiteClass = document.body.classList.contains('white-background');
+      console.log(`UI: Background verification (delayed) - computed color: ${actualBgColor}, has white-background class: ${hasWhiteClass}`);
+    }, 10);
+    
+    this.updateBackgroundToggle();
+    
+    // Apply UI slider values when DOM is ready
+    setTimeout(() => {
+      // Set speed slider
+      const speedSlider = document.getElementById('speed-slider');
+      if (speedSlider) {
+        speedSlider.value = this.speedMultiplier.toString();
+        const speedValue = document.getElementById('speed-value');
+        if (speedValue) {
+          speedValue.textContent = `${this.speedMultiplier}`;
+        }
+      }
+      
+      // Set layers slider
+      const layersSlider = document.getElementById('layers-slider');
+      if (layersSlider) {
+        layersSlider.value = this.maxLayers.toString();
+        const layersValue = document.getElementById('layers-value');
+        if (layersValue) {
+          layersValue.textContent = this.maxLayers.toString();
+        }
+      }
+      
+      // Set volume slider
+      const volumeSlider = document.getElementById('audio-volume-slider');
+      if (volumeSlider) {
+        const savedVolume = userPreferences.get('volume');
+        const volumePercent = Math.round(savedVolume * 100);
+        volumeSlider.value = volumePercent.toString();
+        const volumeValue = document.getElementById('audio-volume-value');
+        if (volumeValue) {
+          volumeValue.textContent = `${volumePercent}%`;
+        }
+        console.log(`UI: Set volume slider to ${volumePercent}% (${savedVolume})`);
+      }
+      
+      console.log(`UI: Applied user preferences - speed: ${this.speedMultiplier}, layers: ${this.maxLayers}, background: ${this.isWhiteBackground}`);
+      console.log('UI: Speed slider found:', !!speedSlider, 'Layers slider found:', !!layersSlider, 'Volume slider found:', !!volumeSlider);
+    }, 100);
   },
 
   // Note: This is a partial extraction - the full UI component is very large (~665 lines)
@@ -216,6 +289,10 @@ export const UI = {
         this.speedMultiplier = speedMap[sliderValue];
         speedValue.textContent = `${sliderValue}`;
         console.log(`UI: Speed changed to level ${sliderValue} (${this.speedMultiplier}x)`);
+        
+        // Save to user preferences
+        userPreferences.set('speed', this.speedMultiplier);
+        
         this.updateAnimationSpeed();
       });
     }
@@ -228,6 +305,10 @@ export const UI = {
         this.maxLayers = parseInt(e.target.value);
         layersValue.textContent = this.maxLayers.toString();
         console.log(`UI: Max layers changed to ${this.maxLayers}`);
+        
+        // Save to user preferences
+        userPreferences.set('maxLayers', this.maxLayers);
+        
         this.updateMaxLayers();
       });
     }
@@ -339,14 +420,18 @@ export const UI = {
 
   toggleBackground() {
     this.isWhiteBackground = !this.isWhiteBackground;
-    document.body.style.backgroundColor = this.isWhiteBackground ? 'white' : 'black';
     
-    // Update body class for CSS styling
+    // Use !important to ensure our preference takes priority
     if (this.isWhiteBackground) {
+      document.body.style.setProperty('background-color', 'white', 'important');
       document.body.classList.add('white-background');
     } else {
+      document.body.style.setProperty('background-color', 'black', 'important');
       document.body.classList.remove('white-background');
     }
+    
+    // Save to user preferences
+    userPreferences.set('isWhiteBackground', this.isWhiteBackground);
     
     this.updateBackgroundToggle();
     console.log('UI: Background toggled to', this.isWhiteBackground ? 'white' : 'black');

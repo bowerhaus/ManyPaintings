@@ -249,6 +249,7 @@ Press **G** to toggle grid visualization and see how images are positioned.
 *   **Pattern Display:** Shows current pattern code for reproducibility
 *   **Image Management:** ✅ **NEW FEATURE** - Upload, browse, and delete images through web interface
 *   **Favorites Gallery:** ✅ **NEW FEATURE** - Visual gallery with thumbnails to browse and manage saved favorites
+*   **Gallery Manager:** ✅ **NEW FEATURE** - Professional Samsung Frame TV-style display calibration controls
 
 #### 3.7.1 User Preferences ✅ **NEW FEATURE**
 The application automatically saves and restores user preferences across browser sessions using localStorage:
@@ -258,7 +259,42 @@ The application automatically saves and restores user preferences across browser
 *   **Smart Defaults:** Graceful fallbacks if localStorage unavailable
 *   **No Configuration:** Works automatically with no setup required
 
-#### 3.7.2 Pattern Behavior ✅ **CONFIG-DRIVEN**
+#### 3.7.2 Gallery Manager ✅ **NEW FEATURE**
+Professional Samsung Frame TV-style display calibration system for optimal artwork presentation:
+
+**Color Grading Controls:**
+*   **Brightness:** 85-115% range (±15%) for optimal display conditions
+*   **Contrast:** 85-115% range (±15%) for artwork clarity
+*   **Saturation:** 50-120% range for color intensity control  
+*   **White Balance:** 80-120% range (±20%) for warm/cool gallery lighting temperature adjustment
+
+**Canvas Texture System:**
+*   **Canvas Texture Intensity:** 0-100% overlay intensity for authentic painted-on-canvas appearance
+*   **Realistic Linen Weave:** High-quality linen canvas texture scaled appropriately for natural look
+*   **Smart Blending:** Multiply blend mode works naturally with both black and white backgrounds
+*   **Filter Integration:** Texture responds to all color grading adjustments for cohesive appearance
+
+**Professional Interface:**
+*   **Bottom-Sheet Modal:** Samsung Frame TV-style interface positioned at bottom for artwork visibility
+*   **Real-Time Preview:** All adjustments apply instantly while controls remain visible
+*   **Persistent Settings:** All gallery settings automatically saved to localStorage
+*   **Reset to Defaults:** One-click restoration of neutral calibration settings
+*   **Keyboard Access:** C key or Gallery Manager button for quick access
+
+**Technical Features:**
+*   **Entire Canvas Filtering:** Affects complete visual output including background, layers, matte border, and texture
+*   **Professional Color Space:** Proper hue rotation for white balance with realistic temperature shifts
+*   **Performance Optimized:** Real-time filtering with minimal performance impact
+*   **Cross-Mode Compatibility:** Works identically in both main interface and kiosk mode
+
+**Usage Workflow:**
+1. **Access:** Press C key or click Gallery Manager button to open calibration controls
+2. **Adjust:** Use sliders to fine-tune brightness, contrast, saturation, white balance, and canvas texture
+3. **Preview:** All changes apply instantly to the entire artwork for immediate feedback
+4. **Reset:** Click "Reset to Defaults" to return to neutral calibration
+5. **Auto-Save:** All settings automatically persist across browser sessions
+
+#### 3.7.3 Pattern Behavior ✅ **CONFIG-DRIVEN**
 Pattern generation follows strict configuration-based logic:
 *   **Config `initial_pattern_code: null`** → Fresh random pattern each refresh
 *   **Config `initial_pattern_code: "code"`** → Always use that specific pattern
@@ -270,6 +306,10 @@ Pattern generation follows strict configuration-based logic:
 *   **N:** Generate new pattern  
 *   **B:** Toggle background (black/white)
 *   **A:** Toggle audio playback
+*   **F:** Save current painting as favorite
+*   **V:** View favorites gallery
+*   **I:** Open image manager
+*   **C:** Open Gallery Manager (display calibration)
 *   **G:** Toggle grid visualization (for debugging positioning)
 
 ## 4. Target Audience
@@ -493,9 +533,11 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 - **N:** Generate new pattern
 - **B:** Toggle background (black/white)
 - **A:** Toggle audio playback
-- **G:** Toggle rule of thirds grid / debug borders
 - **F:** Save current painting as favorite
 - **V:** View favorites gallery
+- **I:** Open image manager
+- **C:** Open Gallery Manager (display calibration)
+- **G:** Toggle rule of thirds grid / debug borders
 
 #### Control Panel Features
 - **Real-time adjustments:** All changes take effect immediately
@@ -790,6 +832,7 @@ The project includes comprehensive VS Code support:
 *   **API Endpoints:** ✅ COMPLETED - REST API endpoints for favorites and image management
 *   **Favorites Opacity Fix:** ✅ COMPLETED - Fixed favorites saving to capture current animated opacity values instead of target opacity
 *   **UI Polish:** ✅ COMPLETED - Removed "successfully" from toast messages and added ESC key support to close favorites modal
+*   **Gallery Manager System:** ✅ COMPLETED - Professional Samsung Frame TV-style display calibration with brightness, contrast, saturation, white balance, and canvas texture controls
 
 ### 🚀 Potential Future Features
 *   **Advanced Audio Features:** Add multiple audio tracks, crossfading, and synchronization with visual patterns.

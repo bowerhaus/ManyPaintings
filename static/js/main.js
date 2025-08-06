@@ -12,6 +12,7 @@ import { MatteBorderManager } from './managers/MatteBorderManager.js';
 import { userPreferences } from './managers/UserPreferences.js';
 import { UI } from './ui/UI.js';
 import { FavoritesGallery } from './ui/FavoritesGallery.js';
+import { GalleryManager } from './ui/GalleryManager.js';
 import { ImageManagerUI } from './modules/imageManagerUI.js';
 import { AnimationEngine } from './modules/AnimationEngine.js';
 import { GridManager } from './utils/GridManager.js';
@@ -56,6 +57,7 @@ const App = {
       // Initialize modules in sequence
       UI.init();
       FavoritesGallery.init();
+      GalleryManager.init();
       ImageManagerUI.init();
 
       await ImageManager.init();
@@ -78,6 +80,11 @@ const App = {
       if (UI && UI.applyUserPreferences) {
         console.log('App: Re-applying user preferences after all modules initialized');
         UI.applyUserPreferences();
+      }
+
+      // Initialize gallery manager settings on startup
+      if (GalleryManager && GalleryManager.initializeOnStartup) {
+        GalleryManager.initializeOnStartup();
       }
 
       // Set up window resize event listener
@@ -150,6 +157,7 @@ const App = {
   MatteBorderManager,
   FavoritesManager,
   FavoritesGallery,
+  GalleryManager,
   ImageManagerUI,
   UI,
   GridManager,

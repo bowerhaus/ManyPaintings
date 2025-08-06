@@ -83,7 +83,7 @@
   "matte_border": {
     "enabled": true,
     "border_percent": 10,
-    "color": "#F8F8F8",
+    "color": "#F5F2E8",
     "style": "thin",
     "image_area": {
       "aspect_ratio": "16:9"

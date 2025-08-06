@@ -777,5 +777,43 @@ export const AnimationEngine = {
 
   seededRandomBetween(randomFunc, min, max) {
     return randomFunc() * (max - min) + min;
+  },
+
+  /**
+   * Apply global color grading filters to the entire viewport
+   * @param {Object} colorGrading - Color grading values
+   * @param {number} colorGrading.brightness - Brightness percentage (50-150)
+   * @param {number} colorGrading.contrast - Contrast percentage (50-200)
+   * @param {number} colorGrading.saturation - Saturation percentage (0-200)
+   * @param {number} colorGrading.hue - Hue rotation degrees (0-360)
+   */
+  applyColorGrading(colorGrading) {
+    // Apply to entire canvas container to include background and matte border
+    const canvasContainer = document.getElementById('canvas-container');
+    if (!canvasContainer) return;
+
+    const { brightness = 100, contrast = 100, saturation = 100, hue = 0 } = colorGrading;
+    
+    // Build CSS filter string for global application
+    const filters = [
+      `brightness(${brightness}%)`,
+      `contrast(${contrast}%)`,
+      `saturate(${saturation}%)`,
+      `hue-rotate(${hue}deg)`
+    ];
+
+    canvasContainer.style.filter = filters.join(' ');
+    
+    console.log(`AnimationEngine: Applied global color grading to entire canvas - brightness:${brightness}% contrast:${contrast}% saturation:${saturation}% hue:${hue}°`);
+  },
+
+  /**
+   * Reset color grading to defaults
+   */
+  resetColorGrading() {
+    const canvasContainer = document.getElementById('canvas-container');
+    if (!canvasContainer) return;
+    canvasContainer.style.filter = '';
+    console.log('AnimationEngine: Reset global color grading to defaults');
   }
 };

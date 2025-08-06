@@ -60,14 +60,14 @@ pip install -r requirements.txt
   - `main.js` (105 lines) - Entry point and initialization
   - `managers/` - Core system managers (ImageManager, PatternManager, AudioManager, FavoritesManager, MatteBorderManager, UserPreferences)
   - `modules/` - Animation engine and specialized components
-  - `ui/` - User interface components (UI, FavoritesGallery, imageManagerUI)
+  - `ui/` - User interface components (UI, FavoritesGallery, GalleryManager, imageManagerUI)
   - `utils/` - Utility modules (GridManager)
 - **No Build Tools**: Pure JavaScript with immediate browser compatibility
 
 ### User Preferences System
 - **LocalStorage Integration**: Comprehensive browser localStorage for persistent user settings
 - **UserPreferences Module**: Centralized preferences management with validation and error handling
-- **Settings Persisted**: Speed multiplier (1-10), max layers (1-8), audio volume (0-100%), background color (black/white)
+- **Settings Persisted**: Speed multiplier (1-10), max layers (1-8), audio volume (0-100%), background color (black/white), gallery settings (brightness, contrast, saturation, white balance)
 - **Auto-Save**: All control panel changes saved instantly without user action
 - **Smart Restoration**: Preferences applied during initialization and after all modules loaded
 - **Error Resilience**: Graceful fallbacks when localStorage unavailable or corrupted
@@ -86,8 +86,32 @@ pip install -r requirements.txt
 - **No Build Tools**: Pure JavaScript with ES6 modules
 - **Flask Backend**: Simple Python server for API and static file serving
 
+### Gallery Manager System (Samsung Frame TV Experience)
+- **Professional Color Grading**: Press C key or click Gallery Manager button for artwork display optimization
+- **Real-time Adjustments**: All settings apply instantly to artwork while controls remain visible
+- **Samsung Frame TV Style**: Bottom-sheet interface allows artwork visibility during adjustments
+- **Gallery Controls**:
+  - **Brightness**: 85-115% (±15%) for optimal display conditions
+  - **Contrast**: 85-115% (±15%) for artwork clarity  
+  - **Saturation**: 50-120% range for color intensity control
+  - **White Balance**: 80-120% (±20%) for warm/cool gallery lighting temperature
+  - **Canvas Texture Intensity**: 0-100% authentic linen weave canvas texture overlay
+- **Persistent Settings**: All adjustments automatically saved to localStorage and restored on startup
+- **Professional Interface**: Centered bottom modal (400-500px width) with transparent background
+- **Reset Functionality**: One-click reset to defaults button
+- **Module Architecture**: Separate `GalleryManager.js` module following existing patterns
+
+### Canvas Texture Overlay System
+- **Authentic Texture**: High-quality linen weave canvas texture (`static/resources/linen-weave-canvas.png`)
+- **Realistic Scaling**: Texture scaled to 20% of original size for natural canvas appearance
+- **Smart Blending**: Uses multiply blend mode to work naturally with both black and white backgrounds
+- **Filter Integration**: Texture responds to all Gallery Manager color grading adjustments
+- **Performance Optimized**: CSS background-image with repeat pattern for efficient rendering
+- **Z-Index Positioning**: Properly layered at z-index 15 (above background, below image layers)
+
 ### UI Interaction Notes
 - **Delete Operations**: Don't show confirmation alerts when a delete operation occurs. Just show a toast notification.
 - **Image Management**: Use I key or click image manager button to access upload/delete functionality
 - **Favorites Gallery**: Use V key or click gallery button to browse saved favorites with thumbnails
+- **Gallery Manager**: Use C key or click gallery manager button to open professional color adjustment interface
 - **Debug Grid**: Use G key to toggle rule of thirds grid visualization for positioning debugging

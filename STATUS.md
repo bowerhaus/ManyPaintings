@@ -42,6 +42,81 @@
   - Displays pattern codes and generation strategy
   - No localStorage interference or legacy pattern restoration
 
+## 🎨 Samsung Frame TV Enhancement Opportunities
+
+### Art Mode Visual Enhancements - IN PROGRESS
+
+**1. Gallery Manager System - ✅ COMPLETED**
+Professional Samsung Frame TV-style display calibration system implemented:
+- **Gallery Manager Modal**: Professional bottom-sheet interface (Samsung Frame TV style)
+  - Accessible via C key or Gallery Manager button in action bar
+  - Real-time adjustments with artwork visibility during calibration
+- **Professional Gallery Controls**: 
+  - **Brightness**: 85-115% range (±15%) for optimal display conditions
+  - **Contrast**: 85-115% range (±15%) for artwork clarity
+  - **Saturation**: 50-120% range for color intensity control
+  - **White Balance**: 80-120% range (±20%) for warm/cool gallery lighting temperature
+  - **Canvas Texture Intensity**: 0-100% authentic linen weave canvas overlay
+- **Complete Canvas Filtering**: Affects entire visual output including background, layers, matte border, and texture
+- **Persistent Settings**: All adjustments automatically saved to localStorage and restored on startup
+- **Reset Functionality**: One-click reset to neutral calibration settings
+
+**Technical Implementation Completed:**
+- **Separate Module**: `GalleryManager.js` following existing modular architecture pattern
+- **CSS Filter Pipeline**: Applied to entire `#canvas-container` for comprehensive filtering
+- **UserPreferences Integration**: Full integration with validation and persistence
+- **Canvas Texture System**: Authentic linen weave texture with proper scaling and filter integration
+
+**2. Canvas Texture Overlay System - ✅ COMPLETED**
+- Added authentic linen weave canvas texture overlay system
+- High-quality realistic texture scaled appropriately for natural appearance
+- Smart blending using multiply mode for natural interaction with backgrounds
+- Canvas Texture Intensity slider (0-100%) integrated into Gallery Manager
+- Filter integration ensures texture responds to all color grading adjustments
+
+**3. Enhanced Gallery Presentation**
+- Adjust matte border to warmer museum-quality tone (#F5F2E8)
+- Increase border thickness to 12-15% for stronger gallery presence
+- Add subtle shadow/bevel effects to simulate realistic frame depth
+- *Browser Control*: Border width slider (5-25%), border color picker, frame style dropdown (Classic/Modern/Gallery)
+
+**4. Lighting & Atmosphere Effects**
+- Subtle vignette effect to simulate professional gallery lighting
+- Soft directional light gradient across the "canvas"
+- Gentle highlight effects on artwork surface
+- *Browser Control*: Vignette strength slider (0-100%), lighting direction control (top/center/bottom), ambient lighting toggle
+
+**5. Artistic Filter Pipeline**
+- Oil painting effect using CSS filters for softer, more painterly appearance
+- Subtle blur filters (0.3-0.5px) to soften digital edges
+- Artistic color adjustments: slight desaturation and warmer color temperature
+- *Browser Control*: Filter intensity slider (0-100%), blur amount (0-2px), artistic style dropdown (None/Oil Paint/Watercolor/Impressionist)
+
+### 4K Image Considerations
+
+**Current Image Resolution Analysis:**
+- Existing images appear to be standard resolution (likely 1080p or lower)
+- Samsung Frame 43" TV: 3840×2160 (4K UHD) native resolution
+- Current images may appear soft or pixelated on 4K display
+
+**4K Enhancement Strategy:**
+- **Image Upscaling**: Current images could be AI-upscaled to 4K resolution
+- **New 4K Content**: Generate new abstract art at 4K native resolution (3840×2160)
+- **Hybrid Approach**: Keep current images but generate 4K versions for key pieces
+- **Performance Impact**: 4K images are 4x larger - need to optimize loading and memory usage
+
+**Technical Implementation Options:**
+- **AI Upscaling Tools**: Use tools like Real-ESRGAN or Waifu2x for art upscaling
+- **Vector Recreation**: Recreate mathematical patterns at 4K resolution
+- **Adaptive Loading**: Serve 4K only on high-resolution displays
+- **Progressive Loading**: Load lower-res first, then enhance to 4K
+
+**Storage & Performance Considerations:**
+- 4K images: ~2-8MB each vs ~200KB-1MB current
+- Memory usage: ~64MB per 4K layer vs ~16MB current
+- Network impact: Longer initial load times
+- Browser performance: More GPU memory required
+
 ## 🚀 Previous Updates (August 2025) - Feature Complete Modular Architecture ✅
 
 ### JavaScript Modularization Project - COMPLETED

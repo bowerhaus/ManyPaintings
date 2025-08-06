@@ -221,14 +221,8 @@ body.white-background {
     transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-body.white-background #canvas-container {
+body.white-background .filterable-background {
     background: #fff !important;
-    background-color: #fff !important;
-}
-
-body.white-background #image-layers {
-    background: #fff !important;
-    background-color: #fff !important;
 }
 
 body.white-background #kiosk-container {
@@ -307,7 +301,8 @@ body.white-background #background-toggle-btn,
 body.white-background #audio-toggle-btn,
 body.white-background #favorite-btn,
 body.white-background #favorites-gallery-btn,
-body.white-background #image-manager-btn {
+body.white-background #image-manager-btn,
+body.white-background #gallery-manager-btn {
     background: rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     color: rgba(255, 255, 255, 0.9) !important;
@@ -318,7 +313,8 @@ body.white-background #background-toggle-btn:hover,
 body.white-background #audio-toggle-btn:hover,
 body.white-background #favorite-btn:hover,
 body.white-background #favorites-gallery-btn:hover,
-body.white-background #image-manager-btn:hover {
+body.white-background #image-manager-btn:hover,
+body.white-background #gallery-manager-btn:hover {
     background: rgba(255, 255, 255, 0.2) !important;
     box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1) !important;
 }
@@ -802,7 +798,7 @@ body.white-background #kiosk-controls button:hover {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -858,14 +854,46 @@ body.white-background #kiosk-controls button:hover {
     transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+.filterable-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 0;
+    transition: background-color 0.5s ease;
+}
+
+.texture-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    mix-blend-mode: multiply;
+    background-image: url('/static/resources/linen-weave-canvas.png');
+    background-repeat: repeat;
+    background-size: 20%;
+}
+
+body.white-background .texture-overlay {
+    mix-blend-mode: multiply;
+}
+
 .image-layers-container {
     width: 100%;
     height: 100%;
     position: relative;
     overflow: hidden;
-    background: #000;
+    background: transparent;
     transition: background-color 0.5s ease, color 0.5s ease;
     box-sizing: border-box;
+    z-index: 20;
 }
 
 .rule-of-thirds-grid {
@@ -1032,6 +1060,64 @@ body.white-background #kiosk-controls button:hover {
     .modal-backdrop {
         padding: 2rem;
     }
+}
+
+/* Gallery Manager Modal - Position at bottom for artwork visibility */
+.gallery-manager-modal {
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.gallery-manager-modal .modal-backdrop {
+    align-items: flex-end;
+    justify-content: center;
+    background: transparent;
+}
+
+.gallery-manager-modal .modal-content {
+    max-height: 55vh;
+    margin-bottom: 0;
+    border-radius: 1rem 1rem 0 0;
+    width: auto;
+    max-width: 500px;
+    min-width: 400px;
+}
+
+.gallery-controls {
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+}
+
+.gallery-description {
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+}
+
+.gallery-reset-btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+    color: rgba(0, 0, 0, 0.8);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gallery-reset-btn:hover {
+    background: rgba(0, 0, 0, 0.15);
+    border-color: rgba(0, 0, 0, 0.3);
+}
+
+.control-section {
+    margin-bottom: 1.5rem;
+}
+
+.control-section:last-child {
+    margin-bottom: 0;
 }
 
 /* Duplicate modal-related definitions removed - using the ones above */

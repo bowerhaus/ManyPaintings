@@ -97,7 +97,7 @@ export const MatteBorderManager = {
       enabled: true,
       border_percent: 10,
       color: '#F8F8F8',
-      style: 'classic',
+      style: 'thin',
       image_area: {
         aspect_ratio: '1:1'
       }
@@ -127,7 +127,7 @@ export const MatteBorderManager = {
     this.borderElement.classList.remove('disabled');
 
     // Apply style class
-    this.borderElement.className = `matte-border ${this.config.style || 'classic'}`;
+    this.borderElement.className = `matte-border ${this.config.style || 'thin'}`;
 
     // Calculate and apply the matte canvas with proper aspect ratio
     const matteCanvas = this.calculateMatteCanvas();
@@ -281,6 +281,9 @@ export const MatteBorderManager = {
     // Create 3D bevel frame around the image cutout
     this.create3DBevelFrame(canvas);
 
+    // Create shadow overlay that casts shadows onto the image
+    this.createShadowOverlay(canvas);
+
     // Position the image layers container within the image cutout area
     this.positionImageLayers(canvas);
 
@@ -332,7 +335,7 @@ export const MatteBorderManager = {
       bevelFrame.id = 'bevel-frame';
       bevelFrame.style.position = 'absolute';
       bevelFrame.style.pointerEvents = 'none';
-      bevelFrame.style.zIndex = '51'; // Above the matte border
+      bevelFrame.style.zIndex = '53'; // Above the matte border but below shadow
       this.borderElement.parentNode.appendChild(bevelFrame);
     }
 
@@ -342,44 +345,31 @@ export const MatteBorderManager = {
     const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
     const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
 
-    // Position the bevel frame around the image cutout area (slightly larger)
-    const bevelWidth = 16; // 16px for the bevel effect area
+    // Position the bevel frame exactly at the image cutout area boundaries
+    const bevelWidth = 12; // Width of the bevel effect
     bevelFrame.style.left = `${imageLeft - bevelWidth}px`;
     bevelFrame.style.top = `${imageTop - bevelWidth}px`;
     bevelFrame.style.width = `${imageWidth + (bevelWidth * 2)}px`;
     bevelFrame.style.height = `${imageHeight + (bevelWidth * 2)}px`;
 
-    // Create transparent frame with border that matches matte color
-    bevelFrame.style.border = `${bevelWidth}px solid #F8F8F8`;
+    // Remove border entirely - we'll use box-shadow for the entire bevel effect
+    bevelFrame.style.border = 'none';
     bevelFrame.style.background = 'transparent'; // Transparent so images show through
     bevelFrame.style.boxSizing = 'border-box';
 
-    // Apply 3D bevel effect based on style
-    const style = this.config.style || 'classic';
+    // Just create the frame border without any shadows - shadow overlay handles the shadows
+    const style = this.config.style || 'thin';
+    const borderColor = this.config.color || '#F8F8F8';
+    
     if (style === 'thick') {
-      // Thick: Scale up shadow sizes by 2x
-      bevelFrame.style.boxShadow = `
-        inset 4px 4px 10px rgba(0, 0, 0, 0.15),
-        inset -6px -6px 16px rgba(255, 255, 255, 0.35),
-        inset 2px 2px 4px rgba(0, 0, 0, 0.2),
-        inset -3px -3px 8px rgba(255, 255, 255, 0.4)
-      `;
+      // Thick: Large border only
+      bevelFrame.style.boxShadow = `0 0 0 12px ${borderColor}`;
     } else if (style === 'medium') {
-      // Medium: Scale up shadow sizes by 1.5x
-      bevelFrame.style.boxShadow = `
-        inset 3px 3px 7.5px rgba(0, 0, 0, 0.15),
-        inset -4.5px -4.5px 12px rgba(255, 255, 255, 0.35),
-        inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.2),
-        inset -2.25px -2.25px 6px rgba(255, 255, 255, 0.4)
-      `;
+      // Medium: Medium border only
+      bevelFrame.style.boxShadow = `0 0 0 8px ${borderColor}`;
     } else {
-      // Thin (classic): Keep original sizes
-      bevelFrame.style.boxShadow = `
-        inset 2px 2px 5px rgba(0, 0, 0, 0.15),
-        inset -3px -3px 8px rgba(255, 255, 255, 0.35),
-        inset 1px 1px 2px rgba(0, 0, 0, 0.2),
-        inset -1.5px -1.5px 4px rgba(255, 255, 255, 0.4)
-      `;
+      // Thin: Small border only
+      bevelFrame.style.boxShadow = `0 0 0 4px ${borderColor}`;
     }
 
     console.log(`MatteBorderManager: Created 3D bevel frame (${style} style) around image area:`, {
@@ -389,6 +379,68 @@ export const MatteBorderManager = {
       height: imageHeight + (bevelWidth * 2),
       bevelWidth
     });
+  },
+
+  createShadowOverlay(canvas) {
+    // Create or get the shadow overlay element
+    let shadowOverlay = document.getElementById('shadow-overlay');
+    if (!shadowOverlay) {
+      shadowOverlay = document.createElement('div');
+      shadowOverlay.id = 'shadow-overlay';
+      shadowOverlay.style.position = 'fixed';
+      shadowOverlay.style.pointerEvents = 'none';
+      shadowOverlay.style.zIndex = '55'; // Above the matte border, bevel frame and images
+      // Append to canvas-container to ensure proper stacking context
+      const canvasContainer = document.getElementById('canvas-container');
+      if (canvasContainer) {
+        canvasContainer.appendChild(shadowOverlay);
+      } else {
+        this.borderElement.parentNode.appendChild(shadowOverlay);
+      }
+    }
+
+    // Position exactly over the image area
+    const imageLeft = canvas.canvasLeft + canvas.borderSize;
+    const imageTop = canvas.canvasTop + canvas.borderSize;
+    const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
+    const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
+
+    shadowOverlay.style.left = `${imageLeft}px`;
+    shadowOverlay.style.top = `${imageTop}px`;
+    shadowOverlay.style.width = `${imageWidth}px`;
+    shadowOverlay.style.height = `${imageHeight}px`;
+    shadowOverlay.style.background = 'transparent';
+
+    // Apply shadows based on style - cast inward from all edges
+    const style = this.config.style || 'thin';
+    
+    if (style === 'thick') {
+      // Thick: Narrow edge shadows from frame border
+      shadowOverlay.style.boxShadow = `
+        inset 6px 0 8px -4px rgba(0, 0, 0, 0.3),
+        inset -3px 0 5px -2px rgba(0, 0, 0, 0.15),
+        inset 0 6px 8px -4px rgba(0, 0, 0, 0.3),
+        inset 0 -3px 5px -2px rgba(0, 0, 0, 0.15)
+      `;
+    } else if (style === 'medium') {
+      // Medium: Moderate edge shadows from frame border
+      shadowOverlay.style.boxShadow = `
+        inset 4px 0 6px -3px rgba(0, 0, 0, 0.25),
+        inset -2px 0 4px -2px rgba(0, 0, 0, 0.12),
+        inset 0 4px 6px -3px rgba(0, 0, 0, 0.25),
+        inset 0 -2px 4px -2px rgba(0, 0, 0, 0.12)
+      `;
+    } else {
+      // Thin: Subtle edge shadows from frame border
+      shadowOverlay.style.boxShadow = `
+        inset 3px 0 4px -2px rgba(0, 0, 0, 0.2),
+        inset -2px 0 3px -1px rgba(0, 0, 0, 0.1),
+        inset 0 3px 4px -2px rgba(0, 0, 0, 0.2),
+        inset 0 -2px 3px -1px rgba(0, 0, 0, 0.1)
+      `;
+    }
+
+    console.log(`MatteBorderManager: Created shadow overlay (${style} style) over image area`);
   },
 
   positionImageLayers(canvas) {
@@ -407,44 +459,16 @@ export const MatteBorderManager = {
     imageLayersContainer.style.height = '100vh';
     imageLayersContainer.style.boxSizing = 'border-box';
 
-    // Apply CSS clip-path to create matte border effect
-    if (canvas && this.config && this.config.enabled !== false) {
-      const clipPath = this.createMatteClipPath(canvas);
-      imageLayersContainer.style.clipPath = clipPath;
-    } else {
-      // Remove clipping when matte border is disabled
-      imageLayersContainer.style.clipPath = 'none';
-    }
+    // Remove clipping to allow images to extend under the matte border
+    // This allows matte border shadows to cast onto the images
+    imageLayersContainer.style.clipPath = 'none';
 
-    console.log('MatteBorderManager: Applied virtual coordinate system with CSS clipping');
+    console.log('MatteBorderManager: Applied virtual coordinate system without clipping');
   },
 
-  createMatteClipPath(canvas) {
-    // Calculate the inner area (image area) in viewport coordinates
-    const shadowInset = 4; // Maximum shadow depth
-    const innerLeft = canvas.canvasLeft + canvas.borderSize + shadowInset;
-    const innerTop = canvas.canvasTop + canvas.borderSize + shadowInset;
-    const innerRight = innerLeft + (canvas.canvasWidth - (canvas.borderSize * 2) - (shadowInset * 2));
-    const innerBottom = innerTop + (canvas.canvasHeight - (canvas.borderSize * 2) - (shadowInset * 2));
-
-    // Convert to percentages for CSS clip-path
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    const leftPercent = (innerLeft / viewportWidth) * 100;
-    const topPercent = (innerTop / viewportHeight) * 100;
-    const rightPercent = (innerRight / viewportWidth) * 100;
-    const bottomPercent = (innerBottom / viewportHeight) * 100;
-
-    // Create rectangular clip path for the image area
-    const clipPath = `polygon(${leftPercent}% ${topPercent}%, ${rightPercent}% ${topPercent}%, ${rightPercent}% ${bottomPercent}%, ${leftPercent}% ${bottomPercent}%)`;
-
-    console.log('MatteBorderManager: Created clip path:', clipPath);
-    return clipPath;
-  },
 
   handleResize() {
-    // Reapply virtual coordinate system and clipping on window resize
+    // Reapply virtual coordinate system on window resize
     if (this.config && this.config.enabled !== false) {
       this.applyConfiguration();
     } else {
@@ -477,7 +501,7 @@ export const MatteBorderManager = {
       imageLayersContainer.style.top = '0';
       imageLayersContainer.style.width = '100vw';
       imageLayersContainer.style.height = '100vh';
-      imageLayersContainer.style.clipPath = 'none'; // Remove any clipping
+      imageLayersContainer.style.clipPath = 'none'; // Images always extend to full area
     }
 
     // Reset matte border element
@@ -492,10 +516,16 @@ export const MatteBorderManager = {
       this.borderElement.style.setProperty('background-color', 'transparent', 'important');
     }
 
-    // Remove the inner bevel frame element
-    const bevelFrame = document.getElementById('inner-bevel-frame');
+    // Remove the bevel frame element
+    const bevelFrame = document.getElementById('bevel-frame');
     if (bevelFrame) {
       bevelFrame.remove();
+    }
+
+    // Remove the shadow overlay element
+    const shadowOverlay = document.getElementById('shadow-overlay');
+    if (shadowOverlay) {
+      shadowOverlay.remove();
     }
 
     // Reset viewport background to original (black)

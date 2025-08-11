@@ -84,7 +84,7 @@
     "enabled": true,
     "border_percent": 10,
     "color": "#F5F2E8",
-    "style": "thin",
+    "style": "medium",
     "image_area": {
       "aspect_ratio": "16:9"
     }

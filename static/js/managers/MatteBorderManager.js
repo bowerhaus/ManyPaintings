@@ -97,7 +97,37 @@ export const MatteBorderManager = {
       enabled: true,
       border_percent: 10,
       color: '#F8F8F8',
-      style: 'classic',
+      depth: 12, // Default bevel depth in pixels
+      style: 'medium', // Default style
+      styles: {
+        thin: {
+          depth: 6,
+          top_edge_offset: -25,
+          left_edge_offset: -10,
+          right_edge_offset: -3,
+          bottom_edge_offset: 15,
+          shadow_width_multiplier: 6,
+          shadow_opacity: 0.03
+        },
+        medium: {
+          depth: 10,
+          top_edge_offset: -35,
+          left_edge_offset: -15,
+          right_edge_offset: -5,
+          bottom_edge_offset: 25,
+          shadow_width_multiplier: 9,
+          shadow_opacity: 0.05
+        },
+        thick: {
+          depth: 16,
+          top_edge_offset: -45,
+          left_edge_offset: -20,
+          right_edge_offset: -8,
+          bottom_edge_offset: 35,
+          shadow_width_multiplier: 12,
+          shadow_opacity: 0.07
+        }
+      },
       image_area: {
         aspect_ratio: '1:1'
       }
@@ -127,7 +157,7 @@ export const MatteBorderManager = {
     this.borderElement.classList.remove('disabled');
 
     // Apply style class
-    this.borderElement.className = `matte-border ${this.config.style || 'classic'}`;
+    this.borderElement.className = `matte-border ${this.config.style || 'thin'}`;
 
     // Calculate and apply the matte canvas with proper aspect ratio
     const matteCanvas = this.calculateMatteCanvas();
@@ -281,6 +311,9 @@ export const MatteBorderManager = {
     // Create 3D bevel frame around the image cutout
     this.create3DBevelFrame(canvas);
 
+    // Create Frame TV style beveled frame
+    this.createBeveledFrame(canvas);
+
     // Position the image layers container within the image cutout area
     this.positionImageLayers(canvas);
 
@@ -332,7 +365,7 @@ export const MatteBorderManager = {
       bevelFrame.id = 'bevel-frame';
       bevelFrame.style.position = 'absolute';
       bevelFrame.style.pointerEvents = 'none';
-      bevelFrame.style.zIndex = '51'; // Above the matte border
+      bevelFrame.style.zIndex = '53'; // Above the matte border but below shadow
       this.borderElement.parentNode.appendChild(bevelFrame);
     }
 
@@ -342,53 +375,342 @@ export const MatteBorderManager = {
     const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
     const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
 
-    // Position the bevel frame around the image cutout area (slightly larger)
-    const bevelWidth = 16; // 16px for the bevel effect area
+    // Position the bevel frame exactly at the image cutout area boundaries
+    let bevelWidth;
+    
+    if (typeof this.config.depth === 'number') {
+      bevelWidth = Math.max(1, Math.min(10, Math.floor(this.config.depth / 4))); // Quarter of main bevel depth, clamped
+    } else {
+      // Fallback to old style system for backward compatibility
+      const style = this.config.style || 'thin';
+      if (style === 'thick') {
+        bevelWidth = 6;
+      } else if (style === 'medium') {
+        bevelWidth = 4;
+      } else {
+        bevelWidth = 2;
+      }
+    }
+    
     bevelFrame.style.left = `${imageLeft - bevelWidth}px`;
     bevelFrame.style.top = `${imageTop - bevelWidth}px`;
     bevelFrame.style.width = `${imageWidth + (bevelWidth * 2)}px`;
     bevelFrame.style.height = `${imageHeight + (bevelWidth * 2)}px`;
 
-    // Create transparent frame with border that matches matte color
-    bevelFrame.style.border = `${bevelWidth}px solid #F8F8F8`;
+    // Remove border entirely - we'll use box-shadow for the entire bevel effect
+    bevelFrame.style.border = 'none';
     bevelFrame.style.background = 'transparent'; // Transparent so images show through
     bevelFrame.style.boxSizing = 'border-box';
 
-    // Apply 3D bevel effect based on style
-    const style = this.config.style || 'classic';
-    if (style === 'thick') {
-      // Thick: Scale up shadow sizes by 2x
-      bevelFrame.style.boxShadow = `
-        inset 4px 4px 10px rgba(0, 0, 0, 0.15),
-        inset -6px -6px 16px rgba(255, 255, 255, 0.35),
-        inset 2px 2px 4px rgba(0, 0, 0, 0.2),
-        inset -3px -3px 8px rgba(255, 255, 255, 0.4)
-      `;
-    } else if (style === 'medium') {
-      // Medium: Scale up shadow sizes by 1.5x
-      bevelFrame.style.boxShadow = `
-        inset 3px 3px 7.5px rgba(0, 0, 0, 0.15),
-        inset -4.5px -4.5px 12px rgba(255, 255, 255, 0.35),
-        inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.2),
-        inset -2.25px -2.25px 6px rgba(255, 255, 255, 0.4)
-      `;
-    } else {
-      // Thin (classic): Keep original sizes
-      bevelFrame.style.boxShadow = `
-        inset 2px 2px 5px rgba(0, 0, 0, 0.15),
-        inset -3px -3px 8px rgba(255, 255, 255, 0.35),
-        inset 1px 1px 2px rgba(0, 0, 0, 0.2),
-        inset -1.5px -1.5px 4px rgba(255, 255, 255, 0.4)
-      `;
-    }
+    // Create a subtle raised edge effect
+    const borderColor = this.config.color || '#F8F8F8';
+    
+    // Create a subtle raised frame edge with multiple shadows
+    bevelFrame.style.boxShadow = `
+      0 0 0 ${bevelWidth}px ${borderColor},
+      inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+      inset -1px -1px 2px rgba(0, 0, 0, 0.15)
+    `;
 
-    console.log(`MatteBorderManager: Created 3D bevel frame (${style} style) around image area:`, {
+    const depthSource = typeof this.config.depth === 'number' ? `${this.config.depth}px depth` : `${this.config.style || 'thin'} style`;
+    console.log(`MatteBorderManager: Created 3D bevel frame with ${depthSource} around image area:`, {
       left: imageLeft - bevelWidth,
       top: imageTop - bevelWidth,
       width: imageWidth + (bevelWidth * 2),
       height: imageHeight + (bevelWidth * 2),
       bevelWidth
     });
+  },
+
+  createBeveledFrame(canvas) {
+    // Clean up any existing beveled frame elements
+    this.removeBeveledFrameElements();
+
+    // Calculate frame dimensions
+    const imageLeft = canvas.canvasLeft + canvas.borderSize;
+    const imageTop = canvas.canvasTop + canvas.borderSize;
+    const imageWidth = canvas.canvasWidth - (canvas.borderSize * 2);
+    const imageHeight = canvas.canvasHeight - (canvas.borderSize * 2);
+    
+    // Get bevel depth and style configuration
+    let bevelDepth;
+    let styleConfig = null;
+    
+    // First check if we have style configurations
+    if (this.config.styles && this.config.style && this.config.styles[this.config.style]) {
+      styleConfig = this.config.styles[this.config.style];
+      bevelDepth = styleConfig.depth;
+    } else if (typeof this.config.depth === 'number') {
+      // Direct depth value
+      bevelDepth = Math.max(1, Math.min(50, this.config.depth)); // Clamp between 1-50px
+    } else {
+      // Fallback to old style system for backward compatibility
+      const style = this.config.style || 'thin';
+      if (style === 'thick') {
+        bevelDepth = 20;
+      } else if (style === 'medium') {
+        bevelDepth = 15;
+      } else {
+        bevelDepth = 10;
+      }
+    }
+
+    // Create canvas element for drawing proper bevels
+    const bevelCanvas = document.createElement('canvas');
+    bevelCanvas.id = 'bevel-canvas';
+    bevelCanvas.style.position = 'fixed';
+    bevelCanvas.style.left = '0';
+    bevelCanvas.style.top = '0';
+    bevelCanvas.style.width = '100%';
+    bevelCanvas.style.height = '100%';
+    bevelCanvas.style.pointerEvents = 'none';
+    bevelCanvas.style.zIndex = '55';
+    bevelCanvas.width = window.innerWidth * window.devicePixelRatio;
+    bevelCanvas.height = window.innerHeight * window.devicePixelRatio;
+    
+    const ctx = bevelCanvas.getContext('2d');
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    
+    // Draw the beveled frame using canvas
+    this.drawBeveledFrame(ctx, imageLeft, imageTop, imageWidth, imageHeight, bevelDepth, styleConfig);
+    
+    // Append to canvas-container
+    const canvasContainer = document.getElementById('canvas-container');
+    if (canvasContainer) {
+      canvasContainer.appendChild(bevelCanvas);
+    } else {
+      this.borderElement.parentNode.appendChild(bevelCanvas);
+    }
+
+    const depthSource = typeof this.config.depth === 'number' ? `${this.config.depth}px depth` : `${this.config.style || 'thin'} style (${bevelDepth}px)`;
+    console.log(`MatteBorderManager: Created canvas-based beveled frame with ${depthSource}`);
+  },
+  
+  drawBeveledFrame(ctx, x, y, width, height, depth, styleConfig = null) {
+    // Save the current state
+    ctx.save();
+    
+    // Define the matte color
+    const matteColor = this.config.color || '#F8F8F8';
+    
+    // Function to convert hex to RGB
+    const hexToRgb = (hex) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 248, g: 248, b: 248 };
+    };
+    
+    const baseColor = hexToRgb(matteColor);
+    
+    // Use configurable edge offsets or fall back to defaults
+    let topOffset, leftOffset, rightOffset, bottomOffset;
+    
+    if (styleConfig) {
+      topOffset = styleConfig.top_edge_offset;
+      leftOffset = styleConfig.left_edge_offset;
+      rightOffset = styleConfig.right_edge_offset;
+      bottomOffset = styleConfig.bottom_edge_offset;
+    } else {
+      // Default values (matching current medium style)
+      topOffset = -35;
+      leftOffset = -15;
+      rightOffset = -5;
+      bottomOffset = 25;
+    }
+    
+    // Create flat colors for each edge based on configurable lighting
+    const topColor = `rgb(${Math.max(0, baseColor.r + topOffset)}, ${Math.max(0, baseColor.g + topOffset)}, ${Math.max(0, baseColor.b + topOffset)})`;
+    const leftColor = `rgb(${Math.max(0, baseColor.r + leftOffset)}, ${Math.max(0, baseColor.g + leftOffset)}, ${Math.max(0, baseColor.b + leftOffset)})`;
+    const rightColor = `rgb(${Math.max(0, baseColor.r + rightOffset)}, ${Math.max(0, baseColor.g + rightOffset)}, ${Math.max(0, baseColor.b + rightOffset)})`;
+    const bottomColor = `rgb(${Math.min(255, baseColor.r + bottomOffset)}, ${Math.min(255, baseColor.g + bottomOffset)}, ${Math.min(255, baseColor.b + bottomOffset)})`;
+    
+    
+    // Draw top bevel trapezoid (darkest - in shadow from top-left light)
+    ctx.beginPath();
+    ctx.moveTo(x - depth, y - depth);
+    ctx.lineTo(x + width + depth, y - depth);
+    ctx.lineTo(x + width, y);
+    ctx.lineTo(x, y);
+    ctx.closePath();
+    ctx.fillStyle = topColor;
+    ctx.fill();
+    
+    // Draw right bevel trapezoid (light - catching light)
+    ctx.beginPath();
+    ctx.moveTo(x + width, y);
+    ctx.lineTo(x + width + depth, y - depth);
+    ctx.lineTo(x + width + depth, y + height + depth);
+    ctx.lineTo(x + width, y + height);
+    ctx.closePath();
+    ctx.fillStyle = rightColor;
+    ctx.fill();
+    
+    // Draw bottom bevel trapezoid (lightest - most lit)
+    ctx.beginPath();
+    ctx.moveTo(x, y + height);
+    ctx.lineTo(x + width, y + height);
+    ctx.lineTo(x + width + depth, y + height + depth);
+    ctx.lineTo(x - depth, y + height + depth);
+    ctx.closePath();
+    ctx.fillStyle = bottomColor;
+    ctx.fill();
+    
+    // Draw left bevel trapezoid (dark - in shadow)
+    ctx.beginPath();
+    ctx.moveTo(x - depth, y - depth);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x, y + height);
+    ctx.lineTo(x - depth, y + height + depth);
+    ctx.closePath();
+    ctx.fillStyle = leftColor;
+    ctx.fill();
+    
+    // Add subtle inner shadow over the painting area
+    this.drawInnerShadow(ctx, x, y, width, height, depth, styleConfig);
+    
+    // Restore the context
+    ctx.restore();
+  },
+  
+  drawInnerShadow(ctx, x, y, width, height, depth, styleConfig = null) {
+    // Save context for shadow drawing
+    ctx.save();
+    
+    // Calculate shadow parameters from config or use defaults
+    let shadowSize, shadowOpacity;
+    
+    if (styleConfig && styleConfig.shadow_width_multiplier && styleConfig.shadow_opacity) {
+      shadowSize = Math.min(depth * styleConfig.shadow_width_multiplier, 150);
+      shadowOpacity = styleConfig.shadow_opacity;
+    } else {
+      // Fallback defaults
+      shadowSize = Math.min(depth * 9, 120);
+      shadowOpacity = 0.05;
+    }
+    
+    // Create exponential gradient for top shadow (strongest - light comes from top-left)
+    const topShadow = ctx.createLinearGradient(0, y, 0, y + shadowSize);
+    topShadow.addColorStop(0, `rgba(0, 0, 0, ${shadowOpacity})`);
+    topShadow.addColorStop(0.2, `rgba(0, 0, 0, ${shadowOpacity * 0.6})`);
+    topShadow.addColorStop(0.4, `rgba(0, 0, 0, ${shadowOpacity * 0.3})`);
+    topShadow.addColorStop(0.6, `rgba(0, 0, 0, ${shadowOpacity * 0.1})`);
+    topShadow.addColorStop(0.8, `rgba(0, 0, 0, ${shadowOpacity * 0.03})`);
+    topShadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = topShadow;
+    ctx.fillRect(x, y, width, shadowSize);
+    
+    // Create exponential gradient for left shadow (strong - light comes from top-left)
+    const leftShadow = ctx.createLinearGradient(x, 0, x + shadowSize, 0);
+    const leftOpacity = shadowOpacity * 0.8;
+    leftShadow.addColorStop(0, `rgba(0, 0, 0, ${leftOpacity})`);
+    leftShadow.addColorStop(0.2, `rgba(0, 0, 0, ${leftOpacity * 0.6})`);
+    leftShadow.addColorStop(0.4, `rgba(0, 0, 0, ${leftOpacity * 0.3})`);
+    leftShadow.addColorStop(0.6, `rgba(0, 0, 0, ${leftOpacity * 0.1})`);
+    leftShadow.addColorStop(0.8, `rgba(0, 0, 0, ${leftOpacity * 0.03})`);
+    leftShadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = leftShadow;
+    ctx.fillRect(x, y, shadowSize, height);
+    
+    // Create exponential gradient for right shadow (very subtle - this edge catches light)
+    const rightShadow = ctx.createLinearGradient(x + width, 0, x + width - shadowSize * 0.5, 0);
+    const rightOpacity = shadowOpacity * 0.3;
+    rightShadow.addColorStop(0, `rgba(0, 0, 0, ${rightOpacity})`);
+    rightShadow.addColorStop(0.3, `rgba(0, 0, 0, ${rightOpacity * 0.5})`);
+    rightShadow.addColorStop(0.6, `rgba(0, 0, 0, ${rightOpacity * 0.2})`);
+    rightShadow.addColorStop(0.8, `rgba(0, 0, 0, ${rightOpacity * 0.05})`);
+    rightShadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = rightShadow;
+    ctx.fillRect(x + width - shadowSize * 0.5, y, shadowSize * 0.5, height);
+    
+    // Create exponential gradient for bottom shadow (weakest - this edge is most lit)
+    const bottomShadow = ctx.createLinearGradient(0, y + height, 0, y + height - shadowSize * 0.3);
+    const bottomOpacity = shadowOpacity * 0.2;
+    bottomShadow.addColorStop(0, `rgba(0, 0, 0, ${bottomOpacity})`);
+    bottomShadow.addColorStop(0.3, `rgba(0, 0, 0, ${bottomOpacity * 0.5})`);
+    bottomShadow.addColorStop(0.6, `rgba(0, 0, 0, ${bottomOpacity * 0.2})`);
+    bottomShadow.addColorStop(0.8, `rgba(0, 0, 0, ${bottomOpacity * 0.05})`);
+    bottomShadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = bottomShadow;
+    ctx.fillRect(x, y + height - shadowSize * 0.3, width, shadowSize * 0.3);
+    
+    // Create subtle corner shadows for realism
+    this.drawCornerShadows(ctx, x, y, width, height, shadowSize, shadowOpacity);
+    
+    ctx.restore();
+  },
+  
+  drawCornerShadows(ctx, x, y, width, height, shadowSize, shadowOpacity) {
+    // Top-left corner (strongest shadow) - exponential falloff
+    const topLeftGradient = ctx.createRadialGradient(
+      x, y, 0, 
+      x, y, shadowSize
+    );
+    const tlOpacity = shadowOpacity * 0.4;
+    topLeftGradient.addColorStop(0, `rgba(0, 0, 0, ${tlOpacity})`);
+    topLeftGradient.addColorStop(0.2, `rgba(0, 0, 0, ${tlOpacity * 0.5})`);
+    topLeftGradient.addColorStop(0.4, `rgba(0, 0, 0, ${tlOpacity * 0.2})`);
+    topLeftGradient.addColorStop(0.6, `rgba(0, 0, 0, ${tlOpacity * 0.05})`);
+    topLeftGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = topLeftGradient;
+    ctx.fillRect(x, y, shadowSize, shadowSize);
+    
+    // Top-right corner (medium shadow) - exponential falloff
+    const topRightGradient = ctx.createRadialGradient(
+      x + width, y, 0,
+      x + width, y, shadowSize * 0.7
+    );
+    const trOpacity = shadowOpacity * 0.2;
+    topRightGradient.addColorStop(0, `rgba(0, 0, 0, ${trOpacity})`);
+    topRightGradient.addColorStop(0.3, `rgba(0, 0, 0, ${trOpacity * 0.4})`);
+    topRightGradient.addColorStop(0.6, `rgba(0, 0, 0, ${trOpacity * 0.1})`);
+    topRightGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = topRightGradient;
+    ctx.fillRect(x + width - shadowSize * 0.7, y, shadowSize * 0.7, shadowSize * 0.7);
+    
+    // Bottom-left corner (light shadow) - exponential falloff
+    const bottomLeftGradient = ctx.createRadialGradient(
+      x, y + height, 0,
+      x, y + height, shadowSize * 0.5
+    );
+    const blOpacity = shadowOpacity * 0.15;
+    bottomLeftGradient.addColorStop(0, `rgba(0, 0, 0, ${blOpacity})`);
+    bottomLeftGradient.addColorStop(0.3, `rgba(0, 0, 0, ${blOpacity * 0.3})`);
+    bottomLeftGradient.addColorStop(0.6, `rgba(0, 0, 0, ${blOpacity * 0.08})`);
+    bottomLeftGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = bottomLeftGradient;
+    ctx.fillRect(x, y + height - shadowSize * 0.5, shadowSize * 0.5, shadowSize * 0.5);
+  },
+  
+
+
+  removeBeveledFrameElements() {
+    // Remove existing beveled frame container and all its children
+    const existingContainer = document.getElementById('beveled-frame-container');
+    if (existingContainer) {
+      existingContainer.remove();
+    }
+    
+    // Remove canvas-based bevel if it exists
+    const bevelCanvas = document.getElementById('bevel-canvas');
+    if (bevelCanvas) {
+      bevelCanvas.remove();
+    }
+    
+    // Also remove old shadow overlay if it exists
+    const shadowOverlay = document.getElementById('shadow-overlay');
+    if (shadowOverlay) {
+      shadowOverlay.remove();
+    }
   },
 
   positionImageLayers(canvas) {
@@ -407,64 +729,44 @@ export const MatteBorderManager = {
     imageLayersContainer.style.height = '100vh';
     imageLayersContainer.style.boxSizing = 'border-box';
 
-    // Apply CSS clip-path to create matte border effect
-    if (canvas && this.config && this.config.enabled !== false) {
-      const clipPath = this.createMatteClipPath(canvas);
-      imageLayersContainer.style.clipPath = clipPath;
-    } else {
-      // Remove clipping when matte border is disabled
-      imageLayersContainer.style.clipPath = 'none';
-    }
+    // Remove clipping to allow images to extend under the matte border
+    // This allows matte border shadows to cast onto the images
+    imageLayersContainer.style.clipPath = 'none';
 
-    console.log('MatteBorderManager: Applied virtual coordinate system with CSS clipping');
+    console.log('MatteBorderManager: Applied virtual coordinate system without clipping');
   },
 
-  createMatteClipPath(canvas) {
-    // Calculate the inner area (image area) in viewport coordinates
-    const shadowInset = 4; // Maximum shadow depth
-    const innerLeft = canvas.canvasLeft + canvas.borderSize + shadowInset;
-    const innerTop = canvas.canvasTop + canvas.borderSize + shadowInset;
-    const innerRight = innerLeft + (canvas.canvasWidth - (canvas.borderSize * 2) - (shadowInset * 2));
-    const innerBottom = innerTop + (canvas.canvasHeight - (canvas.borderSize * 2) - (shadowInset * 2));
-
-    // Convert to percentages for CSS clip-path
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    const leftPercent = (innerLeft / viewportWidth) * 100;
-    const topPercent = (innerTop / viewportHeight) * 100;
-    const rightPercent = (innerRight / viewportWidth) * 100;
-    const bottomPercent = (innerBottom / viewportHeight) * 100;
-
-    // Create rectangular clip path for the image area
-    const clipPath = `polygon(${leftPercent}% ${topPercent}%, ${rightPercent}% ${topPercent}%, ${rightPercent}% ${bottomPercent}%, ${leftPercent}% ${bottomPercent}%)`;
-
-    console.log('MatteBorderManager: Created clip path:', clipPath);
-    return clipPath;
-  },
 
   handleResize() {
-    // Reapply virtual coordinate system and clipping on window resize
-    if (this.config && this.config.enabled !== false) {
-      this.applyConfiguration();
-    } else {
-      // Ensure virtual coordinate system is maintained even when matte border is disabled
-      const imageLayersContainer = document.getElementById('image-layers');
-      if (imageLayersContainer) {
-        imageLayersContainer.style.position = 'fixed';
-        imageLayersContainer.style.left = '0';
-        imageLayersContainer.style.top = '0';
-        imageLayersContainer.style.width = '100vw';
-        imageLayersContainer.style.height = '100vh';
-        imageLayersContainer.style.clipPath = 'none';
-      }
+    // Clear any existing resize timeout
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
     }
     
-    // Update grid positioning if GridManager is available
-    const GridManager = window.App?.GridManager;
-    if (GridManager && GridManager.handleResize) {
-      GridManager.handleResize();
-    }
+    // Debounce resize to avoid excessive redraws
+    this.resizeTimeout = setTimeout(() => {
+      // Reapply virtual coordinate system on window resize
+      if (this.config && this.config.enabled !== false) {
+        this.applyConfiguration();
+      } else {
+        // Ensure virtual coordinate system is maintained even when matte border is disabled
+        const imageLayersContainer = document.getElementById('image-layers');
+        if (imageLayersContainer) {
+          imageLayersContainer.style.position = 'fixed';
+          imageLayersContainer.style.left = '0';
+          imageLayersContainer.style.top = '0';
+          imageLayersContainer.style.width = '100vw';
+          imageLayersContainer.style.height = '100vh';
+          imageLayersContainer.style.clipPath = 'none';
+        }
+      }
+      
+      // Update grid positioning if GridManager is available
+      const GridManager = window.App?.GridManager;
+      if (GridManager && GridManager.handleResize) {
+        GridManager.handleResize();
+      }
+    }, 100);
   },
 
   // Reset matte canvas (restore to full viewport)
@@ -477,7 +779,7 @@ export const MatteBorderManager = {
       imageLayersContainer.style.top = '0';
       imageLayersContainer.style.width = '100vw';
       imageLayersContainer.style.height = '100vh';
-      imageLayersContainer.style.clipPath = 'none'; // Remove any clipping
+      imageLayersContainer.style.clipPath = 'none'; // Images always extend to full area
     }
 
     // Reset matte border element
@@ -492,11 +794,14 @@ export const MatteBorderManager = {
       this.borderElement.style.setProperty('background-color', 'transparent', 'important');
     }
 
-    // Remove the inner bevel frame element
-    const bevelFrame = document.getElementById('inner-bevel-frame');
+    // Remove the bevel frame element
+    const bevelFrame = document.getElementById('bevel-frame');
     if (bevelFrame) {
       bevelFrame.remove();
     }
+
+    // Remove the beveled frame elements
+    this.removeBeveledFrameElements();
 
     // Reset viewport background to original (black)
     this.resetViewportBackground();

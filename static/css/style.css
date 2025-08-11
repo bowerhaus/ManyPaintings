@@ -155,6 +155,133 @@ body.white-background .image-layer {
     display: none !important;
 }
 
+/* ===== FRAME TV STYLE BEVELED FRAME ===== */
+.beveled-edge {
+    pointer-events: none;
+    z-index: 55;
+    transition: opacity 0.3s ease;
+}
+
+.beveled-corner {
+    pointer-events: none;
+    z-index: 55;
+    transition: opacity 0.3s ease;
+}
+
+/* Enhanced beveled edges with additional texture and depth */
+.beveled-edge-top {
+    background: linear-gradient(to bottom,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.3) 20%,
+        rgba(240, 240, 240, 0.2) 40%,
+        rgba(200, 200, 200, 0.1) 60%,
+        rgba(0, 0, 0, 0.15) 80%,
+        rgba(0, 0, 0, 0.35) 100%),
+        linear-gradient(90deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.05) 100%);
+    background-blend-mode: multiply, normal;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.beveled-edge-right {
+    background: linear-gradient(to right,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.2) 20%,
+        rgba(100, 100, 100, 0.1) 40%,
+        rgba(200, 200, 200, 0.15) 60%,
+        rgba(255, 255, 255, 0.2) 80%,
+        rgba(255, 255, 255, 0.3) 100%),
+        linear-gradient(0deg,
+        rgba(0, 0, 0, 0.05) 0%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.05) 100%);
+    background-blend-mode: multiply, normal;
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.beveled-edge-bottom {
+    background: linear-gradient(to bottom,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.2) 20%,
+        rgba(100, 100, 100, 0.1) 40%,
+        rgba(200, 200, 200, 0.15) 60%,
+        rgba(255, 255, 255, 0.2) 80%,
+        rgba(255, 255, 255, 0.25) 100%),
+        linear-gradient(90deg,
+        rgba(0, 0, 0, 0.05) 0%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.05) 100%);
+    background-blend-mode: multiply, normal;
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.beveled-edge-left {
+    background: linear-gradient(to right,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.3) 20%,
+        rgba(240, 240, 240, 0.2) 40%,
+        rgba(200, 200, 200, 0.1) 60%,
+        rgba(0, 0, 0, 0.15) 80%,
+        rgba(0, 0, 0, 0.35) 100%),
+        linear-gradient(0deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.05) 100%);
+    background-blend-mode: multiply, normal;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Simple Frame TV style shadow - just a subtle inset shadow all around */
+.frame-tv-shadow {
+    /* The actual Frame TV has a very subtle, uniform inset shadow */
+    pointer-events: none;
+    z-index: 55;
+    transition: opacity 0.3s ease;
+}
+
+/* Frame TV style corner bevels - 45-degree blending of adjacent edges */
+.beveled-corner-top-left {
+    background: linear-gradient(45deg,
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(255, 255, 255, 0.3) 30%,
+        rgba(200, 200, 200, 0.2) 60%,
+        rgba(0, 0, 0, 0.2) 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.beveled-corner-top-right {
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(200, 200, 200, 0.25) 30%,
+        rgba(100, 100, 100, 0.2) 60%,
+        rgba(0, 0, 0, 0.3) 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.beveled-corner-bottom-right {
+    background: linear-gradient(45deg,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.3) 30%,
+        rgba(100, 100, 100, 0.2) 60%,
+        rgba(200, 200, 200, 0.15) 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.beveled-corner-bottom-left {
+    background: linear-gradient(135deg,
+        rgba(0, 0, 0, 0.3) 0%,
+        rgba(100, 100, 100, 0.25) 30%,
+        rgba(200, 200, 200, 0.2) 60%,
+        rgba(255, 255, 255, 0.3) 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* ===== KIOSK MODE CURSOR HIDING ===== */
 .kiosk-mode {
     cursor: none;
@@ -221,14 +348,8 @@ body.white-background {
     transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-body.white-background #canvas-container {
+body.white-background .filterable-background {
     background: #fff !important;
-    background-color: #fff !important;
-}
-
-body.white-background #image-layers {
-    background: #fff !important;
-    background-color: #fff !important;
 }
 
 body.white-background #kiosk-container {
@@ -307,7 +428,8 @@ body.white-background #background-toggle-btn,
 body.white-background #audio-toggle-btn,
 body.white-background #favorite-btn,
 body.white-background #favorites-gallery-btn,
-body.white-background #image-manager-btn {
+body.white-background #image-manager-btn,
+body.white-background #gallery-manager-btn {
     background: rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     color: rgba(255, 255, 255, 0.9) !important;
@@ -318,7 +440,8 @@ body.white-background #background-toggle-btn:hover,
 body.white-background #audio-toggle-btn:hover,
 body.white-background #favorite-btn:hover,
 body.white-background #favorites-gallery-btn:hover,
-body.white-background #image-manager-btn:hover {
+body.white-background #image-manager-btn:hover,
+body.white-background #gallery-manager-btn:hover {
     background: rgba(255, 255, 255, 0.2) !important;
     box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1) !important;
 }
@@ -802,7 +925,7 @@ body.white-background #kiosk-controls button:hover {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -858,14 +981,61 @@ body.white-background #kiosk-controls button:hover {
     transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/* Canvas Drop Shadow - Applied over matte border */
+.canvas-drop-shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 60;
+    border-radius: 0;
+    transition: box-shadow 0.5s ease;
+    /* Ensure the element has a visible boundary for the shadow */
+    border: 1px solid transparent;
+}
+
+.filterable-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 0;
+    transition: background-color 0.5s ease;
+}
+
+.texture-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    mix-blend-mode: multiply;
+    background-image: url('/static/resources/linen-weave-canvas.png');
+    background-repeat: repeat;
+    background-size: 20%;
+}
+
+body.white-background .texture-overlay {
+    mix-blend-mode: multiply;
+}
+
 .image-layers-container {
     width: 100%;
     height: 100%;
     position: relative;
     overflow: hidden;
-    background: #000;
+    background: transparent;
     transition: background-color 0.5s ease, color 0.5s ease;
     box-sizing: border-box;
+    z-index: 20;
 }
 
 .rule-of-thirds-grid {
@@ -1032,6 +1202,65 @@ body.white-background #kiosk-controls button:hover {
     .modal-backdrop {
         padding: 2rem;
     }
+}
+
+/* Gallery Manager Modal - Position at bottom for artwork visibility */
+.gallery-manager-modal {
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.gallery-manager-modal .modal-backdrop {
+    align-items: flex-end;
+    justify-content: center;
+    background: transparent;
+}
+
+.gallery-manager-modal .modal-content {
+    max-height: 80vh;
+    margin-bottom: 0;
+    border-radius: 1rem 1rem 0 0;
+    width: auto;
+    max-width: 500px;
+    min-width: 400px;
+    overflow-y: auto;
+}
+
+.gallery-controls {
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+}
+
+.gallery-description {
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+}
+
+.gallery-reset-btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+    color: rgba(0, 0, 0, 0.8);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gallery-reset-btn:hover {
+    background: rgba(0, 0, 0, 0.15);
+    border-color: rgba(0, 0, 0, 0.3);
+}
+
+.control-section {
+    margin-bottom: 1.5rem;
+}
+
+.control-section:last-child {
+    margin-bottom: 0;
 }
 
 /* Duplicate modal-related definitions removed - using the ones above */
@@ -1344,4 +1573,75 @@ body.white-background #kiosk-controls button:hover {
     background: rgba(255, 255, 255, 0.3) !important;
     border-color: rgba(255, 255, 255, 0.5) !important;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
+}
+
+/* ===== GALLERY MANAGER RESPONSIVE STYLES ===== */
+@media (max-width: 768px) {
+    .gallery-manager-modal .modal-content {
+        max-width: 95vw;
+        min-width: 300px;
+        max-height: 85vh;
+    }
+    
+    .gallery-controls {
+        padding: 1rem;
+    }
+    
+    .control-group {
+        gap: 0.5rem;
+    }
+    
+    .control-group label {
+        font-size: 0.8rem;
+    }
+    
+    .control-input span {
+        font-size: 0.75rem;
+        min-width: 2.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .gallery-manager-modal .modal-content {
+        max-width: 100vw;
+        min-width: 280px;
+        max-height: 90vh;
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+    
+    .gallery-controls {
+        padding: 0.75rem;
+    }
+    
+    .control-section {
+        margin-bottom: 1rem;
+    }
+    
+    .gallery-description {
+        font-size: 0.8rem;
+        margin: 0 0 1rem 0;
+    }
+    
+    .gallery-reset-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-height: 600px) {
+    .gallery-manager-modal .modal-content {
+        max-height: 95vh;
+    }
+    
+    .gallery-controls {
+        padding: 0.5rem 1rem 1rem 1rem;
+    }
+    
+    .control-section {
+        margin-bottom: 0.75rem;
+    }
+    
+    .gallery-description {
+        margin: 0 0 0.75rem 0;
+    }
 }

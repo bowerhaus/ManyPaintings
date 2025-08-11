@@ -19,6 +19,7 @@ export const UI = {
     this.onscreenControls = document.getElementById('onscreen-controls');
     this.controlsTriggerArea = document.getElementById('controls-trigger-area');
 
+
     console.log('UI: Elements found:', {
       onscreenControls: !!this.onscreenControls,
       controlsTriggerArea: !!this.controlsTriggerArea
@@ -64,14 +65,24 @@ export const UI = {
     // Apply background preference
     console.log(`UI: Applying background preference - isWhiteBackground: ${this.isWhiteBackground}`);
     
-    // Use !important to ensure our preference takes priority
+    // Set filterable background element
+    const filterableBackground = document.getElementById('filterable-background');
+    if (filterableBackground) {
+      if (this.isWhiteBackground) {
+        filterableBackground.style.background = '#fff';
+        document.body.classList.add('white-background');
+      } else {
+        filterableBackground.style.background = '#000';
+        document.body.classList.remove('white-background');
+      }
+    }
+    
+    // Keep body background for UI elements
     if (this.isWhiteBackground) {
       document.body.style.setProperty('background-color', 'white', 'important');
-      document.body.classList.add('white-background');
       console.log('UI: Applied white background with !important');
     } else {
       document.body.style.setProperty('background-color', 'black', 'important');
-      document.body.classList.remove('white-background');
       console.log('UI: Applied black background with !important');
     }
     
@@ -118,6 +129,7 @@ export const UI = {
         }
         console.log(`UI: Set volume slider to ${volumePercent}% (${savedVolume})`);
       }
+
       
       console.log(`UI: Applied user preferences - speed: ${this.speedMultiplier}, layers: ${this.maxLayers}, background: ${this.isWhiteBackground}`);
       console.log('UI: Speed slider found:', !!speedSlider, 'Layers slider found:', !!layersSlider, 'Volume slider found:', !!volumeSlider);
@@ -237,6 +249,12 @@ export const UI = {
     const imageManagerBtn = document.getElementById('image-manager-btn');
     if (imageManagerBtn) {
       imageManagerBtn.addEventListener('click', this.showImageManager.bind(this));
+    }
+
+    // Gallery manager button (in onscreen controls)
+    const galleryManagerBtn = document.getElementById('gallery-manager-btn');
+    if (galleryManagerBtn) {
+      galleryManagerBtn.addEventListener('click', this.showGalleryManager.bind(this));
     }
 
     // Retry button
@@ -421,13 +439,23 @@ export const UI = {
   toggleBackground() {
     this.isWhiteBackground = !this.isWhiteBackground;
     
-    // Use !important to ensure our preference takes priority
+    // Control filterable background element instead of CSS background-color
+    const filterableBackground = document.getElementById('filterable-background');
+    if (filterableBackground) {
+      if (this.isWhiteBackground) {
+        filterableBackground.style.background = '#fff';
+        document.body.classList.add('white-background');
+      } else {
+        filterableBackground.style.background = '#000';
+        document.body.classList.remove('white-background');
+      }
+    }
+    
+    // Keep body background for UI elements
     if (this.isWhiteBackground) {
       document.body.style.setProperty('background-color', 'white', 'important');
-      document.body.classList.add('white-background');
     } else {
       document.body.style.setProperty('background-color', 'black', 'important');
-      document.body.classList.remove('white-background');
     }
     
     // Save to user preferences
@@ -550,6 +578,9 @@ export const UI = {
       case 'i':
         this.showImageManager();
         break;
+      case 'c':
+        this.showGalleryManager();
+        break;
     }
   },
 
@@ -599,6 +630,13 @@ export const UI = {
     const ImageManagerUI = window.App?.ImageManagerUI;
     if (ImageManagerUI) {
       ImageManagerUI.show();
+    }
+  },
+
+  showGalleryManager() {
+    const GalleryManager = window.App?.GalleryManager;
+    if (GalleryManager) {
+      GalleryManager.show();
     }
   },
 

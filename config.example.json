@@ -80,6 +80,11 @@
     "loop": true,
     "autoplay": false
   },
+  "canvas_drop_shadow": {
+    "enabled": true,
+    "opacity": 0.5,
+    "width_percent": 30
+  },
   "matte_border": {
     "enabled": true,
     "border_percent": 15,

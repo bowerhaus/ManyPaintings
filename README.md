@@ -100,6 +100,13 @@ The application should provide extensive configuration options to fine-tune the 
 *   **Cross-Mode Compatibility:** Consistent behavior in both main display and kiosk modes
 *   **Responsive Design:** Automatic recalculation on window resize with proper centering
 
+#### Canvas Drop Shadow Configuration ✅ IMPLEMENTED
+*   `enabled` - Enable/disable canvas drop shadow system (default: true)
+*   `opacity` - Maximum shadow opacity (default: 0.5, range: 0.0-1.0)
+*   `width_percent` - Shadow blur width as percentage of viewport (default: 30, range: 5-100)
+
+The drop shadow creates a professional gallery-style presentation with exponential decay falloff. Multiple shadow layers blend smoothly from strong inner shadows to faint outer shadows for natural depth perception.
+
 #### Matte Border Configuration ✅ IMPLEMENTED
 *   `enabled` - Enable/disable matte border system (default: true)
 *   `border_percent` - Border size as percentage of smaller canvas dimension (default: 10)

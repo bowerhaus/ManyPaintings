@@ -9,6 +9,7 @@ import { PatternManager } from './managers/PatternManager.js';
 import { AudioManager } from './managers/AudioManager.js';
 import { FavoritesManager } from './managers/FavoritesManager.js';
 import { MatteBorderManager } from './managers/MatteBorderManager.js';
+import { DropShadowManager } from './managers/DropShadowManager.js';
 import { userPreferences } from './managers/UserPreferences.js';
 import { UI } from './ui/UI.js';
 import { FavoritesGallery } from './ui/FavoritesGallery.js';
@@ -50,6 +51,8 @@ const App = {
       window.kioskMode = kioskMode; // Make available globally
       
       console.log('Configuration loaded:', config);
+      console.log('Config canvas_drop_shadow section:', config.canvas_drop_shadow);
+      console.log('Full config keys:', Object.keys(config));
       
       // UserPreferences is automatically initialized when imported
       console.log('UserPreferences loaded with preferences:', userPreferences.getAll());
@@ -66,6 +69,11 @@ const App = {
 
       // Initialize matte border after other modules are ready
       MatteBorderManager.init();
+      
+      // Initialize drop shadow manager with config
+      console.log('About to initialize DropShadowManager with config:', !!config);
+      console.log('DropShadowManager available:', !!DropShadowManager);
+      DropShadowManager.init(config);
       
       // Initialize grid manager after matte border is set up
       GridManager.init();

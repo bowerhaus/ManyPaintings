@@ -25,6 +25,7 @@ def load_config_from_json(config_name='development'):
         'color_remapping': config_data.get('color_remapping', {}),
         'performance': config_data.get('performance', {}),
         'audio': config_data.get('audio', {}),
+        'canvas_drop_shadow': config_data.get('canvas_drop_shadow', {}),
         'matte_border': config_data.get('matte_border', {})
     }
     
@@ -153,14 +154,15 @@ class Config:
                     # Double-check after acquiring lock
                     current_modified = os.path.getmtime(self._config_path)
                     if current_modified > self._last_modified:
-                        print(f"Config file changed, reloading...")
+                        # Silently reload without print statements to avoid debugger issues
                         self._config_data = load_config_from_json(self._config_name)
                         self._load_configuration()
                         self._last_modified = current_modified
-                        print(f"Config reloaded successfully")
                         return True
         except Exception as e:
-            print(f"Error checking/reloading config: {e}")
+            # Use app logger or stderr to avoid debugger issues
+            import sys
+            sys.stderr.write(f"Error checking/reloading config: {str(e)}\n")
         return False
     
 

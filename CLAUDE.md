@@ -101,6 +101,18 @@ pip install -r requirements.txt
 - **Reset Functionality**: One-click reset to defaults button
 - **Module Architecture**: Separate `GalleryManager.js` module following existing patterns
 
+### Canvas Drop Shadow System
+- **Professional Gallery Effect**: Configurable exponential decay drop shadow around canvas for depth and presentation
+- **Multi-Layer Blending**: Creates natural shadow falloff using multiple CSS box-shadow layers
+- **Viewport-Responsive Width**: Shadow width scales as percentage of viewport size for consistent appearance across displays
+- **Exponential Decay**: Inner layers high opacity, outer layers fade naturally for realistic shadow effect
+- **Configuration Options**:
+  - `enabled`: Enable/disable drop shadow system (boolean)
+  - `opacity`: Maximum shadow opacity (0.0-1.0, default: 0.5)
+  - `width_percent`: Shadow blur width as percentage of viewport (5-100, default: 30)
+- **Z-Index Positioning**: Positioned at z-index 60 to appear over matte border
+- **Performance Optimized**: Uses CSS transitions for smooth opacity changes
+
 ### Canvas Texture Overlay System
 - **Authentic Texture**: High-quality linen weave canvas texture (`static/resources/linen-weave-canvas.png`)
 - **Realistic Scaling**: Texture scaled to 20% of original size for natural canvas appearance

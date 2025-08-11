@@ -155,6 +155,133 @@ body.white-background .image-layer {
     display: none !important;
 }
 
+/* ===== FRAME TV STYLE BEVELED FRAME ===== */
+.beveled-edge {
+    pointer-events: none;
+    z-index: 55;
+    transition: opacity 0.3s ease;
+}
+
+.beveled-corner {
+    pointer-events: none;
+    z-index: 55;
+    transition: opacity 0.3s ease;
+}
+
+/* Enhanced beveled edges with additional texture and depth */
+.beveled-edge-top {
+    background: linear-gradient(to bottom,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.3) 20%,
+        rgba(240, 240, 240, 0.2) 40%,
+        rgba(200, 200, 200, 0.1) 60%,
+        rgba(0, 0, 0, 0.15) 80%,
+        rgba(0, 0, 0, 0.35) 100%),
+        linear-gradient(90deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.05) 100%);
+    background-blend-mode: multiply, normal;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.beveled-edge-right {
+    background: linear-gradient(to right,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.2) 20%,
+        rgba(100, 100, 100, 0.1) 40%,
+        rgba(200, 200, 200, 0.15) 60%,
+        rgba(255, 255, 255, 0.2) 80%,
+        rgba(255, 255, 255, 0.3) 100%),
+        linear-gradient(0deg,
+        rgba(0, 0, 0, 0.05) 0%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.05) 100%);
+    background-blend-mode: multiply, normal;
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.beveled-edge-bottom {
+    background: linear-gradient(to bottom,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.2) 20%,
+        rgba(100, 100, 100, 0.1) 40%,
+        rgba(200, 200, 200, 0.15) 60%,
+        rgba(255, 255, 255, 0.2) 80%,
+        rgba(255, 255, 255, 0.25) 100%),
+        linear-gradient(90deg,
+        rgba(0, 0, 0, 0.05) 0%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.05) 100%);
+    background-blend-mode: multiply, normal;
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.beveled-edge-left {
+    background: linear-gradient(to right,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.3) 20%,
+        rgba(240, 240, 240, 0.2) 40%,
+        rgba(200, 200, 200, 0.1) 60%,
+        rgba(0, 0, 0, 0.15) 80%,
+        rgba(0, 0, 0, 0.35) 100%),
+        linear-gradient(0deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.05) 100%);
+    background-blend-mode: multiply, normal;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Simple Frame TV style shadow - just a subtle inset shadow all around */
+.frame-tv-shadow {
+    /* The actual Frame TV has a very subtle, uniform inset shadow */
+    pointer-events: none;
+    z-index: 55;
+    transition: opacity 0.3s ease;
+}
+
+/* Frame TV style corner bevels - 45-degree blending of adjacent edges */
+.beveled-corner-top-left {
+    background: linear-gradient(45deg,
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(255, 255, 255, 0.3) 30%,
+        rgba(200, 200, 200, 0.2) 60%,
+        rgba(0, 0, 0, 0.2) 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.beveled-corner-top-right {
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(200, 200, 200, 0.25) 30%,
+        rgba(100, 100, 100, 0.2) 60%,
+        rgba(0, 0, 0, 0.3) 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.beveled-corner-bottom-right {
+    background: linear-gradient(45deg,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.3) 30%,
+        rgba(100, 100, 100, 0.2) 60%,
+        rgba(200, 200, 200, 0.15) 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+    border-left: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.beveled-corner-bottom-left {
+    background: linear-gradient(135deg,
+        rgba(0, 0, 0, 0.3) 0%,
+        rgba(100, 100, 100, 0.25) 30%,
+        rgba(200, 200, 200, 0.2) 60%,
+        rgba(255, 255, 255, 0.3) 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* ===== KIOSK MODE CURSOR HIDING ===== */
 .kiosk-mode {
     cursor: none;
@@ -852,6 +979,21 @@ body.white-background #kiosk-controls button:hover {
     position: relative;
     background: #000;
     transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Canvas Drop Shadow - Applied over matte border */
+.canvas-drop-shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 60;
+    border-radius: 0;
+    transition: box-shadow 0.5s ease;
+    /* Ensure the element has a visible boundary for the shadow */
+    border: 1px solid transparent;
 }
 
 .filterable-background {

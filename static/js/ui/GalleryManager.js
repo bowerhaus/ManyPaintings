@@ -148,6 +148,7 @@ export const GalleryManager = {
       });
     }
 
+
     // Reset button
     const resetBtn = document.getElementById('gallery-reset-btn');
     if (resetBtn) {
@@ -195,6 +196,7 @@ export const GalleryManager = {
       textureIntensitySlider.value = this.gallerySettings.textureIntensity.toString();
       textureIntensityValue.textContent = `${this.gallerySettings.textureIntensity}%`;
     }
+
   },
 
   applyGallerySettings() {
@@ -257,6 +259,9 @@ export const GalleryManager = {
 
     // Apply settings
     this.applyGallerySettings();
+    
+    // Apply texture settings
+    this.applyTextureSettings();
 
     // Save to preferences
     userPreferences.update(this.gallerySettings);

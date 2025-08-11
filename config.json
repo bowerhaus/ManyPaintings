@@ -21,7 +21,7 @@
     "fade_in_max_sec": 60.0,
     "fade_out_min_sec": 15.0,
     "fade_out_max_sec": 60.0,
-    "min_hold_time_sec": 5.0,
+    "min_hold_time_sec": 15.0,
     "max_hold_time_sec": 120.0,
     "layer_spawn_interval_sec": 4.0
   },
@@ -80,11 +80,46 @@
     "loop": true,
     "autoplay": false
   },
+  "canvas_drop_shadow": {
+    "enabled": true,
+    "opacity": 0.5,
+    "width_percent": 30
+  },
   "matte_border": {
     "enabled": true,
     "border_percent": 10,
     "color": "#F5F2E8",
+    "depth": 8,
     "style": "medium",
+    "styles": {
+      "thin": {
+        "depth": 8,
+        "top_edge_offset": -25,
+        "left_edge_offset": -10,
+        "right_edge_offset": -3,
+        "bottom_edge_offset": 15,
+        "shadow_width_multiplier": 12,
+        "shadow_opacity": 0.02
+      },
+      "medium": {
+        "depth": 10,
+        "top_edge_offset": -35,
+        "left_edge_offset": -15,
+        "right_edge_offset": -5,
+        "bottom_edge_offset": 25,
+        "shadow_width_multiplier": 12,
+        "shadow_opacity": 0.03
+      },
+      "thick": {
+        "depth": 12,
+        "top_edge_offset": -45,
+        "left_edge_offset": -20,
+        "right_edge_offset": -8,
+        "bottom_edge_offset": 35,
+        "shadow_width_multiplier": 12,
+        "shadow_opacity": 0.05
+      }
+    },
     "image_area": {
       "aspect_ratio": "16:9"
     }

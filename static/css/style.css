@@ -739,6 +739,13 @@ body.white-background #kiosk-controls button:hover {
 }
 
 /* ===== IMAGE MANAGER STYLES ===== */
+/* Image Manager scrollable content container */
+.image-manager-modal .images-container {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
 .image-manager-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -860,6 +867,13 @@ body.white-background #kiosk-controls button:hover {
     margin-bottom: 1.5rem;
 }
 
+/* Image Manager upload area - compact and fixed */
+.image-manager-modal .upload-area {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
 .upload-area:hover {
     border-color: rgba(0, 0, 0, 0.4);
 }
@@ -956,6 +970,14 @@ body.white-background #kiosk-controls button:hover {
     padding: 1.5rem;
     overflow-y: auto;
     max-height: calc(90vh - 120px);
+}
+
+/* Image Manager specific modal body layout */
+.image-manager-modal .modal-body {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    overflow: hidden;
 }
 
 /* ===== SEMANTIC COMPONENT STYLES ===== */

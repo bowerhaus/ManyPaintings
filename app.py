@@ -291,7 +291,17 @@ def create_app(config_name=None):
             
             # Check if file already exists
             if file_path.exists():
-                return jsonify({'error': 'File with this name already exists'}), 409
+                # Return existing image info instead of error for duplicate detection
+                from utils.image_manager import ImageManager
+                image_manager = ImageManager(app.config['IMAGE_DIRECTORY'])
+                image_info = image_manager._get_image_info(file_path)
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'File already exists',
+                    'duplicate': True,
+                    'image': image_info
+                })
             
             file.save(str(file_path))
             

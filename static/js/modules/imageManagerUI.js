@@ -218,6 +218,8 @@ export const ImageManagerUI = {
 
     this.showUploadProgress();
 
+    const uploadedImageIds = [];
+
     for (let i = 0; i < validFiles.length; i++) {
       const file = validFiles[i];
       const progress = ((i + 1) / validFiles.length) * 100;
@@ -225,7 +227,15 @@ export const ImageManagerUI = {
       this.updateUploadProgress(progress, `Uploading ${file.name}...`);
 
       try {
-        await this.uploadSingleFile(file);
+        const uploadResult = await this.uploadSingleFile(file);
+        if (uploadResult && uploadResult.image && uploadResult.image.id) {
+          uploadedImageIds.push(uploadResult.image.id);
+          if (uploadResult.duplicate) {
+            console.log(`ImageManagerUI: Duplicate detected for ${file.name}, triggering existing image with ID: ${uploadResult.image.id}`);
+          } else {
+            console.log(`ImageManagerUI: Uploaded ${file.name} with ID: ${uploadResult.image.id}`);
+          }
+        }
       } catch (error) {
         console.error(`Failed to upload ${file.name}:`, error);
         alert(`Failed to upload ${file.name}: ${error.message}`);
@@ -240,10 +250,69 @@ export const ImageManagerUI = {
       await window.App.ImageManager.init();
       console.log('ImageManagerUI: Refreshed main ImageManager catalog after upload');
       
-      // Regenerate the pattern sequence to include newly uploaded images
-      if (window.App.PatternManager) {
-        await window.App.PatternManager.generateNewPattern(window.App.PatternManager.currentSeed);
-        console.log('ImageManagerUI: Regenerated pattern sequence to include new images');
+      // Force newly uploaded images to be shown immediately
+      if (window.App.PatternManager && uploadedImageIds.length > 0) {
+        // Verify uploaded image IDs exist in the catalog
+        const catalogImageIds = Array.from(window.App.ImageManager.images.keys());
+        const validUploadedIds = uploadedImageIds.filter(id => catalogImageIds.includes(id));
+        const invalidIds = uploadedImageIds.filter(id => !catalogImageIds.includes(id));
+        
+        if (invalidIds.length > 0) {
+          console.warn('ImageManagerUI: Some uploaded image IDs not found in catalog:', invalidIds);
+        }
+        
+        if (validUploadedIds.length > 0) {
+          // Preload the newly uploaded images immediately
+          if (window.App.ImageManager) {
+            await window.App.ImageManager.preloadImages(validUploadedIds, true);
+          }
+          
+          const currentIndex = window.App.PatternManager.sequenceIndex;
+          const sequenceLengthBefore = window.App.PatternManager.imageSequence.length;
+          
+          // Insert new images at the current position, pushing existing images forward
+          // Reverse the array so they appear in the same order they were uploaded
+          validUploadedIds.reverse().forEach(imageId => {
+            window.App.PatternManager.imageSequence.splice(currentIndex, 0, imageId);
+          });
+          
+          console.log('ImageManagerUI: Successfully inserted uploaded images');
+          console.log('ImageManagerUI: Valid uploaded image IDs:', validUploadedIds.reverse()); // reverse back for logging
+          console.log('ImageManagerUI: Inserted at sequence position:', currentIndex);
+          console.log('ImageManagerUI: Sequence length before/after:', sequenceLengthBefore, '→', window.App.PatternManager.imageSequence.length);
+          console.log('ImageManagerUI: Next few images in sequence:', window.App.PatternManager.imageSequence.slice(currentIndex, currentIndex + 5));
+          
+          // Free up one layer slot if we're at the limit
+          const config = window.APP_CONFIG || {};
+          const maxLayers = config.layer_management?.max_concurrent_layers || 5;
+          const currentLayerCount = window.App.AnimationEngine.activeLayers.size;
+          
+          if (currentLayerCount >= maxLayers) {
+            console.log(`ImageManagerUI: At layer limit (${currentLayerCount}/${maxLayers}), removing oldest layer to make room`);
+            
+            // Find the oldest layer (earliest startTime) and remove it immediately
+            let oldestLayer = null;
+            let oldestTime = Date.now();
+            
+            window.App.AnimationEngine.activeLayers.forEach((layerInfo, imageId) => {
+              if (layerInfo.startTime < oldestTime) {
+                oldestTime = layerInfo.startTime;
+                oldestLayer = layerInfo;
+              }
+            });
+            
+            if (oldestLayer) {
+              console.log('ImageManagerUI: Removing oldest layer to make room for uploaded image');
+              window.App.AnimationEngine.removeLayer(oldestLayer);
+            }
+          }
+          
+          // Immediately show the uploaded image
+          console.log('ImageManagerUI: Triggering immediate display of uploaded images');
+          await window.App.PatternManager.showNextImage();
+        } else {
+          console.error('ImageManagerUI: No valid uploaded image IDs found in catalog');
+        }
       }
     }
     

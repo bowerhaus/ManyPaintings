@@ -90,7 +90,7 @@
     "border_percent": 10,
     "color": "#F5F2E8",
     "depth": 8,
-    "style": "medium",
+    "style": "thin",
     "styles": {
       "thin": {
         "depth": 8,

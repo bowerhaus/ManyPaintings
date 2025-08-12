@@ -416,7 +416,21 @@ export const AnimationEngine = {
   },
 
   generateTransformations(img, imageId, seed = null, scaledDimensions = null) {
-    const config = window.APP_CONFIG || {};
+    const globalConfig = window.APP_CONFIG || {};
+    
+    // Get per-image config overrides
+    const ImageManager = window.App?.ImageManager;
+    const imageInfo = ImageManager?.getImageInfo(imageId);
+    const imageConfig = imageInfo?.config || {};
+    
+    // Deep merge global config with per-image overrides
+    const config = this.deepMergeConfig(globalConfig, imageConfig);
+    
+    // Log config override usage for debugging
+    if (Object.keys(imageConfig).length > 0) {
+      console.log(`AnimationEngine: Using per-image config for ${imageId}:`, imageConfig);
+    }
+    
     const transformSeed = seed ? `${imageId}-${seed}` : imageId;
 
     if (config.preloadTransformCache && this.transformationCache.has(transformSeed)) {
@@ -815,5 +829,34 @@ export const AnimationEngine = {
     if (!canvasContainer) return;
     canvasContainer.style.filter = '';
     console.log('AnimationEngine: Reset global color grading to defaults');
+  },
+
+  /**
+   * Deep merge configuration objects, with override taking precedence
+   */
+  deepMergeConfig(base, override) {
+    if (!override || typeof override !== 'object') {
+      return base;
+    }
+    
+    if (!base || typeof base !== 'object') {
+      return override;
+    }
+    
+    const result = { ...base };
+    
+    for (const key in override) {
+      if (override.hasOwnProperty(key)) {
+        if (typeof override[key] === 'object' && override[key] !== null && 
+            typeof result[key] === 'object' && result[key] !== null &&
+            !Array.isArray(override[key]) && !Array.isArray(result[key])) {
+          result[key] = this.deepMergeConfig(result[key], override[key]);
+        } else {
+          result[key] = override[key];
+        }
+      }
+    }
+    
+    return result;
   }
 };

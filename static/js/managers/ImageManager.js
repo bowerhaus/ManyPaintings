@@ -124,5 +124,9 @@ export const ImageManager = {
       [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
+  },
+
+  getImageInfo(imageId) {
+    return this.images.get(imageId) || null;
   }
 };

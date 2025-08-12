@@ -1,0 +1,23 @@
+{
+  "transformations": {
+    "rotation": {
+      "enabled": false
+    },
+    "scale": {
+      "enabled": true,
+      "min_factor": 1.1,
+      "max_factor": 1.1
+    },
+    "translation": {
+      "enabled": false
+    }
+  },
+  "color_remapping": {
+    "enabled": true,
+    "probability": 0.9,
+    "hue_shift_range": {
+      "min_degrees": 0,
+      "max_degrees": 360
+    }
+  }
+}

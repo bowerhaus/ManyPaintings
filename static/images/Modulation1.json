@@ -1,0 +1,15 @@
+{
+  "transformations": {
+    "rotation": {
+      "enabled": false
+    },
+    "scale": {
+      "enabled": true,
+      "min_factor": 1.5,
+      "max_factor": 1.5
+    },
+    "translation": {
+      "enabled": false
+    }
+  }
+}

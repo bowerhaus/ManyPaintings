@@ -61,8 +61,10 @@ pip install -r requirements.txt
   - `managers/` - Core system managers (ImageManager, PatternManager, AudioManager, FavoritesManager, MatteBorderManager, UserPreferences)
   - `modules/` - Animation engine and specialized components
   - `ui/` - User interface components (UI, FavoritesGallery, GalleryManager, imageManagerUI)
-  - `utils/` - Utility modules (GridManager)
+  - `utils/` - Utility modules (GridManager, LayoutUtils)
+  - `constants/` - Shared constants (LayoutConstants)
 - **No Build Tools**: Pure JavaScript with immediate browser compatibility
+- **Centralized Layout System**: ✅ **RECENT REFACTOR** - Eliminated ~420 lines of duplicate code between AnimationEngine and GridManager by extracting shared layout logic into dedicated constants and utilities modules
 
 ### User Preferences System
 - **LocalStorage Integration**: Comprehensive browser localStorage for persistent user settings

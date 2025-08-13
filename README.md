@@ -755,7 +755,27 @@ ManyPaintings/
 │   ├── css/
 │   │   └── style.css           # CSS styles
 │   ├── js/
-│   │   └── main.js             # JavaScript with FavoritesManager
+│   │   ├── main.js             # JavaScript entry point and coordination
+│   │   ├── constants/          # Shared constants modules
+│   │   │   └── LayoutConstants.js  # Layout modes, fractions, and color schemes
+│   │   ├── managers/           # Core system managers
+│   │   │   ├── ImageManager.js
+│   │   │   ├── PatternManager.js
+│   │   │   ├── AudioManager.js
+│   │   │   ├── FavoritesManager.js
+│   │   │   ├── MatteBorderManager.js
+│   │   │   ├── DropShadowManager.js
+│   │   │   └── UserPreferences.js
+│   │   ├── modules/            # Animation engine and specialized components
+│   │   │   ├── AnimationEngine.js
+│   │   │   └── imageManagerUI.js
+│   │   ├── ui/                 # User interface components
+│   │   │   ├── UI.js
+│   │   │   ├── FavoritesGallery.js
+│   │   │   └── GalleryManager.js
+│   │   └── utils/              # Utility modules
+│   │       ├── GridManager.js
+│   │       └── LayoutUtils.js  # Shared layout calculation functions
 │   ├── audio/                  # Audio assets  
 │   │   └── *.mp3               # Background ambient audio files
 │   └── images/                 # Art images and per-image configs
@@ -845,6 +865,7 @@ The project includes comprehensive VS Code support:
 *   **Pattern Behavior System:** ✅ COMPLETED - Config-driven pattern generation with no localStorage interference
 *   **Background Preference Fix:** ✅ COMPLETED - Proper background color restoration with !important styling priority
 *   **JavaScript Modularization:** ✅ COMPLETED - Refactored 3,684-line main.js into manageable ES6 modules
+*   **Layout System Refactoring:** ✅ COMPLETED - Eliminated ~420 lines of duplicate code between AnimationEngine and GridManager by creating centralized LayoutConstants and LayoutUtils modules for consistent layout behavior
 *   **Image Management System:** ✅ COMPLETED - Web-based image upload, browse, and delete functionality
 *   **Enhanced Favorites Gallery:** ✅ COMPLETED - Visual thumbnails using html2canvas for pixel-perfect previews
 *   **Animation Engine Fixes:** ✅ COMPLETED - Resolved play/pause timing issues with proper phase calculations

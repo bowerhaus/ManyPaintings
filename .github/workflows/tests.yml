@@ -59,7 +59,7 @@ jobs:
 
     - name: Run E2E tests
       run: |
-        python -m pytest tests/e2e/ -v --browser chromium --headed=false
+        python -m pytest tests/e2e/ -v --browser chromium --headed false
 
     - name: Upload E2E test artifacts
       if: failure()

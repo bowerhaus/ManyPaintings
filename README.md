@@ -858,6 +858,61 @@ The project includes comprehensive VS Code support:
 - **Jinja** - Template syntax highlighting
 - **HTML CSS Support** - Enhanced HTML/CSS editing
 
+### Testing System ✅ **ENTERPRISE-GRADE IMPLEMENTATION**
+
+ManyPaintings includes a comprehensive automated testing system with 24+ test cases covering all functionality:
+
+#### Testing Architecture
+- **Backend Testing**: pytest with Flask integration for API endpoints and business logic
+- **End-to-End Testing**: Playwright with page object models for reliable UI testing  
+- **No Arbitrary Delays**: Smart wait strategies eliminate test flakiness
+- **Cross-Browser Support**: Tests run on Chromium, Firefox, and WebKit
+
+#### Page Object Model E2E Tests
+- **`tests/e2e/pages/`** - Maintainable page object classes
+- **`MainPage`** - Core application interactions and keyboard shortcuts
+- **`FavoritesGallery`** - Gallery modal operations and validations  
+- **`ApiClient`** - Backend API testing utilities
+- **Smart Selectors** - Uses actual HTML IDs and semantic selectors for stability
+
+#### Running Tests
+
+**All tests:**
+```bash
+# Cross-platform scripts
+test.bat        # Windows
+./test.sh       # Unix/Linux/macOS
+python run_tests.py  # Python script
+
+# Direct pytest
+python -m pytest
+```
+
+**E2E tests only:**
+```bash
+python -m pytest tests/e2e/ -v
+```
+
+**With coverage:**
+```bash
+python -m pytest --cov=. --cov-report=html
+```
+
+#### Test Coverage
+- **Core Functionality**: Application loading, animations, controls (15 tests)
+- **Favorites System**: Save, load, gallery, persistence (9 tests)  
+- **Keyboard Shortcuts**: All major keys (F, V, G, C, I, Space, B, N)
+- **API Endpoints**: Health, config, images, favorites APIs
+- **Visual Elements**: Canvas rendering, styling, error detection
+
+#### VS Code Integration
+- **Test Explorer**: Visual test runner with ▶️ buttons
+- **Debug Tests**: Full breakpoint support for test debugging
+- **Test Discovery**: All tests automatically visible in VS Code
+- **Launch Configs**: Pre-configured test running configurations
+
+The testing system ensures reliable, maintainable code with confidence for both development and production deployments.
+
 ## 10. Future Enhancements
 
 ### ✅ Recently Completed

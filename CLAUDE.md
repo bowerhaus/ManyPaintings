@@ -41,6 +41,13 @@ pip install -r requirements.txt
 
 ### Testing Guidelines
 - **Server Startup**: Don't start the server yourself when testing. Ask the developer to do it.
+- **E2E Testing**: Use the page object model E2E tests with Playwright for reliable automated testing
+- **Test Commands**: 
+  - `python -m pytest tests/e2e/` - Run E2E tests only
+  - `python -m pytest` - Run all tests (backend + E2E)
+  - `test.bat` or `./test.sh` - Cross-platform test scripts
+- **Page Objects**: All E2E tests use page object models to minimize test flakiness and improve maintainability
+- **Wait Strategies**: Tests use proper wait strategies (no arbitrary delays) for reliable execution
 
 ### Important Guidance
  - IMPORTANT - Dont ever start the server. Ask me to do it
@@ -114,6 +121,18 @@ pip install -r requirements.txt
   - `width_percent`: Shadow blur width as percentage of viewport (5-100, default: 30)
 - **Z-Index Positioning**: Positioned at z-index 60 to appear over matte border
 - **Performance Optimized**: Uses CSS transitions for smooth opacity changes
+
+### E2E Testing System
+- **Page Object Model**: Modern testing architecture using page object pattern for maintainable test code
+- **No Arbitrary Delays**: Smart wait strategies eliminate test flakiness from timing issues
+- **Comprehensive Coverage**: 24 automated test cases covering all major user workflows
+- **Test Structure**:
+  - `tests/e2e/pages/` - Page object models (BasePage, MainPage, FavoritesGallery, etc.)
+  - `tests/e2e/test_core_functionality.py` - Core app functionality (15 tests)  
+  - `tests/e2e/test_favorites_system.py` - Favorites system testing (9 tests)
+- **Smart Waits**: Uses `wait_for_element_visible()`, `wait_for_animation_frame()`, `wait_for_application_ready()`
+- **Reliable Selectors**: Uses actual HTML IDs and semantic selectors for stable test execution
+- **Network Handling**: Graceful handling of network idle timeouts for consistent test results
 
 ### Canvas Texture Overlay System
 - **Dual Texture Assets**: Two texture variants for optimal visibility across background modes

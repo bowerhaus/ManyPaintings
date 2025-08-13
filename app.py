@@ -37,21 +37,24 @@ def create_app(config_name=None):
     def get_images():
         from utils.image_manager import ImageManager
         
-        # Pass the full app config as base config for per-image overrides
-        image_manager = ImageManager(app.config['IMAGE_DIRECTORY'], base_config=dict(app.config))
-        catalog = image_manager.get_image_catalog()
-        
-        # Add cache headers for performance, but not if cache-busting timestamp is present
-        response = jsonify(catalog)
-        if app.config['ENABLE_CACHING'] and 't' not in request.args:
-            response.headers['Cache-Control'] = f'public, max-age={app.config["CACHE_MAX_AGE"]}'
-        else:
-            # Disable caching for cache-busting requests
-            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-            response.headers['Pragma'] = 'no-cache'
-            response.headers['Expires'] = '0'
-        
-        return response
+        try:
+            # Pass the full app config as base config for per-image overrides
+            image_manager = ImageManager(app.config['IMAGE_DIRECTORY'], base_config=dict(app.config))
+            catalog = image_manager.get_image_catalog()
+            
+            # Add cache headers for performance, but not if cache-busting timestamp is present
+            response = jsonify(catalog)
+            if app.config['ENABLE_CACHING'] and 't' not in request.args:
+                response.headers['Cache-Control'] = f'public, max-age={app.config["CACHE_MAX_AGE"]}'
+            else:
+                # Disable caching for cache-busting requests
+                response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+                response.headers['Pragma'] = 'no-cache'
+                response.headers['Expires'] = '0'
+            
+            return response
+        except Exception as e:
+            return jsonify({'error': 'Failed to load image catalog', 'message': str(e)}), 500
     
     @app.route('/api/pattern/<seed>')
     def get_pattern(seed):
@@ -119,7 +122,10 @@ def create_app(config_name=None):
         """Save a painting state as a favorite."""
         try:
             # Get the favorite data from request
-            favorite_request = request.get_json()
+            try:
+                favorite_request = request.get_json()
+            except Exception as json_error:
+                return jsonify({'error': 'Invalid JSON format'}), 400
             
             if not favorite_request:
                 return jsonify({'error': 'No favorite data provided'}), 400
@@ -193,8 +199,8 @@ def create_app(config_name=None):
             
             favorite_data = favorites[favorite_id]
             
-            # Return just the state data (not the metadata)
-            return jsonify(favorite_data['state'])
+            # Return the full favorite data (including id, created_at, state, thumbnail)
+            return jsonify(favorite_data)
             
         except (json.JSONDecodeError, IOError) as e:
             return jsonify({'error': f'Failed to load favorite: {str(e)}'}), 500

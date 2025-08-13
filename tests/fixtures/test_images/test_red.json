@@ -1,0 +1,19 @@
+{
+  "transformations": {
+    "scale": {
+      "min_factor": 1.2,
+      "max_factor": 1.8
+    },
+    "rotation": {
+      "max_degrees": 45
+    }
+  },
+  "animation_timing": {
+    "fade_in_min_sec": 2.0,
+    "fade_in_max_sec": 4.0,
+    "fade_out_min_sec": 3.0,
+    "fade_out_max_sec": 6.0,
+    "min_hold_time_sec": 2.0,
+    "max_hold_time_sec": 8.0
+  }
+}

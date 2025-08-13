@@ -8,7 +8,8 @@
       "Bash(dir:*)",
       "Bash(venvScriptsactivate.bat)",
       "Bash(ls:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(\"venv\\Scripts\\activate.bat\")"
     ],
     "deny": []
   }

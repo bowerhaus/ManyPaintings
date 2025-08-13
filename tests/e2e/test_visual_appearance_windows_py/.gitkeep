@@ -1,0 +1,3 @@
+# This directory contains baseline screenshots for Windows visual tests
+# Baseline images will be automatically generated on first test run
+# and stored in subdirectories organized by test class and method

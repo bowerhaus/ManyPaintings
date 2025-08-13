@@ -9,7 +9,8 @@
       "Bash(venvScriptsactivate.bat)",
       "Bash(ls:*)",
       "Bash(node:*)",
-      "Bash(\"venv\\Scripts\\activate.bat\")"
+      "Bash(\"venv\\Scripts\\activate.bat\")",
+      "Bash(pip show:*)"
     ],
     "deny": []
   }

@@ -1305,6 +1305,10 @@ body.white-background .texture-overlay {
     padding: 3rem 0;
 }
 
+.empty-section:not(.hidden) {
+    display: block;
+}
+
 .empty-icon {
     width: 4rem;
     height: 4rem;

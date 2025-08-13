@@ -168,9 +168,11 @@ export const FavoritesManager = {
         throw new Error(`Failed to load favorite: ${response.statusText}`);
       }
 
-      const state = await response.json();
-      console.log('FavoritesManager: Loading favorite state:', state);
+      const favoriteData = await response.json();
+      console.log('FavoritesManager: Loading favorite data:', favoriteData);
 
+      // Extract the state from the full favorite object
+      const state = favoriteData.state || favoriteData;
       await this.restoreState(state);
       console.log('FavoritesManager: Favorite restored successfully');
 

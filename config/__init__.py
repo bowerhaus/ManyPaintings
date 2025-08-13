@@ -186,9 +186,20 @@ class RaspberryPiConfig(Config):
     def __init__(self):
         super().__init__('raspberry_pi')
 
+class TestingConfig(Config):
+    def __init__(self):
+        super().__init__('development')  # Use development as base
+        # Override settings for testing
+        self.DEBUG = True
+        self.TESTING = True
+        self.WTF_CSRF_ENABLED = False
+        self.SECRET_KEY = 'test-secret-key'
+        self.IMAGE_DIRECTORY = 'tests/fixtures/test_images'
+
 config = {
     'development': DevelopmentConfig(),
     'production': ProductionConfig(),
     'raspberry_pi': RaspberryPiConfig(),
+    'testing': TestingConfig(),
     'default': DevelopmentConfig()
 }

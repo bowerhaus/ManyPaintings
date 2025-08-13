@@ -277,8 +277,13 @@ Professional Samsung Frame TV-style display calibration system for optimal artwo
 
 **Canvas Texture System:**
 *   **Canvas Texture Intensity:** 0-100% overlay intensity for authentic painted-on-canvas appearance
+*   **Dual Texture Assets:** Two texture variants optimized for each background mode
+    - Light linen texture for white backgrounds with multiply blending
+    - Dark inverted linen texture for black backgrounds with normal blending
+*   **Background-Adaptive Positioning:** Texture layering adapts to background for optimal visual experience
+    - Black backgrounds: Texture behind images (preserves artwork clarity)
+    - White backgrounds: Texture over images (traditional canvas effect)
 *   **Realistic Linen Weave:** High-quality linen canvas texture scaled appropriately for natural look
-*   **Smart Blending:** Multiply blend mode works naturally with both black and white backgrounds
 *   **Filter Integration:** Texture responds to all color grading adjustments for cohesive appearance
 
 **Professional Interface:**

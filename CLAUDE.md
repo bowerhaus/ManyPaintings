@@ -114,12 +114,16 @@ pip install -r requirements.txt
 - **Performance Optimized**: Uses CSS transitions for smooth opacity changes
 
 ### Canvas Texture Overlay System
-- **Authentic Texture**: High-quality linen weave canvas texture (`static/resources/linen-weave-canvas.png`)
+- **Dual Texture Assets**: Two texture variants for optimal visibility across background modes
+  - `static/resources/linen-weave-canvas.png`: Original light texture for white backgrounds
+  - `static/resources/linen-weave-canvas-dark.png`: Inverted dark texture for black backgrounds
 - **Realistic Scaling**: Texture scaled to 20% of original size for natural canvas appearance
-- **Smart Blending**: Uses multiply blend mode to work naturally with both black and white backgrounds
+- **Background-Adaptive Blending**: 
+  - **Black backgrounds**: Dark texture with normal blend mode (z-index 5, behind images)
+  - **White backgrounds**: Light texture with multiply blend mode (z-index 15, over images)
+- **Optimized Layering**: Texture positioning adapts to background for best visual experience
 - **Filter Integration**: Texture responds to all Gallery Manager color grading adjustments
 - **Performance Optimized**: CSS background-image with repeat pattern for efficient rendering
-- **Z-Index Positioning**: Properly layered at z-index 15 (above background, below image layers)
 
 ### UI Interaction Notes
 - **Delete Operations**: Don't show confirmation alerts when a delete operation occurs. Just show a toast notification.

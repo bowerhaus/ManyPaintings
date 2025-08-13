@@ -46,7 +46,7 @@ def main():
     
     if args.backend:
         print("=== Running Backend Tests ===")
-        cmd = base_cmd + ['tests/test_*.py']
+        cmd = base_cmd + ['tests/test_app.py', 'tests/test_config.py', 'tests/test_image_manager.py']
         if args.coverage:
             cmd.extend(['--cov=.', '--cov-report=html', '--cov-report=term'])
         success &= run_command(cmd)
@@ -63,7 +63,7 @@ def main():
         print("=== Running All Tests ===")
         
         print("\n--- Backend Tests ---")
-        cmd = base_cmd + ['tests/test_*.py']
+        cmd = base_cmd + ['tests/test_app.py', 'tests/test_config.py', 'tests/test_image_manager.py']
         if args.coverage:
             cmd.extend(['--cov=.', '--cov-report=html', '--cov-report=term-missing'])
         success &= run_command(cmd)

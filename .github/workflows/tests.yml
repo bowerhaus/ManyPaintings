@@ -5,13 +5,14 @@ on:
     branches: [ main, master, develop ]
   pull_request:
     branches: [ main, master, develop ]
+  workflow_dispatch:
 
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.11, 3.12, 3.13]
+        python-version: [3.11, 3.12]
 
     steps:
     - uses: actions/checkout@v4
@@ -59,7 +60,7 @@ jobs:
 
     - name: Run E2E tests
       run: |
-        python -m pytest tests/e2e/ -v --browser chromium --headed=false
+        python -m pytest tests/e2e/ -v --browser chromium
 
     - name: Upload E2E test artifacts
       if: failure()

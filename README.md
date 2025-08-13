@@ -41,7 +41,7 @@ This document outlines the Product Requirements for a generative art application
 *   **Enhanced Image Transformations:** ✅ **IMPROVED FEATURE** - Advanced transformation system with multiple layout modes:
     *   **Rotation:** Images may be rotated by random angles with deterministic seeded generation
     *   **Scaling:** Images may be scaled up or down within defined limits
-    *   **Multi-Mode Layout System:** ✅ **NEW** - Three positioning strategies: Rule of Thirds (4 points), Rule of Thirds + Center (5 points), and Random distribution with matte border awareness and minimum visibility constraints
+    *   **Multi-Mode Layout System:** ✅ **NEW** - Four positioning strategies: Rule of Thirds (4 corner points), Rule of Thirds + Center (5 points), Rule of Fifths Thirds + Center (5 points), Rule of Fifths and Thirds (4 corner points), and Random distribution with matte border awareness and minimum visibility constraints
     *   **Color Remapping:** Images may have their colors dynamically shifted for visual variety
 
 *   **Configurable Animation Parameters:** The animation system should support fine-tuned control through configuration:
@@ -74,7 +74,7 @@ The application should provide extensive configuration options to fine-tune the 
 *   `scale.min_factor` - Minimum scale multiplier (default: 0.5)
 *   `scale.max_factor` - Maximum scale multiplier (default: 1.0)
 *   `translation.enabled` - Enable positioning system (default: true)
-*   `translation.layout_mode` - Positioning strategy: "rule_of_thirds", "rule_of_thirds_and_centre", or "random" (default: "rule_of_thirds_and_centre")
+*   `translation.layout_mode` - Positioning strategy: "rule_of_thirds", "rule_of_thirds_and_centre", "rule_of_fifths_thirds_and_centre", "rule_of_fifths_and_thirds", or "random" (default: "rule_of_thirds_and_centre")
 *   `translation.minimum_visible_percent` - Minimum image visibility percentage (default: 60%)
 *   `best_fit_scaling.enabled` - Enable automatic image scaling to fit within image area (default: true)
 
@@ -207,31 +207,45 @@ Where:
 
 ### 3.6. Multi-Mode Layout System ✅ RECENT IMPROVEMENT
 
-The application now features a sophisticated **Multi-Mode Layout System** with three distinct positioning strategies that provide different visual experiences and use cases.
+The application now features a sophisticated **Multi-Mode Layout System** with four distinct positioning strategies that provide different visual experiences and use cases.
 
 #### Available Layout Modes
 
 ##### 1. Rule of Thirds (`rule_of_thirds`)
 **Purpose:** Structured, aesthetically pleasing positioning based on photography composition principles
-*   **Positioning:** Images cycle through the 4 rule of thirds intersection points
-*   **Pattern:** Top-left → Top-right → Bottom-left → Bottom-right (round-robin)
-*   **Visual Effect:** Classic photographic composition with balanced positioning
-*   **Grid Visualization:** Shows red grid lines and yellow intersection points when enabled (G key)
+*   **Positioning:** Images cycle through 4 corner points at rule of thirds intersections
+*   **Pattern:** (1/3, 1/3) → (2/3, 1/3) → (1/3, 2/3) → (2/3, 2/3) (round-robin)
+*   **Visual Effect:** Classic photographic composition with balanced corner positioning
+*   **Grid Visualization:** Shows red grid lines and yellow corner dots when enabled (G key)
 
 ##### 2. Rule of Thirds + Center (`rule_of_thirds_and_centre`)
 **Purpose:** Expanded structured positioning including the viewport center
-*   **Positioning:** Images cycle through 5 positions: 4 rule of thirds points + center point
-*   **Pattern:** Top-left → Top-right → Bottom-left → Bottom-right → Center (round-robin)
-*   **Visual Effect:** More variety while maintaining compositional structure
-*   **Grid Visualization:** Shows rule of thirds grid + center dot when enabled (G key)
+*   **Positioning:** Images cycle through 4 corner points + center point (5 total)
+*   **Pattern:** 4 corners + (1/2, 1/2) center point (round-robin)
+*   **Visual Effect:** Classic composition with central focus option
+*   **Grid Visualization:** Shows red grid lines, yellow corner dots + center dot when visible
 
-##### 3. Random (`random`)
+##### 3. Rule of Fifths Thirds + Center (`rule_of_fifths_thirds_and_centre`)
+**Purpose:** Alternative golden ratio inspired positioning with center
+*   **Positioning:** Images cycle through 4 corner points at fifths/thirds intersections + center (5 total)
+*   **Pattern:** (1/5, 1/3) → (4/5, 1/3) → (1/5, 2/3) → (4/5, 2/3) → (1/2, 1/2) (round-robin)
+*   **Visual Effect:** More dynamic corner positioning with central option
+*   **Grid Visualization:** Shows cyan grid lines, cyan corner dots + center dot when visible
+
+##### 4. Rule of Fifths and Thirds (`rule_of_fifths_and_thirds`)
+**Purpose:** Golden ratio inspired corner positioning without center
+*   **Positioning:** Images cycle through 4 corner points at fifths/thirds intersections
+*   **Pattern:** (1/5, 1/3) → (4/5, 1/3) → (1/5, 2/3) → (4/5, 2/3) (round-robin)  
+*   **Visual Effect:** Dynamic corner-only positioning
+*   **Grid Visualization:** Shows orange grid lines and orange corner dots when enabled (G key)
+
+##### 5. Random (`random`)
 **Purpose:** Natural, unpredictable positioning across the entire visible area
-*   **Positioning:** True random distribution within matte border bounds
-*   **Pattern:** No pattern - each image gets completely random placement
-*   **Visual Effect:** Organic, unpredictable compositions
-*   **Grid Visualization:** Grid lines hidden (irrelevant), G key toggles debug borders only
-*   **Minimum Visibility:** Enforces 60% minimum visibility constraint to prevent images from being positioned mostly off-screen
+*   **Positioning:** Images are placed randomly throughout the viewport
+*   **Pattern:** Completely random positioning with no predetermined points
+*   **Visual Effect:** Organic, unpredictable composition
+*   **Grid Visualization:** Grid is disabled in random mode
+
 
 #### Configuration
 Set your preferred layout mode in `config.json`:
@@ -242,7 +256,7 @@ Set your preferred layout mode in `config.json`:
   }
 }
 ```
-Options: `rule_of_thirds`, `rule_of_thirds_and_centre`, `random`
+Options: `rule_of_thirds`, `rule_of_thirds_and_centre`, `rule_of_fifths_thirds_and_centre`, `rule_of_fifths_and_thirds`, `random`
 
 #### Debugging
 Press **G** to toggle grid visualization and see how images are positioned.

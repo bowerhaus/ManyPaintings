@@ -109,6 +109,14 @@ class Config:
         self.TRANSLATION_RULE_OF_THIRDS_AND_CENTRE_MAX_HORIZONTAL_DEVIATION_PERCENT = rule_of_thirds_and_centre_config.get('max_horizontal_deviation_percent', 5)
         self.TRANSLATION_RULE_OF_THIRDS_AND_CENTRE_MAX_VERTICAL_DEVIATION_PERCENT = rule_of_thirds_and_centre_config.get('max_vertical_deviation_percent', 5)
         
+        rule_of_fifths_thirds_and_centre_config = translation_config.get('rule_of_fifths_thirds_and_centre', {})
+        self.TRANSLATION_RULE_OF_FIFTHS_THIRDS_AND_CENTRE_MAX_HORIZONTAL_DEVIATION_PERCENT = rule_of_fifths_thirds_and_centre_config.get('max_horizontal_deviation_percent', 5)
+        self.TRANSLATION_RULE_OF_FIFTHS_THIRDS_AND_CENTRE_MAX_VERTICAL_DEVIATION_PERCENT = rule_of_fifths_thirds_and_centre_config.get('max_vertical_deviation_percent', 5)
+        
+        rule_of_fifths_and_thirds_config = translation_config.get('rule_of_fifths_and_thirds', {})
+        self.TRANSLATION_RULE_OF_FIFTHS_AND_THIRDS_MAX_HORIZONTAL_DEVIATION_PERCENT = rule_of_fifths_and_thirds_config.get('max_horizontal_deviation_percent', 5)
+        self.TRANSLATION_RULE_OF_FIFTHS_AND_THIRDS_MAX_VERTICAL_DEVIATION_PERCENT = rule_of_fifths_and_thirds_config.get('max_vertical_deviation_percent', 5)
+        
         best_fit_scaling_config = transform_config.get('best_fit_scaling', {})
         self.BEST_FIT_SCALING_ENABLED = best_fit_scaling_config.get('enabled', True)
         

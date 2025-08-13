@@ -465,7 +465,7 @@ export const AnimationEngine = {
         const ruleOfThirdsPoints = GridManager ? GridManager.getRuleOfThirdsPoints() : null;
         
         if (ruleOfThirdsPoints && ruleOfThirdsPoints.length >= 4) {
-          // Use the first 4 points (excluding center)
+          // Use only the 4 corner points
           const point = ruleOfThirdsPoints[this.ruleOfThirdsIndex % 4];
           this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % 4;
 
@@ -498,16 +498,16 @@ export const AnimationEngine = {
 
           console.log(`Rule of thirds: Point ${this.ruleOfThirdsIndex === 0 ? 4 : this.ruleOfThirdsIndex} → translate(${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px)`);
         } else {
-          // Fallback to old viewport-based calculation
-          const intersectionPoints = [
+          // Fallback to viewport-based calculation - only corner points
+          const cornerPoints = [
             { x: 1 / 3, y: 1 / 3 },    // Top-left
             { x: 2 / 3, y: 1 / 3 },    // Top-right
             { x: 1 / 3, y: 2 / 3 },    // Bottom-left
             { x: 2 / 3, y: 2 / 3 },    // Bottom-right
           ];
 
-          const point = intersectionPoints[this.ruleOfThirdsIndex];
-          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % intersectionPoints.length;
+          const point = cornerPoints[this.ruleOfThirdsIndex];
+          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % cornerPoints.length;
 
           const viewportOffsetX = (point.x - 0.5) * 100;
           const viewportOffsetY = (point.y - 0.5) * 100;
@@ -523,7 +523,7 @@ export const AnimationEngine = {
         const ruleOfThirdsPoints = GridManager ? GridManager.getRuleOfThirdsPoints() : null;
         
         if (ruleOfThirdsPoints && ruleOfThirdsPoints.length >= 5) {
-          // Use all 5 points (including center)
+          // Use 4 corner points + center (5 points total)
           const point = ruleOfThirdsPoints[this.ruleOfThirdsIndex];
           this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % 5;
 
@@ -556,17 +556,134 @@ export const AnimationEngine = {
 
           console.log(`Rule of thirds + center: Point ${this.ruleOfThirdsIndex === 0 ? 5 : this.ruleOfThirdsIndex} → translate(${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px)`);
         } else {
-          // Fallback to old viewport-based calculation
-          const intersectionPoints = [
+          // Fallback to viewport-based calculation - corner points + center
+          const cornerPlusCenter = [
             { x: 1 / 3, y: 1 / 3 },    // Top-left
             { x: 2 / 3, y: 1 / 3 },    // Top-right
             { x: 1 / 3, y: 2 / 3 },    // Bottom-left
             { x: 2 / 3, y: 2 / 3 },    // Bottom-right
-            { x: 0.5, y: 0.5 },        // Center
+            { x: 1 / 2, y: 1 / 2 },    // Center
           ];
 
-          const point = intersectionPoints[this.ruleOfThirdsIndex];
-          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % intersectionPoints.length;
+          const point = cornerPlusCenter[this.ruleOfThirdsIndex];
+          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % cornerPlusCenter.length;
+
+          const viewportOffsetX = (point.x - 0.5) * 100;
+          const viewportOffsetY = (point.y - 0.5) * 100;
+          
+          transformations.translateX = viewportOffsetX;
+          transformations.translateY = viewportOffsetY;
+          transformations.useViewportUnits = true;
+        }
+        
+      } else if (layoutMode === 'rule_of_fifths_thirds_and_centre') {
+        // Get rule of fifths thirds points from GridManager (accounts for matte border)
+        const GridManager = window.App?.GridManager;
+        const ruleOfFifthsThirdsPoints = GridManager ? GridManager.getRuleOfFifthsThirdsPoints() : null;
+        
+        if (ruleOfFifthsThirdsPoints && ruleOfFifthsThirdsPoints.length >= 5) {
+          // Use 4 corner points + center (5 points total)
+          const point = ruleOfFifthsThirdsPoints[this.ruleOfThirdsIndex];
+          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % 5;
+
+          // Apply deviation if configured
+          let finalX = point.x;
+          let finalY = point.y;
+          
+          const maxHorizontalDev = (config.transformations?.translation?.rule_of_fifths_thirds_and_centre?.max_horizontal_deviation_percent || 0) / 100;
+          const maxVerticalDev = (config.transformations?.translation?.rule_of_fifths_thirds_and_centre?.max_vertical_deviation_percent || 0) / 100;
+          
+          if (maxHorizontalDev > 0 || maxVerticalDev > 0) {
+            // Get the effective image area for deviation calculation
+            const MatteBorderManager = window.App?.MatteBorderManager;
+            const imageArea = MatteBorderManager ? MatteBorderManager.getImageArea() : { width: window.innerWidth, height: window.innerHeight };
+            
+            const horizontalDeviation = (random() - 0.5) * 2 * maxHorizontalDev * imageArea.width;
+            const verticalDeviation = (random() - 0.5) * 2 * maxVerticalDev * imageArea.height;
+            
+            finalX = Math.max(imageArea.left, Math.min(imageArea.left + imageArea.width, point.x + horizontalDeviation));
+            finalY = Math.max(imageArea.top, Math.min(imageArea.top + imageArea.height, point.y + verticalDeviation));
+          }
+
+          // Convert absolute position to offset from viewport center
+          const viewportCenterX = window.innerWidth / 2;
+          const viewportCenterY = window.innerHeight / 2;
+          
+          transformations.translateX = finalX - viewportCenterX;
+          transformations.translateY = finalY - viewportCenterY;
+          transformations.useViewportUnits = false; // Use pixels since we have absolute coordinates
+
+          console.log(`Rule of fifths thirds + centre: Point ${(this.ruleOfThirdsIndex === 0 ? 5 : this.ruleOfThirdsIndex)} → translate(${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px)`);
+        } else {
+          // Fallback to viewport-based calculation - corner points + center
+          const cornerPlusCenter = [
+            { x: 1/5, y: 1/3 },  // Top-left
+            { x: 4/5, y: 1/3 },  // Top-right
+            { x: 1/5, y: 2/3 },  // Bottom-left
+            { x: 4/5, y: 2/3 },  // Bottom-right
+            { x: 1/2, y: 1/2 }   // Center
+          ];
+
+          const point = cornerPlusCenter[this.ruleOfThirdsIndex];
+          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % cornerPlusCenter.length;
+
+          const viewportOffsetX = (point.x - 0.5) * 100;
+          const viewportOffsetY = (point.y - 0.5) * 100;
+          
+          transformations.translateX = viewportOffsetX;
+          transformations.translateY = viewportOffsetY;
+          transformations.useViewportUnits = true;
+        }
+        
+      } else if (layoutMode === 'rule_of_fifths_and_thirds') {
+        // Get rule of fifths and thirds points from GridManager (accounts for matte border)
+        const GridManager = window.App?.GridManager;
+        const ruleOfFifthsAndThirdsPoints = GridManager ? GridManager.getRuleOfFifthsAndThirdsPoints() : null;
+        
+        if (ruleOfFifthsAndThirdsPoints && ruleOfFifthsAndThirdsPoints.length >= 4) {
+          // Use only the 4 corner points
+          const point = ruleOfFifthsAndThirdsPoints[this.ruleOfThirdsIndex];
+          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % 4;
+
+          // Apply deviation if configured
+          let finalX = point.x;
+          let finalY = point.y;
+          
+          const maxHorizontalDev = (config.transformations?.translation?.rule_of_fifths_and_thirds?.max_horizontal_deviation_percent || 0) / 100;
+          const maxVerticalDev = (config.transformations?.translation?.rule_of_fifths_and_thirds?.max_vertical_deviation_percent || 0) / 100;
+          
+          if (maxHorizontalDev > 0 || maxVerticalDev > 0) {
+            // Get the effective image area for deviation calculation
+            const MatteBorderManager = window.App?.MatteBorderManager;
+            const imageArea = MatteBorderManager ? MatteBorderManager.getImageArea() : { width: window.innerWidth, height: window.innerHeight };
+            
+            const horizontalDeviation = (random() - 0.5) * 2 * maxHorizontalDev * imageArea.width;
+            const verticalDeviation = (random() - 0.5) * 2 * maxVerticalDev * imageArea.height;
+            
+            finalX = Math.max(imageArea.left, Math.min(imageArea.left + imageArea.width, point.x + horizontalDeviation));
+            finalY = Math.max(imageArea.top, Math.min(imageArea.top + imageArea.height, point.y + verticalDeviation));
+          }
+
+          // Convert absolute position to offset from viewport center
+          const viewportCenterX = window.innerWidth / 2;
+          const viewportCenterY = window.innerHeight / 2;
+          
+          transformations.translateX = finalX - viewportCenterX;
+          transformations.translateY = finalY - viewportCenterY;
+          transformations.useViewportUnits = false; // Use pixels since we have absolute coordinates
+
+          console.log(`Rule of fifths and thirds: Point ${(this.ruleOfThirdsIndex === 0 ? 4 : this.ruleOfThirdsIndex)} → translate(${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px)`);
+        } else {
+          // Fallback to viewport-based calculation - only corner points
+          const cornerPoints = [
+            { x: 1/5, y: 1/3 },  // Top-left
+            { x: 4/5, y: 1/3 },  // Top-right
+            { x: 1/5, y: 2/3 },  // Bottom-left
+            { x: 4/5, y: 2/3 }   // Bottom-right
+          ];
+
+          const point = cornerPoints[this.ruleOfThirdsIndex];
+          this.ruleOfThirdsIndex = (this.ruleOfThirdsIndex + 1) % cornerPoints.length;
 
           const viewportOffsetX = (point.x - 0.5) * 100;
           const viewportOffsetY = (point.y - 0.5) * 100;
@@ -754,6 +871,8 @@ export const AnimationEngine = {
       const currentLayoutMode = window.APP_CONFIG && window.APP_CONFIG.transformations?.translation?.layout_mode;
       const isGridVisible = grid.style.display !== 'none';
       const isUsingCenterMode = currentLayoutMode === 'rule_of_thirds_and_centre';
+      const isRuleOfFifthsThirdsMode = currentLayoutMode === 'rule_of_fifths_thirds_and_centre';
+      const isRuleOfFifthsAndThirdsMode = currentLayoutMode === 'rule_of_fifths_and_thirds';
       const isRandomMode = currentLayoutMode === 'random';
       
       if (isRandomMode) {
@@ -762,7 +881,7 @@ export const AnimationEngine = {
         return;
       }
       
-      if (isGridVisible && isUsingCenterMode) {
+      if (isGridVisible && (isUsingCenterMode || isRuleOfFifthsThirdsMode)) {
         centerDot.style.display = 'block';
       } else {
         centerDot.style.display = 'none';

@@ -645,8 +645,8 @@ export const UI = {
     const currentLayoutMode = window.APP_CONFIG?.transformations?.translation?.layout_mode;
     
     // Only allow grid in rule of thirds modes
-    if (currentLayoutMode !== 'rule_of_thirds' && currentLayoutMode !== 'rule_of_thirds_and_centre') {
-      console.log('Debug grid only available in rule of thirds layout modes');
+    if (currentLayoutMode !== 'rule_of_thirds' && currentLayoutMode !== 'rule_of_thirds_and_centre' && currentLayoutMode !== 'rule_of_fifths_thirds_and_centre' && currentLayoutMode !== 'rule_of_fifths_and_thirds') {
+      console.log('Debug grid only available in rule of thirds and rule of fifths thirds layout modes');
       return;
     }
     

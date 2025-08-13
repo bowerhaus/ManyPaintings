@@ -125,9 +125,19 @@ pip install -r requirements.txt
 - **Filter Integration**: Texture responds to all Gallery Manager color grading adjustments
 - **Performance Optimized**: CSS background-image with repeat pattern for efficient rendering
 
+### Layout System
+- **Four Layout Modes**: Sophisticated positioning system with corner-focused placement
+  - `rule_of_thirds`: 4 corner points at rule of thirds intersections
+  - `rule_of_thirds_and_centre`: 4 corners + center point (5 total)
+  - `rule_of_fifths_thirds_and_centre`: 4 corners at fifths/thirds intersections + center (5 total)
+  - `rule_of_fifths_and_thirds`: 4 corners at fifths/thirds intersections only
+- **Corner-Focused Design**: All modes exclude edge-center points (top-center, bottom-center, middle-left, middle-right)
+- **Visual Grid System**: Each mode has distinct colored grid visualization for debugging
+- **Matte Border Aware**: All positioning calculations account for matte border area
+
 ### UI Interaction Notes
 - **Delete Operations**: Don't show confirmation alerts when a delete operation occurs. Just show a toast notification.
 - **Image Management**: Use I key or click image manager button to access upload/delete functionality
 - **Favorites Gallery**: Use V key or click gallery button to browse saved favorites with thumbnails
 - **Gallery Manager**: Use C key or click gallery manager button to open professional color adjustment interface
-- **Debug Grid**: Use G key to toggle rule of thirds grid visualization for positioning debugging
+- **Debug Grid**: Use G key to toggle grid visualization for positioning debugging (works with all layout modes)

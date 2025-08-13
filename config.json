@@ -43,13 +43,21 @@
     },
     "translation": {
       "enabled": true,
-      "layout_mode": "rule_of_thirds_and_centre",
+      "layout_mode": "rule_of_fifths_thirds_and_centre",
       "minimum_visible_percent": 60,
       "rule_of_thirds": {
         "max_horizontal_deviation_percent": 0,
         "max_vertical_deviation_percent": 0
       },
       "rule_of_thirds_and_centre": {
+        "max_horizontal_deviation_percent": 0,
+        "max_vertical_deviation_percent": 0
+      },
+      "rule_of_fifths_thirds_and_centre": {
+        "max_horizontal_deviation_percent": 0,
+        "max_vertical_deviation_percent": 0
+      },
+      "rule_of_fifths_and_thirds": {
         "max_horizontal_deviation_percent": 0,
         "max_vertical_deviation_percent": 0
       },

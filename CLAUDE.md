@@ -91,7 +91,7 @@ pip install -r requirements.txt
 - **Real-time Adjustments**: All settings apply instantly to artwork while controls remain visible
 - **Samsung Frame TV Style**: Bottom-sheet interface allows artwork visibility during adjustments
 - **Gallery Controls**:
-  - **Brightness**: 85-115% (±15%) for optimal display conditions
+  - **Brightness**: 25-115% range for optimal display conditions
   - **Contrast**: 85-115% (±15%) for artwork clarity  
   - **Saturation**: 50-120% range for color intensity control
   - **White Balance**: 80-120% (±20%) for warm/cool gallery lighting temperature

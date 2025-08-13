@@ -87,22 +87,22 @@
   },
   "matte_border": {
     "enabled": true,
-    "border_percent": 10,
+    "border_percent": 7,
     "color": "#F5F2E8",
     "depth": 8,
     "style": "thin",
     "styles": {
       "thin": {
-        "depth": 8,
+        "depth": 6,
         "top_edge_offset": -25,
         "left_edge_offset": -10,
         "right_edge_offset": -3,
-        "bottom_edge_offset": 15,
+        "bottom_edge_offset": 10,
         "shadow_width_multiplier": 12,
         "shadow_opacity": 0.02
       },
       "medium": {
-        "depth": 10,
+        "depth": 8,
         "top_edge_offset": -35,
         "left_edge_offset": -15,
         "right_edge_offset": -5,
@@ -111,7 +111,7 @@
         "shadow_opacity": 0.03
       },
       "thick": {
-        "depth": 12,
+        "depth": 10,
         "top_edge_offset": -45,
         "left_edge_offset": -20,
         "right_edge_offset": -8,

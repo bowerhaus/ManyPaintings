@@ -13,7 +13,7 @@ export class UserPreferences {
             maxLayers: 4,       // Maximum concurrent layers (1-8)  
             volume: 0.5,        // Audio volume (0-1)
             isWhiteBackground: false,  // Background color (false=black, true=white)
-            brightness: 100,    // Brightness percentage (85-115)
+            brightness: 100,    // Brightness percentage (25-115)
             contrast: 100,      // Contrast percentage (85-115)
             saturation: 100,    // Saturation percentage (50-120)
             whiteBalance: 100,  // White balance percentage (80-120, maps to hue rotation)
@@ -111,8 +111,8 @@ export class UserPreferences {
             validated.isWhiteBackground = prefs.isWhiteBackground;
         }
         
-        // Validate brightness (85-115)
-        if (typeof prefs.brightness === 'number' && prefs.brightness >= 85 && prefs.brightness <= 115) {
+        // Validate brightness (25-115)
+        if (typeof prefs.brightness === 'number' && prefs.brightness >= 25 && prefs.brightness <= 115) {
             validated.brightness = prefs.brightness;
         }
         

@@ -144,9 +144,11 @@ class FavoritesGallery(BasePage):
         # Wait for either favorites to appear or empty state
         self.page.wait_for_function(
             """() => {
-                const cards = document.querySelectorAll('.favorite-card, .favorite-item, .gallery-item');
-                const emptyMsg = document.querySelector('.empty-gallery, .no-favorites');
-                return cards.length > 0 || emptyMsg !== null;
+                const cards = document.querySelectorAll('.favorite-card');
+                const emptySection = document.querySelector('#favorites-empty');
+                const grid = document.querySelector('#favorites-grid');
+                // Wait for either cards to appear or empty state to be visible
+                return (cards.length > 0) || (emptySection && !emptySection.classList.contains('hidden')) || (grid && grid.children.length > 0);
             }""",
             timeout=timeout
         )

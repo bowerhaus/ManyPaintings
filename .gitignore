@@ -97,3 +97,4 @@ tmp/
 docs/_build/
 favorites.json
 ManyPaintings-Windows.exe
+chrome_data/

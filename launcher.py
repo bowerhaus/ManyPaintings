@@ -208,7 +208,7 @@ def wait_for_server(host="127.0.0.1", port=5000, timeout=30):
                     if response.getcode() == 200:
                         print(f"Server ready at {url}")
                         return True
-        except (Exception, urllib.error.URLError):
+        except Exception:
             pass
         time.sleep(0.5)
     
@@ -279,11 +279,12 @@ def main():
         print("Failed to start Flask server. Exiting.")
         sys.exit(1)
     
-    # Launch browser in kiosk mode (app mode, not fullscreen)
-    kiosk_url = f"http://{host}:{port}/kiosk"
-    print(f"Opening kiosk mode: {kiosk_url}")
+    # Launch browser in full screen kiosk mode with normal interface
+    # Using normal endpoint but in full screen
+    url = f"http://{host}:{port}"  
+    print(f"Opening browser in full screen mode: {url}")
     
-    browser_process = launch_browser_kiosk_windowed(kiosk_url, port)
+    browser_process = launch_browser_kiosk(url, port)
     
     try:
         if browser_process:

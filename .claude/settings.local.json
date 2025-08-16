@@ -10,7 +10,10 @@
       "Bash(ls:*)",
       "Bash(node:*)",
       "Bash(\"venv\\Scripts\\activate.bat\")",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "WebSearch",
+      "Bash(cec-client:*)",
+      "Bash(cec-ctl:*)"
     ],
     "deny": []
   }

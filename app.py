@@ -363,6 +363,32 @@ def create_app(config_name=None):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/api/cpu-temperature')
+    def get_cpu_temperature():
+        """Get CPU temperature on Raspberry Pi."""
+        try:
+            import platform
+            
+            # Check if running on Raspberry Pi (ARM architecture)
+            if not (platform.machine().startswith('arm') or platform.machine().startswith('aarch')):
+                return jsonify({'error': 'CPU temperature only available on Raspberry Pi'}), 404
+            
+            # Read temperature from RPi thermal zone
+            temp_file = '/sys/class/thermal/thermal_zone0/temp'
+            if os.path.exists(temp_file):
+                with open(temp_file, 'r') as f:
+                    temp_millidegrees = int(f.read().strip())
+                    temp_celsius = temp_millidegrees / 1000.0
+                    return jsonify({
+                        'temperature': round(temp_celsius),
+                        'unit': 'C'
+                    })
+            else:
+                return jsonify({'error': 'Temperature sensor not found'}), 404
+                
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
     @app.errorhandler(404)
     def not_found_error(error):
         return jsonify({'error': 'Not found'}), 404

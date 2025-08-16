@@ -10,6 +10,7 @@ import { AudioManager } from './managers/AudioManager.js';
 import { FavoritesManager } from './managers/FavoritesManager.js';
 import { MatteBorderManager } from './managers/MatteBorderManager.js';
 import { DropShadowManager } from './managers/DropShadowManager.js';
+import { CPUTemperatureManager } from './managers/CPUTemperatureManager.js';
 import { userPreferences } from './managers/UserPreferences.js';
 import { UI } from './ui/UI.js';
 import { FavoritesGallery } from './ui/FavoritesGallery.js';
@@ -22,6 +23,7 @@ import { GridManager } from './utils/GridManager.js';
 let config = {};
 let isInitialized = false;
 let kioskMode = false;
+let cpuTemperatureManager = null;
 
 /**
  * Main Application Interface
@@ -77,6 +79,9 @@ const App = {
       
       // Initialize grid manager after matte border is set up
       GridManager.init();
+
+      // Initialize CPU temperature manager (RPi only)
+      cpuTemperatureManager = new CPUTemperatureManager();
 
       await PatternManager.init();
 
@@ -169,7 +174,12 @@ const App = {
   ImageManagerUI,
   UI,
   GridManager,
-  userPreferences
+  userPreferences,
+  
+  // Getter for CPU temperature manager
+  get CPUTemperatureManager() {
+    return cpuTemperatureManager;
+  }
 };
 
 // Expose App to global scope for template scripts

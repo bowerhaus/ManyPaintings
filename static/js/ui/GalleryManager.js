@@ -275,5 +275,29 @@ export const GalleryManager = {
     this.applyGallerySettings();
     this.applyTextureSettings();
     console.log('GalleryManager: Initialized on startup with saved settings');
+  },
+
+  // Apply changes from remote control
+  async applyRemoteChanges(changes) {
+    console.log('GalleryManager: Applying remote changes:', changes);
+    
+    // Update local gallery settings with changes
+    for (const [key, value] of Object.entries(changes)) {
+      if (this.gallerySettings.hasOwnProperty(key)) {
+        this.gallerySettings[key] = value;
+        console.log(`GalleryManager: Updated ${key} to ${value} from remote`);
+      }
+    }
+    
+    // Update the UI sliders if the modal is open
+    if (this.modal && !this.modal.classList.contains('hidden')) {
+      this.updateSliders();
+    }
+    
+    // Apply the visual changes immediately
+    this.applyGallerySettings();
+    this.applyTextureSettings();
+    
+    console.log('GalleryManager: Applied remote changes successfully');
   }
 };

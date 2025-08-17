@@ -773,5 +773,47 @@ export const AnimationEngine = {
     }
     
     return result;
+  },
+
+  // Method to update max layers from remote control
+  setMaxLayers(newMaxLayers) {
+    console.log(`AnimationEngine: Setting max layers to ${newMaxLayers}`);
+    
+    // Update config
+    const config = window.APP_CONFIG || {};
+    if (!config.layer_management) config.layer_management = {};
+    config.layer_management.max_concurrent_layers = newMaxLayers;
+    
+    // If we have more active layers than the new limit, remove excess layers
+    const currentLayerCount = this.activeLayers.size;
+    if (currentLayerCount > newMaxLayers) {
+      const excessLayers = currentLayerCount - newMaxLayers;
+      console.log(`AnimationEngine: Removing ${excessLayers} excess layers (${currentLayerCount} -> ${newMaxLayers})`);
+      this.removeExcessLayers(excessLayers);
+    }
+  },
+
+  removeExcessLayers(excessCount) {
+    // Remove the oldest layers first
+    let removed = 0;
+    for (const [imageId, layerInfo] of this.activeLayers.entries()) {
+      if (removed >= excessCount) break;
+      
+      // Clear any pending timeouts
+      if (layerInfo.holdTimeout) {
+        clearTimeout(layerInfo.holdTimeout);
+      }
+      
+      // Remove from DOM
+      if (layerInfo.layer && layerInfo.layer.parentNode) {
+        layerInfo.layer.parentNode.removeChild(layerInfo.layer);
+      }
+      
+      // Remove from active layers
+      this.activeLayers.delete(imageId);
+      removed++;
+    }
+    
+    console.log(`AnimationEngine: Removed ${removed} excess layers`);
   }
 };

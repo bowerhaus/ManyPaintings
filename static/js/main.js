@@ -11,6 +11,7 @@ import { FavoritesManager } from './managers/FavoritesManager.js';
 import { MatteBorderManager } from './managers/MatteBorderManager.js';
 import { DropShadowManager } from './managers/DropShadowManager.js';
 import { userPreferences } from './managers/UserPreferences.js';
+import { remoteSync } from './managers/RemoteSync.js';
 import { UI } from './ui/UI.js';
 import { FavoritesGallery } from './ui/FavoritesGallery.js';
 import { GalleryManager } from './ui/GalleryManager.js';
@@ -101,6 +102,9 @@ const App = {
       // Check for favorite parameter in URL
       this.checkForFavoriteParameter();
 
+      // Initialize remote synchronization for detecting remote control changes
+      await remoteSync.init();
+
     } catch (error) {
       console.error('App initialization failed:', error);
       UI.showError('Application failed to start');
@@ -166,7 +170,8 @@ const App = {
   ImageManagerUI,
   UI,
   GridManager,
-  userPreferences
+  userPreferences,
+  remoteSync
 };
 
 // Expose App to global scope for template scripts

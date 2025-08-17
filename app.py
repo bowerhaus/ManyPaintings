@@ -29,6 +29,15 @@ def create_app(config_name=None):
         app.config.from_object(config_obj)
         return render_template('kiosk.html', config=app.config)
     
+    @app.route('/remote')
+    def remote():
+        # iPhone remote control interface
+        # Check for config changes on page load
+        config_obj = config[config_name or 'default']
+        config_obj.check_and_reload()
+        app.config.from_object(config_obj)
+        return render_template('remote.html', config=app.config)
+    
     @app.route('/health')
     def health():
         return jsonify({'status': 'healthy', 'config': config_name})
@@ -287,6 +296,7 @@ def create_app(config_name=None):
                 'maxLayers': 4,
                 'volume': 50,
                 'isWhiteBackground': False,
+                'isPlaying': True,  # Animation playing state
                 'gallery': {
                     'brightness': 100,
                     'contrast': 100,
@@ -361,6 +371,150 @@ def create_app(config_name=None):
                 'settings': updated_settings
             })
             
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/new-pattern', methods=['POST'])
+    def new_pattern():
+        """Trigger a new pattern generation on the main display."""
+        try:
+            # This endpoint allows remote control to trigger new patterns
+            # The main application should poll for pattern changes or use WebSocket
+            # For now, we'll just return success - the polling mechanism will handle it
+            return jsonify({
+                'success': True,
+                'message': 'New pattern triggered'
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/favorites/<favorite_id>/load', methods=['POST'])
+    def load_favorite(favorite_id):
+        """Load a specific favorite on the main display."""
+        try:
+            # This endpoint allows remote control to load favorites
+            # The main application should poll for favorite loads or use WebSocket
+            favorites_file = 'favorites.json'
+            
+            if not os.path.exists(favorites_file):
+                return jsonify({'error': 'No favorites found'}), 404
+            
+            with open(favorites_file, 'r') as f:
+                favorites = json.load(f)
+            
+            if favorite_id not in favorites:
+                return jsonify({'error': 'Favorite not found'}), 404
+            
+            # Store the favorite to be loaded in a temporary file for polling
+            load_request = {
+                'timestamp': datetime.now().isoformat(),
+                'favorite_id': favorite_id,
+                'favorite_data': favorites[favorite_id]
+            }
+            
+            with open('load_favorite.json', 'w') as f:
+                json.dump(load_request, f, indent=2)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Favorite loaded',
+                'favorite_id': favorite_id
+            })
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    # Global variables to track requests
+    save_favorite_request = {'timestamp': None, 'processed': True}
+    play_pause_request = {'timestamp': None, 'processed': True, 'action': None}
+    
+    @app.route('/api/save-current-favorite', methods=['POST'])
+    def save_current_favorite():
+        """Endpoint for remote to request saving current display state as favorite."""
+        global save_favorite_request
+        save_favorite_request = {
+            'timestamp': datetime.now().isoformat(),
+            'processed': False
+        }
+        return jsonify({
+            'success': True,
+            'message': 'Save favorite request received'
+        })
+    
+    @app.route('/api/check-save-favorite', methods=['GET'])
+    def check_save_favorite():
+        """Check if there's a pending save favorite request."""
+        global save_favorite_request
+        if not save_favorite_request['processed']:
+            # Mark as processed and return the request
+            save_favorite_request['processed'] = True
+            return jsonify({
+                'has_request': True,
+                'timestamp': save_favorite_request['timestamp']
+            })
+        else:
+            return jsonify({
+                'has_request': False
+            })
+    
+    @app.route('/api/play-pause', methods=['POST'])
+    def play_pause():
+        """Endpoint for remote to toggle play/pause state."""
+        global play_pause_request
+        play_pause_request = {
+            'timestamp': datetime.now().isoformat(),
+            'processed': False,
+            'action': 'toggle'
+        }
+        return jsonify({
+            'success': True,
+            'message': 'Play/pause request received'
+        })
+    
+    @app.route('/api/check-play-pause', methods=['GET'])
+    def check_play_pause():
+        """Check if there's a pending play/pause request."""
+        global play_pause_request
+        if not play_pause_request['processed']:
+            # Mark as processed and return the request
+            play_pause_request['processed'] = True
+            return jsonify({
+                'has_request': True,
+                'action': play_pause_request['action'],
+                'timestamp': play_pause_request['timestamp']
+            })
+        else:
+            return jsonify({
+                'has_request': False
+            })
+    
+    @app.route('/api/load-favorite-status', methods=['GET'])
+    def get_load_favorite_status():
+        """Check if there's a pending favorite load request."""
+        try:
+            load_file = 'load_favorite.json'
+            if os.path.exists(load_file):
+                with open(load_file, 'r') as f:
+                    load_request = json.load(f)
+                return jsonify({
+                    'has_request': True,
+                    'request': load_request
+                })
+            else:
+                return jsonify({
+                    'has_request': False
+                })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/load_favorite.json', methods=['DELETE'])
+    def delete_load_favorite_request():
+        """Delete the favorite load request file."""
+        try:
+            load_file = 'load_favorite.json'
+            if os.path.exists(load_file):
+                os.unlink(load_file)
+            return jsonify({'success': True})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     

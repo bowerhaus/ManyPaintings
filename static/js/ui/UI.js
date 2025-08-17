@@ -372,7 +372,7 @@ export const UI = {
     console.log('UI: Main controls shown');
   },
 
-  togglePlayPause() {
+  async togglePlayPause() {
     const AnimationEngine = window.App?.AnimationEngine;
     const PatternManager = window.App?.PatternManager;
     if (!AnimationEngine) return;
@@ -384,6 +384,9 @@ export const UI = {
         PatternManager.stopPatternSequence();
       }
       this.updatePlayPauseButton(false);
+      
+      // Save playing state
+      await userPreferences.set('isPlaying', false);
     } else {
       console.log('UI: Resuming animations and pattern sequence');
       AnimationEngine.start();
@@ -391,6 +394,9 @@ export const UI = {
         PatternManager.startPatternSequence();
       }
       this.updatePlayPauseButton(true);
+      
+      // Save playing state
+      await userPreferences.set('isPlaying', true);
     }
   },
 
@@ -761,5 +767,100 @@ export const UI = {
     }
     
     console.log(`UI: Removed ${removed} excess layers`);
+  },
+
+  // Methods for RemoteSync to update UI from remote control changes
+  updateSpeedDisplay() {
+    const speedSlider = document.getElementById('speed-slider');
+    const speedValue = document.getElementById('speed-value');
+    
+    if (speedSlider) {
+      speedSlider.value = this.speedMultiplier.toString();
+    }
+    if (speedValue) {
+      speedValue.textContent = `${this.speedMultiplier}`;
+    }
+    
+    this.updateAnimationSpeed();
+    console.log(`UI: Speed display updated to ${this.speedMultiplier}x from remote`);
+  },
+
+  updateMaxLayersDisplay() {
+    const layersSlider = document.getElementById('layers-slider');
+    const layersValue = document.getElementById('layers-value');
+    
+    if (layersSlider) {
+      layersSlider.value = this.maxLayers.toString();
+    }
+    if (layersValue) {
+      layersValue.textContent = this.maxLayers.toString();
+    }
+    
+    this.updateMaxLayers();
+    console.log(`UI: Max layers display updated to ${this.maxLayers} from remote`);
+  },
+
+  async updateVolumeDisplay() {
+    const volumeSlider = document.getElementById('audio-volume-slider');
+    const volumeValue = document.getElementById('audio-volume-value');
+    
+    try {
+      const volumePercent = await userPreferences.get('volume') || 50;
+      
+      if (volumeSlider) {
+        volumeSlider.value = volumePercent.toString();
+      }
+      if (volumeValue) {
+        volumeValue.textContent = `${volumePercent}%`;
+      }
+      
+      console.log(`UI: Volume display updated to ${volumePercent}% from remote`);
+    } catch (error) {
+      console.warn('UI: Failed to update volume display:', error);
+    }
+  },
+
+  showToast(message, duration = 2000) {
+    // Create green toast matching main app style (upper middle)
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(76, 175, 80, 0.95);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10000;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      word-wrap: break-word;
+      text-align: center;
+      opacity: 0;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      toast.style.opacity = '1';
+    }, 10);
+    
+    // Animate out and remove
+    setTimeout(() => {
+      toast.style.transform = 'translateX(-50%) translateY(-100px)';
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, duration);
   }
 };

@@ -860,20 +860,30 @@ The project includes comprehensive VS Code support:
 
 ### Testing System ✅ **ENTERPRISE-GRADE IMPLEMENTATION**
 
-ManyPaintings includes a comprehensive automated testing system with 24+ test cases covering all functionality:
+ManyPaintings includes a comprehensive three-tier automated testing system with 24+ test cases covering all functionality:
 
 #### Testing Architecture
 - **Backend Testing**: pytest with Flask integration for API endpoints and business logic
 - **End-to-End Testing**: Playwright with page object models for reliable UI testing  
-- **No Arbitrary Delays**: Smart wait strategies eliminate test flakiness
-- **Cross-Browser Support**: Tests run on Chromium, Firefox, and WebKit
+- **Visual Testing**: Windows-only screenshot-based UI validation with API stubbing
+- **Smart Wait Strategies**: No arbitrary delays, reliable element waiting
+- **Cross-Platform**: Tests auto-skip on unsupported platforms
 
 #### Page Object Model E2E Tests
 - **`tests/e2e/pages/`** - Maintainable page object classes
 - **`MainPage`** - Core application interactions and keyboard shortcuts
-- **`FavoritesGallery`** - Gallery modal operations and validations  
-- **`ApiClient`** - Backend API testing utilities
+- **`FavoritesGallery`** - Gallery modal operations and validations
+- **`ImageManagerPage`** - Image management interface testing
+- **`GalleryManagerPage`** - Color grading controls testing
 - **Smart Selectors** - Uses actual HTML IDs and semantic selectors for stability
+
+#### Visual Testing Suite ✅ NEW FEATURE
+- **Windows-Only**: Platform-specific screenshot validation
+- **API Stubbing**: Route interception for predictable test states
+  - Mock `/api/favorites` for empty/populated favorites scenarios
+  - Mock `/api/images` for empty/populated image manager scenarios
+- **Automated Screenshots**: Generated to `test-results/visual/` directory
+- **CSS Bug Detection**: Tests uncovered and fixed empty state visibility issues
 
 #### Running Tests
 
@@ -893,6 +903,11 @@ python -m pytest
 python -m pytest tests/e2e/ -v
 ```
 
+**Visual tests (Windows only):**
+```bash
+python -m pytest tests/e2e/test_visual_appearance_windows.py -v
+```
+
 **With coverage:**
 ```bash
 python -m pytest --cov=. --cov-report=html
@@ -901,17 +916,24 @@ python -m pytest --cov=. --cov-report=html
 #### Test Coverage
 - **Core Functionality**: Application loading, animations, controls (15 tests)
 - **Favorites System**: Save, load, gallery, persistence (9 tests)  
-- **Keyboard Shortcuts**: All major keys (F, V, G, C, I, Space, B, N)
-- **API Endpoints**: Health, config, images, favorites APIs
-- **Visual Elements**: Canvas rendering, styling, error detection
+- **Visual Validation**: UI component appearance and behavior (12+ tests)
+- **Keyboard Shortcuts**: All major keys (F, V, G, C, I, Space, B, N, A)
+- **API Endpoints**: All REST endpoints with error handling
+- **Bug Detection**: Tests have identified and resolved several UI issues
+
+#### Recent Testing Achievements ✅
+- **Visual Test Implementation**: Comprehensive UI validation with screenshot capture
+- **API Stubbing Strategy**: Predictable test data without filesystem complexity
+- **CSS Bug Fixes**: Identified and resolved image manager empty state visibility
+- **Unicode Compatibility**: Fixed Windows console output for reliable CI/CD
 
 #### VS Code Integration
-- **Test Explorer**: Visual test runner with ▶️ buttons
-- **Debug Tests**: Full breakpoint support for test debugging
-- **Test Discovery**: All tests automatically visible in VS Code
-- **Launch Configs**: Pre-configured test running configurations
+- **Test Explorer**: Visual test runner with ▶️ buttons for all test types
+- **Debug Support**: Full breakpoint support for backend, E2E, and visual tests
+- **Test Discovery**: All 24+ tests automatically visible in VS Code
+- **Launch Configs**: Pre-configured test running and debugging configurations
 
-The testing system ensures reliable, maintainable code with confidence for both development and production deployments.
+The testing system ensures reliable, maintainable code and has actively improved the application by identifying and resolving bugs during development.
 
 ## 10. Future Enhancements
 

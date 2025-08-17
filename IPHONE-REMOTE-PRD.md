@@ -32,13 +32,16 @@ This document outlines the requirements and implementation approach for adding i
 ### MVP Features (Must-Have)
 1. **Save Favorite** - Capture current painting state
 2. **View/Select Favorites** - Browse and load saved paintings with thumbnails
-3. **Gallery Manager Controls** - All 5 color grading adjustments
-4. **Speed Control** - Animation speed multiplier (1-10x)
-5. **Volume Control** - Audio volume (0-100%)
+3. **Delete Favorites** - Remove unwanted saved paintings with enhanced mobile-friendly delete buttons
+4. **Gallery Manager Controls** - All 5 color grading adjustments
+5. **Speed Control** - Animation speed multiplier (1-10x)
+6. **Volume Control** - Audio volume (0-100%)
 
 ### User Experience Requirements
 - **Immediate Feedback**: Visual changes appear on TV instantly when adjusting iPhone controls
-- **Favorites Display**: Thumbnails visible on iPhone during selection
+- **Favorites Display**: Thumbnails visible on iPhone during selection with proper background color theming
+- **Mobile-Friendly Interface**: Enhanced delete buttons with proper touch targets for mobile devices
+- **Theme Consistency**: Favorites gallery adapts to black/white background mode
 - **Response Time**: <200ms from control input to screen feedback
 - **No App Store**: Browser-based solution requiring no installation
 
@@ -196,8 +199,9 @@ setInterval(async () => {
 │ Texture    [|------] │
 ├─────────────────────┤
 │ Favorites           │
-│ [🖼️] [🖼️] [🖼️] [🖼️]   │
-│ [🖼️] [🖼️] [+ Save]     │
+│ [🖼️❌] [🖼️❌] [🖼️❌] [🖼️❌] │
+│ [🖼️❌] [🖼️❌] [+ Save]     │
+│ (Enhanced delete UI) │
 └─────────────────────┘
 ```
 

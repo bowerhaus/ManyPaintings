@@ -61,9 +61,12 @@ pip install -r requirements.txt
 
 ### Favorites System
 - **Save Favorites**: Press F key or click heart button to save current painting state
-- **Thumbnail Generation**: Uses html2canvas library to capture pixel-perfect thumbnails
+- **Thumbnail Generation**: Uses html2canvas library to capture pixel-perfect thumbnails with preserved background colors
+- **Background Preservation**: Thumbnails maintain original background color (black/white) from when they were saved
 - **Storage**: Favorites saved as JSON with base64 thumbnail data
 - **Gallery**: Press V key or click gallery button to view/load saved favorites
+- **Delete Functionality**: Full delete capabilities in both main browser and mobile remote interfaces
+- **Cross-Platform**: Consistent favorites experience across desktop and iPhone remote control
 
 ### JavaScript Architecture
 - **Modular Design**: Refactored from 3,684-line monolith into manageable ES6 modules
@@ -168,8 +171,11 @@ pip install -r requirements.txt
 - **Delete Operations**: Don't show confirmation alerts when a delete operation occurs. Just show a toast notification.
 - **Image Management**: Use I key or click image manager button to access upload/delete functionality
 - **Favorites Gallery**: Use V key or click gallery button to browse saved favorites with thumbnails
+  - **Delete Favorites**: Click red X button in top-right corner of thumbnails to delete favorites
+  - **Background Preservation**: Thumbnails display with original background color regardless of current theme
 - **Gallery Manager**: Use C key or click gallery manager button to open professional color adjustment interface
 - **Debug Grid**: Use G key to toggle grid visualization for positioning debugging (works with all layout modes)
+- **Remote Control**: iPhone remote interface includes full favorites management with delete functionality
 
 ## Recent Development Achievements ✅
 
@@ -198,6 +204,8 @@ The ManyPaintings application has achieved full production readiness with:
 - ✅ **Enterprise Testing**: Comprehensive automated test coverage with bug detection
 - ✅ **Cross-Platform Support**: Windows executables, Raspberry Pi optimization, development environment
 - ✅ **Professional Polish**: Gallery-grade presentation with Samsung Frame TV-style interface
+- ✅ **Enhanced Favorites System**: Complete favorites management with background preservation and cross-platform delete functionality
+- ✅ **Remote Control Integration**: Full iPhone remote interface with favorites management and theme synchronization
 - ✅ **Documentation**: Complete README, STATUS, and developer guidance
 
-The project stands as a complete implementation of the original vision with significant enhancements beyond initial requirements.
+The project stands as a complete implementation of the original vision with significant enhancements beyond initial requirements, including comprehensive remote control capabilities and advanced favorites management.

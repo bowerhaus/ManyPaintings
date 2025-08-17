@@ -36,8 +36,9 @@ export const FavoritesManager = {
       thumbnailCanvas.width = 200;
       thumbnailCanvas.height = 200;
 
-      // Fill background color first
-      const bgColor = window.getComputedStyle(layersContainer).backgroundColor || '#000000';
+      // Fill background color first - check the actual background mode
+      const isWhiteBackground = document.body.classList.contains('white-background');
+      const bgColor = isWhiteBackground ? '#ffffff' : '#000000';
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, 200, 200);
 

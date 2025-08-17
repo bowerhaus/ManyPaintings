@@ -6,6 +6,10 @@ from pathlib import Path
 from flask import Flask, render_template, jsonify, send_from_directory, request
 from config import config
 
+# Global variables to track requests
+save_favorite_request = {'timestamp': None, 'processed': True}
+play_pause_request = {'timestamp': None, 'processed': True, 'action': None}
+
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'default')
@@ -424,9 +428,6 @@ def create_app(config_name=None):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
-    # Global variables to track requests
-    save_favorite_request = {'timestamp': None, 'processed': True}
-    play_pause_request = {'timestamp': None, 'processed': True, 'action': None}
     
     @app.route('/api/save-current-favorite', methods=['POST'])
     def save_current_favorite():

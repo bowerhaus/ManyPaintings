@@ -405,6 +405,34 @@ class RemoteController {
         }
     }
     
+    async deleteFavorite(favoriteId, itemElement) {
+        try {
+            const response = await fetch(`/api/favorites/${favoriteId}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            // Remove the element from the UI
+            itemElement.remove();
+            
+            // Update local favorites array
+            this.favorites = this.favorites.filter(fav => fav.id !== favoriteId);
+            
+            // Check if grid is now empty
+            if (this.favorites.length === 0) {
+                this.showFavoritesEmpty(true);
+            }
+            
+            this.showToast('Favorite deleted');
+        } catch (error) {
+            console.error('Failed to delete favorite:', error);
+            this.showToast('Failed to delete favorite');
+        }
+    }
+    
     updateFavoritesDisplay() {
         if (!this.elements.favoritesGrid) return;
         
@@ -428,12 +456,21 @@ class RemoteController {
     createFavoriteElement(favorite) {
         const item = document.createElement('div');
         item.className = 'favorite-item';
-        item.addEventListener('click', () => this.loadFavorite(favorite.id));
         
         const thumbnail = document.createElement('img');
         thumbnail.className = 'favorite-thumbnail';
         thumbnail.src = favorite.thumbnail || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
         thumbnail.alt = favorite.name || 'Favorite';
+        
+        // Create delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'remote-favorite-delete-btn';
+        deleteBtn.title = 'Delete';
+        deleteBtn.innerHTML = `
+            <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+        `;
         
         const title = document.createElement('div');
         title.className = 'favorite-title';
@@ -443,7 +480,22 @@ class RemoteController {
         const timeStr = createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         title.textContent = `${dateStr} ${timeStr}`;
         
+        // Add click handler for loading favorite (on the main area, not delete button)
+        item.addEventListener('click', (e) => {
+            if (!e.target.closest('.remote-favorite-delete-btn')) {
+                this.loadFavorite(favorite.id);
+            }
+        });
+        
+        // Add click handler for delete button
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            this.deleteFavorite(favorite.id, item);
+        });
+        
         item.appendChild(thumbnail);
+        item.appendChild(deleteBtn);
         item.appendChild(title);
         
         return item;

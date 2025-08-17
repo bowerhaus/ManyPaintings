@@ -33,12 +33,15 @@ This document outlines the requirements and implementation approach for adding A
 1. **Navigate Controls** - D-pad navigation through on-screen control panel
 2. **Adjust Settings** - Modify speed, layers, volume, gallery settings
 3. **Save Favorite** - Quick save current painting state
-4. **Browse Favorites** - Navigate and select saved favorites
-5. **Visual Feedback** - Control panel appears during navigation
+4. **Browse Favorites** - Navigate and select saved favorites with enhanced mobile-friendly interface
+5. **Delete Favorites** - Remove unwanted saved paintings with proper remote navigation
+6. **Visual Feedback** - Control panel appears during navigation with theme consistency
 
 ### User Experience Requirements
 - **Control Panel Auto-Show**: Panel appears when remote activity detected
 - **Focus Indicators**: Clear visual highlighting of selected controls
+- **Theme Consistency**: Favorites gallery adapts to black/white background mode with proper contrast
+- **Enhanced Delete Interface**: Mobile-friendly delete buttons with proper touch targets
 - **Immediate Feedback**: Settings changes apply instantly on screen
 - **Auto-Hide**: Panel disappears after inactivity period
 
@@ -180,7 +183,8 @@ Control Panel Structure:
 │                                     │
 │   Favorites                         │
 │   ├─ [Save Current]                 │
-│   └─ [Browse Gallery]               │
+│   ├─ [Browse Gallery] (with delete) │
+│   └─ (Enhanced mobile UI)           │
 └─────────────────────────────────────┘
 ```
 

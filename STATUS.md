@@ -149,11 +149,11 @@ python -m pytest tests/e2e/test_visual_appearance_windows.py
 
 Following the completion of the core application, we're now implementing remote control functionality to enhance the gallery display experience.
 
-#### **Phase 1: Server-Side Settings Storage** 🔄 STARTING
-- [ ] **Settings API**: Create GET/POST `/api/settings` endpoints
-- [ ] **Server Storage**: Implement `settings.json` file storage  
-- [ ] **UserPreferences Update**: Replace localStorage with API calls
-- [ ] **Default Values**: Use hardcoded defaults for first-time setup
+#### **Phase 1: Server-Side Settings Storage** ✅ COMPLETED
+- [x] **Settings API**: Create GET/POST `/api/settings` endpoints
+- [x] **Server Storage**: Implement `settings.json` file storage  
+- [x] **UserPreferences Update**: Replace localStorage with API calls
+- [x] **Default Values**: Use hardcoded defaults for first-time setup
 
 #### **Phase 2: iPhone Web Remote** ⏳ PENDING
 - [ ] **Mobile UI**: Create responsive `/remote` interface

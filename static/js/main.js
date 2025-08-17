@@ -54,18 +54,15 @@ const App = {
       console.log('Config canvas_drop_shadow section:', config.canvas_drop_shadow);
       console.log('Full config keys:', Object.keys(config));
       
-      // UserPreferences is automatically initialized when imported
-      console.log('UserPreferences loaded with preferences:', userPreferences.getAll());
-
       // Initialize modules in sequence
-      UI.init();
+      await UI.init();
       FavoritesGallery.init();
-      GalleryManager.init();
+      await GalleryManager.init();
       ImageManagerUI.init();
 
       await ImageManager.init();
       AnimationEngine.init();
-      AudioManager.init();
+      await AudioManager.init();
 
       // Initialize matte border after other modules are ready
       MatteBorderManager.init();

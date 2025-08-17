@@ -1,204 +1,265 @@
 /**
- * UserPreferences Manager - Handles localStorage for user settings
- * Provides centralized management of user preferences with validation and error handling
+ * UserPreferences Manager - Handles server-side storage for user settings
+ * Provides centralized management of user preferences with API integration
  */
 export class UserPreferences {
     constructor() {
-        this.STORAGE_KEY = 'manyPaintings_preferences';
         this.VERSION = '1.0';
+        this.cache = {}; // Memory cache for current session
+        this.initialized = false;
         
-        // Default preferences
+        // Default preferences (fallback when server unavailable)
         this.defaults = {
             speed: 1,           // Speed multiplier (1-10)
             maxLayers: 4,       // Maximum concurrent layers (1-8)  
-            volume: 0.5,        // Audio volume (0-1)
+            volume: 50,         // Audio volume (0-100)
             isWhiteBackground: false,  // Background color (false=black, true=white)
-            brightness: 100,    // Brightness percentage (25-115)
-            contrast: 100,      // Contrast percentage (85-115)
-            saturation: 100,    // Saturation percentage (50-120)
-            whiteBalance: 100,  // White balance percentage (80-120, maps to hue rotation)
-            textureIntensity: 0, // Texture overlay intensity percentage (0-100)
-            version: this.VERSION
+            gallery: {
+                brightness: 100,    // Brightness percentage (25-115)
+                contrast: 100,      // Contrast percentage (85-115)
+                saturation: 100,    // Saturation percentage (50-120)
+                whiteBalance: 100,  // White balance percentage (80-120, maps to hue rotation)
+                textureIntensity: 0 // Texture overlay intensity percentage (0-100)
+            }
         };
         
-        // Check localStorage support
-        console.log('UserPreferences: localStorage supported:', UserPreferences.isSupported());
-        
-        this.preferences = this.loadPreferences();
-        
-        console.log('UserPreferences: Initialized with preferences:', this.preferences);
+        console.log('UserPreferences: Initialized with server-side storage');
     }
     
     /**
-     * Load preferences from localStorage with fallback to defaults
-     * @returns {Object} Merged preferences object
+     * Initialize preferences by loading from server
+     * @returns {Promise<Object>} Current preferences
      */
-    loadPreferences() {
+    async init() {
+        if (this.initialized) {
+            return this.cache;
+        }
+        
         try {
-            const stored = localStorage.getItem(this.STORAGE_KEY);
-            if (!stored) {
-                return { ...this.defaults };
+            console.log('UserPreferences: Loading initial settings from server...');
+            const response = await fetch('/api/settings');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            const parsed = JSON.parse(stored);
+            const settings = await response.json();
+            this.cache = settings;
+            this.initialized = true;
             
-            // Validate and merge with defaults
-            const preferences = this.validateAndMerge(parsed);
-            
-            console.log('UserPreferences: Loaded preferences from localStorage:', preferences);
-            return preferences;
-            
-        } catch (error) {
-            console.warn('UserPreferences: Failed to load from localStorage, using defaults:', error);
-            return { ...this.defaults };
-        }
-    }
-    
-    /**
-     * Save preferences to localStorage
-     * @param {Object} updates - Preference updates to apply
-     */
-    savePreferences(updates = {}) {
-        try {
-            console.log('UserPreferences: Attempting to save updates:', updates);
-            
-            // Merge updates with current preferences
-            this.preferences = { ...this.preferences, ...updates, version: this.VERSION };
-            
-            // Validate before saving
-            this.preferences = this.validateAndMerge(this.preferences);
-            
-            // Save to localStorage
-            const jsonString = JSON.stringify(this.preferences);
-            localStorage.setItem(this.STORAGE_KEY, jsonString);
-            
-            // Verify save worked
-            const verifyRead = localStorage.getItem(this.STORAGE_KEY);
-            console.log('UserPreferences: Save verification - stored successfully:', !!verifyRead);
-            console.log('UserPreferences: Saved to localStorage:', this.preferences);
+            console.log('UserPreferences: Loaded from server:', settings);
+            return settings;
             
         } catch (error) {
-            console.error('UserPreferences: Failed to save to localStorage:', error);
-            console.error('UserPreferences: Error details:', error.message, error.name);
+            console.warn('UserPreferences: Failed to load from server, using defaults:', error);
+            this.cache = { ...this.defaults };
+            this.initialized = true;
+            return this.cache;
         }
-    }
-    
-    /**
-     * Validate preference values and merge with defaults
-     * @param {Object} prefs - Preferences to validate
-     * @returns {Object} Validated preferences
-     */
-    validateAndMerge(prefs) {
-        const validated = { ...this.defaults };
-        
-        // Validate speed (1-10)
-        if (typeof prefs.speed === 'number' && prefs.speed >= 1 && prefs.speed <= 10) {
-            validated.speed = prefs.speed;
-        }
-        
-        // Validate maxLayers (1-8)
-        if (typeof prefs.maxLayers === 'number' && prefs.maxLayers >= 1 && prefs.maxLayers <= 8) {
-            validated.maxLayers = prefs.maxLayers;
-        }
-        
-        // Validate volume (0-1)
-        if (typeof prefs.volume === 'number' && prefs.volume >= 0 && prefs.volume <= 1) {
-            validated.volume = prefs.volume;
-        }
-        
-        // Validate background (boolean)
-        if (typeof prefs.isWhiteBackground === 'boolean') {
-            validated.isWhiteBackground = prefs.isWhiteBackground;
-        }
-        
-        // Validate brightness (25-115)
-        if (typeof prefs.brightness === 'number' && prefs.brightness >= 25 && prefs.brightness <= 115) {
-            validated.brightness = prefs.brightness;
-        }
-        
-        // Validate contrast (85-115)
-        if (typeof prefs.contrast === 'number' && prefs.contrast >= 85 && prefs.contrast <= 115) {
-            validated.contrast = prefs.contrast;
-        }
-        
-        // Validate saturation (50-120)
-        if (typeof prefs.saturation === 'number' && prefs.saturation >= 50 && prefs.saturation <= 120) {
-            validated.saturation = prefs.saturation;
-        }
-        
-        // Validate white balance (80-120)
-        if (typeof prefs.whiteBalance === 'number' && prefs.whiteBalance >= 80 && prefs.whiteBalance <= 120) {
-            validated.whiteBalance = prefs.whiteBalance;
-        }
-        
-        // Validate textureIntensity (0-100%)
-        if (typeof prefs.textureIntensity === 'number' && prefs.textureIntensity >= 0 && prefs.textureIntensity <= 100) {
-            validated.textureIntensity = prefs.textureIntensity;
-        }
-        
-        return validated;
     }
     
     /**
      * Get a specific preference value
-     * @param {string} key - Preference key
-     * @returns {*} Preference value
+     * @param {string} key - Preference key (supports nested keys like 'gallery.brightness')
+     * @returns {Promise<*>} Preference value
      */
-    get(key) {
-        return this.preferences[key];
+    async get(key) {
+        // Ensure initialized
+        if (!this.initialized) {
+            await this.init();
+        }
+        
+        // Handle nested keys (e.g., 'gallery.brightness')
+        if (key.includes('.')) {
+            const [parent, child] = key.split('.');
+            return this.cache[parent]?.[child] ?? this.getDefault(key);
+        }
+        
+        return this.cache[key] ?? this.getDefault(key);
     }
     
     /**
-     * Set a specific preference value and save
-     * @param {string} key - Preference key
+     * Set a specific preference value and save to server
+     * @param {string} key - Preference key (supports nested keys)
      * @param {*} value - Preference value
+     * @returns {Promise<boolean>} Success status
      */
-    set(key, value) {
+    async set(key, value) {
         console.log(`UserPreferences: Setting ${key} = ${value}`);
-        this.savePreferences({ [key]: value });
+        
+        // Ensure initialized
+        if (!this.initialized) {
+            await this.init();
+        }
+        
+        // Update cache immediately for responsive UI
+        if (key.includes('.')) {
+            const [parent, child] = key.split('.');
+            if (!this.cache[parent]) {
+                this.cache[parent] = {};
+            }
+            this.cache[parent][child] = value;
+        } else {
+            this.cache[key] = value;
+        }
+        
+        // Save to server
+        return await this.saveToServer({ [key]: value });
     }
     
     /**
      * Get all current preferences
-     * @returns {Object} All preferences
+     * @returns {Promise<Object>} All preferences
      */
-    getAll() {
-        return { ...this.preferences };
+    async getAll() {
+        if (!this.initialized) {
+            await this.init();
+        }
+        return { ...this.cache };
     }
     
     /**
      * Update multiple preferences at once
      * @param {Object} updates - Multiple preference updates
+     * @returns {Promise<boolean>} Success status
      */
-    update(updates) {
-        this.savePreferences(updates);
+    async update(updates) {
+        console.log('UserPreferences: Updating multiple settings:', updates);
+        
+        // Ensure initialized
+        if (!this.initialized) {
+            await this.init();
+        }
+        
+        // Update cache immediately
+        for (const [key, value] of Object.entries(updates)) {
+            if (key.includes('.')) {
+                const [parent, child] = key.split('.');
+                if (!this.cache[parent]) {
+                    this.cache[parent] = {};
+                }
+                this.cache[parent][child] = value;
+            } else {
+                this.cache[key] = value;
+            }
+        }
+        
+        // Save to server
+        return await this.saveToServer(updates);
     }
     
     /**
-     * Reset all preferences to defaults
+     * Save settings to server
+     * @param {Object} settings - Settings to save
+     * @returns {Promise<boolean>} Success status
+     * @private
      */
-    reset() {
+    async saveToServer(settings) {
         try {
-            localStorage.removeItem(this.STORAGE_KEY);
-            this.preferences = { ...this.defaults };
-            console.log('UserPreferences: Reset to defaults');
+            // Convert nested key notation to object structure
+            const payload = {};
+            for (const [key, value] of Object.entries(settings)) {
+                if (key.includes('.')) {
+                    const [parent, child] = key.split('.');
+                    if (!payload[parent]) {
+                        payload[parent] = {};
+                    }
+                    payload[parent][child] = value;
+                } else {
+                    payload[key] = value;
+                }
+            }
+            
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('UserPreferences: Successfully saved to server');
+                return true;
+            } else {
+                console.error('UserPreferences: Server returned error:', result.error);
+                return false;
+            }
+            
         } catch (error) {
-            console.error('UserPreferences: Failed to reset preferences:', error);
+            console.error('UserPreferences: Failed to save to server:', error);
+            return false;
         }
     }
     
     /**
-     * Check if localStorage is available
-     * @returns {boolean} True if localStorage is supported
+     * Get default value for a preference key
+     * @param {string} key - Preference key
+     * @returns {*} Default value
+     * @private
      */
-    static isSupported() {
+    getDefault(key) {
+        if (key.includes('.')) {
+            const [parent, child] = key.split('.');
+            return this.defaults[parent]?.[child];
+        }
+        return this.defaults[key];
+    }
+    
+    /**
+     * Reset all preferences to defaults
+     * @returns {Promise<boolean>} Success status
+     */
+    async reset() {
         try {
-            const test = 'localStorage_test';
-            localStorage.setItem(test, test);
-            localStorage.removeItem(test);
-            return true;
-        } catch (e) {
+            console.log('UserPreferences: Resetting to defaults');
+            
+            // Reset cache
+            this.cache = { ...this.defaults };
+            
+            // Save defaults to server
+            const success = await this.saveToServer(this.defaults);
+            
+            if (success) {
+                console.log('UserPreferences: Reset completed successfully');
+            }
+            
+            return success;
+            
+        } catch (error) {
+            console.error('UserPreferences: Failed to reset preferences:', error);
             return false;
+        }
+    }
+    
+    /**
+     * Refresh settings from server (useful for remote control sync)
+     * @returns {Promise<Object>} Updated settings
+     */
+    async refresh() {
+        try {
+            console.log('UserPreferences: Refreshing from server...');
+            const response = await fetch('/api/settings');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const settings = await response.json();
+            this.cache = settings;
+            
+            console.log('UserPreferences: Refreshed from server:', settings);
+            return settings;
+            
+        } catch (error) {
+            console.warn('UserPreferences: Failed to refresh from server:', error);
+            return this.cache;
         }
     }
 }

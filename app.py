@@ -33,6 +33,10 @@ def create_app(config_name=None):
     def health():
         return jsonify({'status': 'healthy', 'config': config_name})
     
+    @app.route('/favicon.ico')
+    def favicon():
+        return '', 204  # No content
+    
     @app.route('/api/images')
     def get_images():
         from utils.image_manager import ImageManager
@@ -268,6 +272,95 @@ def create_app(config_name=None):
             
         except (json.JSONDecodeError, IOError) as e:
             return jsonify({'error': f'Failed to load favorites: {str(e)}'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/settings', methods=['GET'])
+    def get_settings():
+        """Get all application settings."""
+        try:
+            settings_file = 'settings.json'
+            
+            # Default settings
+            default_settings = {
+                'speed': 1,
+                'maxLayers': 4,
+                'volume': 50,
+                'isWhiteBackground': False,
+                'gallery': {
+                    'brightness': 100,
+                    'contrast': 100,
+                    'saturation': 100,
+                    'whiteBalance': 100,
+                    'textureIntensity': 0
+                }
+            }
+            
+            if not os.path.exists(settings_file):
+                # Create settings file with defaults on first run
+                with open(settings_file, 'w') as f:
+                    json.dump(default_settings, f, indent=2)
+                return jsonify(default_settings)
+            
+            with open(settings_file, 'r') as f:
+                settings = json.load(f)
+            
+            # Merge with defaults to ensure all keys exist
+            merged_settings = {**default_settings, **settings}
+            merged_settings['gallery'] = {**default_settings['gallery'], **settings.get('gallery', {})}
+            
+            return jsonify(merged_settings)
+            
+        except (json.JSONDecodeError, IOError) as e:
+            return jsonify({'error': f'Failed to load settings: {str(e)}'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/settings', methods=['POST'])
+    def update_settings():
+        """Update application settings (partial or full update)."""
+        try:
+            settings_file = 'settings.json'
+            
+            # Get the update data from request
+            try:
+                update_data = request.get_json()
+            except Exception as json_error:
+                return jsonify({'error': 'Invalid JSON format'}), 400
+            
+            if not update_data:
+                return jsonify({'error': 'No settings data provided'}), 400
+            
+            # Load existing settings or use defaults
+            current_settings = {}
+            if os.path.exists(settings_file):
+                try:
+                    with open(settings_file, 'r') as f:
+                        current_settings = json.load(f)
+                except (json.JSONDecodeError, IOError) as e:
+                    print(f"Warning: Could not load existing settings: {e}")
+            
+            # Merge updates with current settings
+            if 'gallery' in update_data and 'gallery' in current_settings:
+                # Handle gallery settings specially to allow partial updates
+                current_settings['gallery'] = {**current_settings.get('gallery', {}), **update_data['gallery']}
+                del update_data['gallery']
+            
+            # Update other settings
+            updated_settings = {**current_settings, **update_data}
+            
+            # Save back to file
+            try:
+                with open(settings_file, 'w') as f:
+                    json.dump(updated_settings, f, indent=2)
+            except IOError as e:
+                return jsonify({'error': f'Failed to save settings: {str(e)}'}), 500
+            
+            return jsonify({
+                'success': True,
+                'settings': updated_settings
+            })
+            
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     

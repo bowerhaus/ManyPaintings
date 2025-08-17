@@ -365,6 +365,25 @@ class TestGalleryManagerVisuals:
         main_page = MainPage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
         gallery_manager = GalleryManagerPage(visual_page)
         
+        # Mock the /api/settings endpoint to return default values for consistent testing
+        default_settings = {
+            "speed": 1,
+            "maxLayers": 4,
+            "volume": 50,
+            "isWhiteBackground": False,
+            "gallery": {
+                "brightness": 100,
+                "contrast": 100,
+                "saturation": 100,
+                "whiteBalance": 100,
+                "textureIntensity": 0
+            }
+        }
+        visual_page.route("**/api/settings", lambda route: route.fulfill(
+            content_type="application/json",
+            body=json.dumps(default_settings)
+        ))
+        
         main_page.load_main_page()
         main_page.wait_for_application_ready()
         

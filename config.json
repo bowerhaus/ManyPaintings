@@ -21,8 +21,8 @@
     "fade_in_max_sec": 60.0,
     "fade_out_min_sec": 15.0,
     "fade_out_max_sec": 60.0,
-    "min_hold_time_sec": 15.0,
-    "max_hold_time_sec": 120.0,
+    "min_hold_time_sec": 60.0,
+    "max_hold_time_sec": 360.0,
     "layer_spawn_interval_sec": 4.0
   },
   "layer_management": {

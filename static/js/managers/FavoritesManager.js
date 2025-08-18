@@ -144,7 +144,7 @@ export const FavoritesManager = {
       // Show success feedback
       const UI = window.App?.UI;
       if (UI) {
-        UI.showSuccess('Favorite saved!');
+        UI.showSuccess('Favorite saved');
       }
 
       return result.id;

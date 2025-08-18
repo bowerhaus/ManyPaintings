@@ -382,9 +382,29 @@ def create_app(config_name=None):
     def new_pattern():
         """Trigger a new pattern generation on the main display."""
         try:
-            # This endpoint allows remote control to trigger new patterns
-            # The main application should poll for pattern changes or use WebSocket
-            # For now, we'll just return success - the polling mechanism will handle it
+            # Store the new pattern request timestamp so RemoteSync can detect it
+            settings_file = 'settings.json'
+            
+            # Read current settings
+            current_settings = {}
+            if os.path.exists(settings_file):
+                try:
+                    with open(settings_file, 'r') as f:
+                        current_settings = json.load(f)
+                except json.JSONDecodeError:
+                    current_settings = {}
+            
+            # Add new pattern request timestamp
+            import time
+            current_settings['newPatternRequest'] = time.time()
+            
+            # Save updated settings
+            try:
+                with open(settings_file, 'w') as f:
+                    json.dump(current_settings, f, indent=2)
+            except IOError as e:
+                return jsonify({'error': f'Failed to save new pattern request: {str(e)}'}), 500
+            
             return jsonify({
                 'success': True,
                 'message': 'New pattern triggered'

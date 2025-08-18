@@ -10,6 +10,7 @@ export class RemoteSync {
         this.pollTimer = null;
         this.lastSettings = {};
         this.lastPollTime = 0;
+        this.lastPatternRequest = null; // Track last pattern request timestamp
         
         console.log('RemoteSync: Initialized');
     }
@@ -244,11 +245,51 @@ export class RemoteSync {
      */
     async checkPatternRequests() {
         try {
-            // For now, we don't have a pattern request mechanism
-            // This could be implemented with a timestamp file or database field
-            // that the main app checks for new pattern requests
+            const response = await fetch('/api/settings');
+            if (!response.ok) return;
+            
+            const settings = await response.json();
+            
+            // Check if there's a new pattern request timestamp
+            if (settings.newPatternRequest && settings.newPatternRequest !== this.lastPatternRequest) {
+                console.log('RemoteSync: New pattern request detected');
+                this.lastPatternRequest = settings.newPatternRequest;
+                
+                // Trigger new pattern generation
+                await this.generateNewPatternFromRemote();
+            }
         } catch (error) {
             console.warn('RemoteSync: Failed to check pattern requests:', error);
+        }
+    }
+
+    /**
+     * Generate a new pattern triggered by remote control
+     */
+    async generateNewPatternFromRemote() {
+        try {
+            console.log('RemoteSync: Attempting to generate new pattern from remote');
+            console.log('RemoteSync: window.App available:', !!window.App);
+            console.log('RemoteSync: window.App.UI available:', !!(window.App && window.App.UI));
+            console.log('RemoteSync: UI.generateNewPattern available:', !!(window.App && window.App.UI && window.App.UI.generateNewPattern));
+            
+            const UI = window.App?.UI;
+            if (UI && UI.generateNewPattern) {
+                await UI.generateNewPattern();
+                console.log('RemoteSync: Successfully generated new pattern from remote request');
+                
+                // Show notification
+                this.showToast('New pattern generated');
+            } else {
+                console.warn('RemoteSync: UI or generateNewPattern method not available');
+                if (!UI) {
+                    console.warn('RemoteSync: UI not found on window.App');
+                } else if (!UI.generateNewPattern) {
+                    console.warn('RemoteSync: generateNewPattern method not found on UI');
+                }
+            }
+        } catch (error) {
+            console.error('RemoteSync: Failed to generate new pattern from remote:', error);
         }
     }
     
@@ -339,7 +380,7 @@ export class RemoteSync {
                 
                 // Show appropriate toast message
                 const newState = AnimationEngine ? AnimationEngine.isPlaying : !wasPlaying;
-                const message = newState ? 'Resumed from remote' : 'Paused from remote';
+                const message = newState ? 'Resumed' : 'Paused';
                 this.showToast(message);
                 
                 console.log('RemoteSync: Successfully toggled play/pause from remote:', newState ? 'playing' : 'paused');
@@ -360,8 +401,7 @@ export class RemoteSync {
                 await FavoritesManager.saveFavorite();
                 console.log('RemoteSync: Successfully saved favorite from remote request');
                 
-                // Show notification
-                this.showToast('Favorite saved from remote');
+                // Don't show toast - FavoritesManager already handles this
             }
         } catch (error) {
             console.error('RemoteSync: Failed to save favorite from remote:', error);
@@ -379,8 +419,7 @@ export class RemoteSync {
                 await FavoritesManager.loadFavorite(loadRequest.favorite_id);
                 console.log('RemoteSync: Successfully loaded favorite:', loadRequest.favorite_id);
                 
-                // Show notification
-                this.showToast('Favorite loaded from remote');
+                // Don't show toast - FavoritesGallery already handles this
             }
         } catch (error) {
             console.error('RemoteSync: Failed to load favorite from remote:', error);
@@ -411,7 +450,7 @@ export class RemoteSync {
             }
             
             if (changeMessages.length > 0) {
-                const message = `Remote: ${changeMessages.join(', ')}`;
+                const message = changeMessages.join(', ');
                 this.showToast(message);
             }
             

@@ -635,7 +635,7 @@ export const UI = {
         console.log('UI: Calling FavoritesManager.saveFavorite()');
         await FavoritesManager.saveFavorite();
         console.log('UI: Favorite saved successfully');
-        this.showSuccess('Favorite saved successfully');
+        // Toast handled by FavoritesManager
       } else {
         console.error('UI: FavoritesManager not available');
         this.showError('FavoritesManager not available');

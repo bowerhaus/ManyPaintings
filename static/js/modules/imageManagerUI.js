@@ -363,7 +363,7 @@ export const ImageManagerUI = {
 
       // Show success toast
       if (window.App && window.App.UI) {
-        window.App.UI.showSuccess(`Image "${filename}" deleted successfully`);
+        window.App.UI.showSuccess(`Image "${filename}" deleted`);
       }
 
       // Clear any cached images from ImageManager

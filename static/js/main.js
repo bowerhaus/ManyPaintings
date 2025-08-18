@@ -176,7 +176,7 @@ const App = {
   UI,
   GridManager,
   userPreferences,
-  remoteSync
+  remoteSync,
   
   // Getter for CPU temperature manager
   get CPUTemperatureManager() {

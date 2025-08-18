@@ -9,7 +9,16 @@ export class CPUTemperatureManager {
     
     init() {
         console.log('CPUTemperatureManager: Initializing...');
-        // Check if we're on Raspberry Pi by trying to fetch temperature
+        
+        // Quick client-side check first - look for common RPi user agents or ARM indicators
+        const isLikelyRPi = this.isLikelyRaspberryPi();
+        
+        if (!isLikelyRPi) {
+            console.log('CPUTemperatureManager: Client-side detection indicates not RPi, skipping');
+            return;
+        }
+        
+        // If client-side check suggests RPi, verify with server
         this.checkRPiAvailability().then(isRPi => {
             console.log('CPUTemperatureManager: RPi availability check result:', isRPi);
             if (isRPi) {
@@ -19,21 +28,58 @@ export class CPUTemperatureManager {
                 this.isEnabled = true;
                 console.log('CPUTemperatureManager: Initialization complete');
             } else {
-                console.log('CPUTemperatureManager: Not on Raspberry Pi, skipping temperature display');
+                console.log('CPUTemperatureManager: Server confirms not RPi, skipping temperature display');
             }
         }).catch(error => {
             console.error('CPUTemperatureManager: Error during initialization:', error);
         });
     }
     
+    isLikelyRaspberryPi() {
+        // Client-side heuristics to detect Raspberry Pi
+        const userAgent = navigator.userAgent.toLowerCase();
+        const platform = navigator.platform.toLowerCase();
+        
+        // Check for ARM architecture indicators
+        const armIndicators = [
+            'arm', 'aarch', 'raspberry', 'linux armv'
+        ];
+        
+        const isArmPlatform = armIndicators.some(indicator => 
+            userAgent.includes(indicator) || platform.includes(indicator)
+        );
+        
+        // Check for Linux (RPi typically runs Linux)
+        const isLinux = userAgent.includes('linux') && !userAgent.includes('android');
+        
+        // For development: assume Windows/Mac are not RPi
+        const isWindows = platform.includes('win') || userAgent.includes('windows');
+        const isMac = platform.includes('mac') || userAgent.includes('mac');
+        
+        if (isWindows || isMac) {
+            return false; // Definitely not RPi
+        }
+        
+        // If it's Linux and possibly ARM, it might be RPi
+        return isLinux && (isArmPlatform || armIndicators.some(indicator => 
+            navigator.userAgent.includes(indicator)
+        ));
+    }
+    
     async checkRPiAvailability() {
         try {
             console.log('CPUTemperatureManager: Checking RPi availability...');
             const response = await fetch('/api/cpu-temperature');
+            
+            if (response.status === 404) {
+                console.log('CPUTemperatureManager: Not running on Raspberry Pi (expected 404)');
+                return false;
+            }
+            
             console.log('CPUTemperatureManager: API response status:', response.status);
             return response.ok;
         } catch (error) {
-            console.error('CPUTemperatureManager: Error checking RPi availability:', error);
+            console.log('CPUTemperatureManager: Network error checking RPi availability, assuming not RPi:', error.message);
             return false;
         }
     }

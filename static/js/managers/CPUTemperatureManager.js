@@ -49,8 +49,9 @@ export class CPUTemperatureManager {
             userAgent.includes(indicator) || platform.includes(indicator)
         );
         
-        // Check for Linux (RPi typically runs Linux)
+        // Check for Linux-based systems (including Chrome OS on RPi)
         const isLinux = userAgent.includes('linux') && !userAgent.includes('android');
+        const isChromeOS = userAgent.includes('cros');
         
         // For development: assume Windows/Mac are not RPi
         const isWindows = platform.includes('win') || userAgent.includes('windows');
@@ -60,10 +61,9 @@ export class CPUTemperatureManager {
             return false; // Definitely not RPi
         }
         
-        // If it's Linux and possibly ARM, it might be RPi
-        return isLinux && (isArmPlatform || armIndicators.some(indicator => 
-            navigator.userAgent.includes(indicator)
-        ));
+        // Allow Chrome OS or Linux systems to proceed to server check
+        // Server will do the definitive ARM architecture check
+        return isLinux || isChromeOS;
     }
     
     async checkRPiAvailability() {

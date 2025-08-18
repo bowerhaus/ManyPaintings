@@ -13,7 +13,8 @@
       "Bash(pip show:*)",
       "WebSearch",
       "Bash(cec-client:*)",
-      "Bash(cec-ctl:*)"
+      "Bash(cec-ctl:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

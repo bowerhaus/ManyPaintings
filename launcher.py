@@ -119,6 +119,7 @@ def launch_browser_kiosk(url, port=5000):
                 chrome_path,
                 f"--app={url}",
                 "--kiosk",
+                "--hide-cursor",
                 "--disable-restore-session-state",
                 "--disable-session-crashed-bubble",
                 "--disable-infobars",
@@ -132,7 +133,6 @@ def launch_browser_kiosk(url, port=5000):
                 chrome_path,
                 f"--app={url}",
                 "--kiosk",
-                "--window-size=1920,1080",
                 "--window-position=0,0",
                 "--disable-restore-session-state",
                 "--disable-session-crashed-bubble",
@@ -141,6 +141,8 @@ def launch_browser_kiosk(url, port=5000):
                 "--disable-default-apps",
                 "--disable-gpu-process-crash-limit",
                 "--enable-features=VaapiVideoDecoder",
+                "--disable-web-security",
+                "--disable-features=VizDisplayCompositor",
                 f"--user-data-dir={get_resource_path('chrome_data')}"
             ]
         
@@ -171,7 +173,6 @@ def launch_browser_normal(url, port=5000):
             cmd = [
                 chrome_path,
                 url,
-                "--window-size=1920,1080",
                 "--window-position=0,0",
                 "--disable-restore-session-state",
                 "--no-first-run",
@@ -209,7 +210,6 @@ def launch_browser_normal_fullscreen(url, port=5000):
                 chrome_path,
                 url,
                 "--start-fullscreen",  # Start in full screen mode
-                "--window-size=1920,1080",
                 "--window-position=0,0",
                 "--disable-restore-session-state",
                 "--no-first-run",
@@ -248,7 +248,6 @@ def launch_browser_kiosk_windowed(url, port=5000):
             cmd = [
                 chrome_path,
                 f"--app={url}",
-                "--window-size=1920,1080",
                 "--window-position=0,0",
                 "--disable-restore-session-state",
                 "--disable-session-crashed-bubble",
@@ -383,9 +382,7 @@ def main(mode="kiosk"):
     system = platform.system()
     if is_raspberry_pi():
         print("Platform: Raspberry Pi")
-        # Set display resolution to 1080p
-        print("Setting display resolution to 1080p...")
-        set_display_resolution_1080p()
+        # Note: Using native display resolution (no forced resolution change)
     elif is_windows():
         print("Platform: Windows")
     else:

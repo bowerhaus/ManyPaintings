@@ -56,6 +56,10 @@ export const AnimationEngine = {
       this.layersContainer.style.height = '100vh';
       this.layersContainer.style.zIndex = '10';
       console.log('AnimationEngine: Virtual coordinate system initialized - container set to full viewport');
+      console.log(`AnimationEngine: Screen dimensions - innerWidth: ${window.innerWidth}px, innerHeight: ${window.innerHeight}px`);
+      console.log(`AnimationEngine: Viewport dimensions - vw: ${window.innerWidth}px, vh: ${window.innerHeight}px`);
+      
+      // Debug API available for troubleshooting when needed
     }
   },
 
@@ -461,6 +465,13 @@ export const AnimationEngine = {
     // Translation logic based on layout mode
     if (config.transformations?.translation?.enabled) {
       const layoutMode = config.transformations?.translation?.layout_mode;
+      console.log(`AnimationEngine: Translation enabled, layout mode: ${layoutMode}`);
+      
+      // Check for layout mode (debug logging can be added here when needed)
+      if (!layoutMode) {
+        console.error('AnimationEngine: Layout mode is undefined! Cannot proceed with positioning.');
+        return transformations;
+      }
       
       if (layoutMode === LAYOUT_MODES.RANDOM) {
         // Random mode
@@ -469,10 +480,13 @@ export const AnimationEngine = {
         
         transformations.translateX = (random() - 0.5) * viewportWidth * 0.3;
         transformations.translateY = (random() - 0.5) * viewportHeight * 0.3;
+        console.log(`AnimationEngine: Random mode - viewport: ${viewportWidth}x${viewportHeight}, translate: ${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px`);
       } else {
         // Use structured layout mode
         const MatteBorderManager = window.App?.MatteBorderManager;
         const imageArea = MatteBorderManager ? MatteBorderManager.getImageArea() : null;
+        console.log(`AnimationEngine: MatteBorderManager available: ${!!MatteBorderManager}`);
+        console.log(`AnimationEngine: Image area:`, imageArea);
         
         // Get next layout point
         const { point, nextIndex } = LayoutUtils.getNextLayoutPoint(
@@ -482,6 +496,7 @@ export const AnimationEngine = {
         );
         
         this.layoutPointIndex = nextIndex;
+        console.log(`AnimationEngine: Layout point ${this.layoutPointIndex === 0 ? 'last' : this.layoutPointIndex}:`, point);
         
         // Apply deviation if configured
         const deviationConfig = config.transformations?.translation?.[layoutMode];
@@ -497,6 +512,7 @@ export const AnimationEngine = {
             maxVerticalDev,
             random
           );
+          console.log(`AnimationEngine: After deviation:`, finalPoint);
         }
         
         if (imageArea) {
@@ -506,7 +522,9 @@ export const AnimationEngine = {
           transformations.translateY = offset.y;
           transformations.useViewportUnits = false;
           
-          console.log(`${layoutMode}: Point ${this.layoutPointIndex === 0 ? 'last' : this.layoutPointIndex} → translate(${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px)`);
+          console.log(`AnimationEngine: ${layoutMode}: Point ${this.layoutPointIndex === 0 ? 'last' : this.layoutPointIndex} → absolute(${finalPoint.x}, ${finalPoint.y}) → translate(${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px)`);
+          
+          // Debug positioning info available via debugLog() when troubleshooting
         } else {
           // Fallback to viewport percentage points
           const { point: vpPoint, nextIndex: vpNextIndex } = LayoutUtils.getNextViewportPercentagePoint(
@@ -572,6 +590,8 @@ export const AnimationEngine = {
       transform += `scale(${scale}) `;
     }
 
+    console.log(`AnimationEngine: Applied transform for ${imageId}: ${transform}`);
+    
     imageElement.style.transform = transform;
 
     if (hueShift !== 0) {
@@ -831,5 +851,30 @@ export const AnimationEngine = {
     }
     
     console.log(`AnimationEngine: Removed ${removed} excess layers`);
+  },
+
+  // Debug Logging Methods
+  async debugLog(message) {
+    try {
+      await fetch('/api/debug-log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: message })
+      });
+    } catch (error) {
+      console.error('Failed to send debug log:', error);
+    }
+  },
+
+  async clearDebugLog() {
+    try {
+      await fetch('/api/debug-clear', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Failed to clear debug log:', error);
+    }
   }
 };

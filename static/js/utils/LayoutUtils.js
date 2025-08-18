@@ -105,13 +105,33 @@ export const LayoutUtils = {
    * @returns {Object} {x, y} offset from viewport center in pixels
    */
   absoluteToViewportOffset(absoluteX, absoluteY) {
-    const viewportCenterX = window.innerWidth / 2;
-    const viewportCenterY = window.innerHeight / 2;
+    // Get the image area from MatteBorderManager to determine proper center
+    const MatteBorderManager = window.App?.MatteBorderManager;
+    let centerX, centerY;
     
-    return {
-      x: absoluteX - viewportCenterX,
-      y: absoluteY - viewportCenterY
+    if (MatteBorderManager && MatteBorderManager.config?.enabled) {
+      // If matte border is active, use image area center
+      const imageArea = MatteBorderManager.getImageArea();
+      centerX = imageArea.left + (imageArea.width / 2);
+      centerY = imageArea.top + (imageArea.height / 2);
+      console.log(`LayoutUtils: Using image area center (${centerX.toFixed(1)}, ${centerY.toFixed(1)})`);
+      
+      // Debug info available via AnimationEngine.debugLog() when troubleshooting
+    } else {
+      // No matte border, use viewport center
+      centerX = window.innerWidth / 2;
+      centerY = window.innerHeight / 2;
+      console.log(`LayoutUtils: Using viewport center (${centerX.toFixed(1)}, ${centerY.toFixed(1)})`);
+      
+      // Debug info available via AnimationEngine.debugLog() when troubleshooting
+    }
+    
+    const offset = {
+      x: absoluteX - centerX,
+      y: absoluteY - centerY
     };
+    
+    return offset;
   },
 
   /**

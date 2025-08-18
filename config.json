@@ -147,6 +147,11 @@
         "debug": false,
         "secret_key": "CHANGE-THIS-IN-PRODUCTION"
       },
+      "transformations": {
+        "translation": {
+          "layout_mode": "rule_of_fifths_thirds_and_centre"
+        }
+      },
       "performance": {
         "animation_quality": "high"
       }
@@ -173,6 +178,7 @@
       "transformations": {
         "translation": {
           "enabled": true,
+          "layout_mode": "rule_of_fifths_thirds_and_centre",
           "minimum_visible_percent": 70
         }
       },

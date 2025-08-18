@@ -291,6 +291,14 @@ body.white-background .image-layer {
     cursor: none !important;
 }
 
+/* Force hide kiosk controls when hidden via JavaScript */
+.kiosk-mode #kiosk-controls[style*="display: none"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 /* ===== PATTERN DISPLAY FOR KIOSK MODE ===== */
 .pattern-display.kiosk-pattern {
     position: absolute;

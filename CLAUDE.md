@@ -9,9 +9,29 @@ This is a Flask-based generative art application inspired by Brian Eno's "77 Mil
 ## Development Commands
 
 ### Running the Application
+
+#### Quick Kiosk Launch (Recommended)
 ```bash
-# Start Flask development server
+# Linux/macOS - Full-screen kiosk mode with hidden cursor and controls
+./launch-kiosk.sh
+
+# Windows - Full-screen kiosk mode with hidden cursor and controls  
+launch-kiosk.bat
+```
+
+#### Advanced Launch Options
+```bash
+# Development server only
 python app.py
+
+# Kiosk mode (programmatic)
+python launcher.py kiosk
+
+# Normal windowed mode
+python launcher.py normal
+
+# Normal full-screen mode (with browser UI)
+python launcher.py normal-fullscreen
 
 # Production deployment with Gunicorn
 pip install gunicorn
@@ -40,6 +60,25 @@ pip install -r requirements.txt
 
 ## Developer Notes
 
+### Launcher System (Updated August 2025)
+The launcher system has been streamlined to focus on kiosk mode deployment while maintaining flexibility:
+
+#### Current Launcher Files
+- **`launch-kiosk.sh` / `launch-kiosk.bat`** - Simplified kiosk launchers for immediate full-screen deployment
+- **`launcher.py`** - Core Python launcher with command-line mode support
+- **Removed files**: Interactive menu launchers and redundant mode-specific scripts (cleaned up August 2025)
+
+#### Kiosk Mode Features
+- **Hidden cursor**: CSS `cursor: none !important` applied in kiosk mode
+- **Smart control hiding**: Action buttons automatically hidden when browser enters kiosk mode (`--kiosk` flag) or fullscreen
+- **Browser kiosk detection**: JavaScript detects browser kiosk mode via window dimensions and `navigator.standalone`
+- **Cross-platform**: Works on both Raspberry Pi (Chromium) and Windows (Chrome/Edge)
+
+#### Launch Mode Comparison
+- **Kiosk mode**: Full-screen, no browser UI, hidden cursor, hidden action buttons
+- **Normal mode**: Windowed with browser UI, visible cursor, visible action buttons  
+- **Normal-fullscreen mode**: Full-screen with browser UI, visible cursor, action buttons hidden only in fullscreen
+
 ### Testing Guidelines
 - **Server Startup**: Don't start the server yourself when testing. Ask the developer to do it.
 - **Four-Tier Testing**: Enterprise-grade automated testing with backend, E2E, integration, and visual validation
@@ -65,6 +104,33 @@ pip install -r requirements.txt
 - **IMPORTANT** - Don't ever start the server. Ask me to do it
 - **CSS Bug Fixes**: Recent test work identified and resolved empty state visibility issues
 - **API Stubbing**: Prefer API route interception over filesystem mocking for test reliability
+
+### Debug API for Troubleshooting
+When console access is limited (e.g., during kiosk mode or remote debugging), the application provides debug logging endpoints:
+
+#### Available Debug Endpoints:
+- **`POST /api/debug-log`** - Send debug messages to `debug.log` file
+- **`POST /api/debug-clear`** - Clear the debug log file  
+- **`GET /api/debug-config`** - View current configuration state and environment detection
+
+#### JavaScript Debug Methods:
+```javascript
+// Temporarily add debug logging to any module
+this.debugLog(`Debug message: ${JSON.stringify(data)}`);
+this.clearDebugLog(); // Clear previous debug entries
+```
+
+#### Config System Debug Mode:
+Enable detailed configuration merge logging:
+```bash
+DEBUG_CONFIG=1 python launcher.py
+```
+
+#### Usage Guidelines:
+- **Temporary Usage**: Add debug calls only when needed for specific issues
+- **Remove After Use**: Clean up debug calls after troubleshooting is complete
+- **File Access**: Debug log written to `debug.log` in project root
+- **API Access**: All endpoints work without authentication for easy troubleshooting
 
 ## Key Features
 

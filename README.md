@@ -598,7 +598,30 @@ For developers who want to modify the code:
 
 ### 6.4. Running the Application
 
-#### Option 1: Pre-Built Executable (Recommended)
+#### Option 1: Quick Kiosk Launch (Recommended)
+For immediate full-screen kiosk mode with hidden cursor and action buttons:
+```bash
+# Linux/macOS - Streamlined kiosk launcher
+./launch-kiosk.sh
+
+# Windows - Streamlined kiosk launcher  
+launch-kiosk.bat
+```
+
+#### Option 2: Advanced Launch Modes
+For other display modes using the core launcher:
+```bash
+# Full-screen kiosk mode (programmatic)
+python launcher.py kiosk
+
+# Normal windowed mode
+python launcher.py normal
+
+# Normal full-screen mode (with browser UI)
+python launcher.py normal-fullscreen
+```
+
+#### Option 3: Pre-Built Executable (Alternative)
 ```bash
 # Windows
 ManyPaintings-Windows.exe
@@ -607,13 +630,13 @@ ManyPaintings-Windows.exe
 ./ManyPaintings-RaspberryPi
 ```
 
-#### Option 2: Development Server
+#### Option 4: Development Server
 ```bash
 # Activate virtual environment first
 python app.py
 ```
 
-#### Option 3: Production Deployment
+#### Option 5: Production Deployment
 ```bash
 # Install Gunicorn
 pip install gunicorn
@@ -898,12 +921,48 @@ ManyPaintings/
 - **Images don't load**: Verify `static/images/` contains PNG files
 - **Config changes ignored**: Refresh browser (F5) after editing `config.json`
 
+### Debug API for Troubleshooting
+
+When console access is limited (e.g., kiosk mode), the application provides debug logging endpoints:
+
+#### Debug Logging Endpoints
+- **`POST /api/debug-log`** - Log messages to `debug.log` file
+  ```bash
+  curl -X POST http://localhost:5000/api/debug-log \
+    -H "Content-Type: application/json" \
+    -d '{"message": "Debug message here"}'
+  ```
+
+- **`POST /api/debug-clear`** - Clear debug log file
+  ```bash
+  curl -X POST http://localhost:5000/api/debug-clear
+  ```
+
+- **`GET /api/debug-config`** - View current config state and environment detection
+  ```bash
+  curl http://localhost:5000/api/debug-config
+  ```
+
+#### Using Debug API in Code
+For temporary debugging, add logging calls to JavaScript:
+```javascript
+// In AnimationEngine or other modules
+this.debugLog(`Debug info: ${JSON.stringify(data)}`);
+```
+
+#### Config System Debug Logging
+Enable detailed config merge logging:
+```bash
+DEBUG_CONFIG=1 python launcher.py
+```
+
 ### Getting Help
 
 1. Check console output for detailed error messages
-2. Verify all prerequisites are installed
-3. Try running `python launcher.py` directly for debugging
-4. Review [BUILD-INSTRUCTIONS.md](BUILD-INSTRUCTIONS.md) for build issues
+2. Use debug API endpoints when console access is limited
+3. Verify all prerequisites are installed  
+4. Try running `python launcher.py` directly for debugging
+5. Review [BUILD-INSTRUCTIONS.md](BUILD-INSTRUCTIONS.md) for build issues
 
 ## 9. Development
 
@@ -1037,6 +1096,7 @@ The testing system ensures reliable, maintainable code and has actively improved
 *   **Favorites Opacity Fix:** ✅ COMPLETED - Fixed favorites saving to capture current animated opacity values instead of target opacity
 *   **UI Polish:** ✅ COMPLETED - Removed "successfully" from toast messages and added ESC key support to close favorites modal
 *   **Gallery Manager System:** ✅ COMPLETED - Professional Samsung Frame TV-style display calibration with brightness, contrast, saturation, white balance, and canvas texture controls
+*   **Launcher System Overhaul:** ✅ COMPLETED (August 2025) - Streamlined launcher scripts focused on kiosk mode with hidden cursor and smart action button management
 
 ### 🚀 Potential Future Features
 *   **Advanced Audio Features:** Add multiple audio tracks, crossfading, and synchronization with visual patterns.

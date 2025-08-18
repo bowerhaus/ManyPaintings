@@ -20,7 +20,7 @@ class RemoteController {
         
         // Activity tracking for smart disconnect
         this.lastActivityTime = Date.now();
-        this.inactivityTimeout = 30000; // 30 seconds
+        this.inactivityTimeout = 60000; // 60 seconds
         this.activityCheckInterval = 5000; // Check every 5 seconds
         this.activityTimer = null;
         this.isActive = true;
@@ -229,6 +229,9 @@ class RemoteController {
             // Resume polling immediately
             this.startPolling();
             
+            // Resume hero cycling
+            this.resumeHeroRotation();
+            
             this.showToast('Reconnected to main display');
         }
     }
@@ -245,7 +248,7 @@ class RemoteController {
             this.checkInactivity();
         }, this.activityCheckInterval);
         
-        console.log('Remote Controller: Started activity monitoring (30s timeout)');
+        console.log('Remote Controller: Started activity monitoring (60s timeout)');
     }
     
     /**
@@ -259,7 +262,7 @@ class RemoteController {
         const timeSinceLastActivity = Date.now() - this.lastActivityTime;
         
         if (timeSinceLastActivity >= this.inactivityTimeout) {
-            console.log('Remote Controller: 30 seconds of inactivity detected, disconnecting...');
+            console.log('Remote Controller: 60 seconds of inactivity detected, disconnecting...');
             this.disconnect();
         }
     }
@@ -353,9 +356,7 @@ class RemoteController {
             this.updateFavoritesDisplay();
             
             // Update hero images when favorites change
-            if (this.updateHeroImages) {
-                this.updateHeroImages();
-            }
+            this.updateHeroImages();
             
             console.log('Remote Controller: Favorites loaded:', this.favorites.length);
         } catch (error) {

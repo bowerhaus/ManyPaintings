@@ -36,21 +36,30 @@ pip install -r requirements.txt
 ### Access Points
 - Main application: `http://localhost:5000`
 - Kiosk mode: `http://localhost:5000/kiosk`
+- iPhone Remote Control: `http://localhost:5000/remote`
 
 ## Developer Notes
 
 ### Testing Guidelines
 - **Server Startup**: Don't start the server yourself when testing. Ask the developer to do it.
-- **Three-Tier Testing**: Enterprise-grade automated testing with backend, E2E, and visual validation
+- **Four-Tier Testing**: Enterprise-grade automated testing with backend, E2E, integration, and visual validation
 - **Test Commands**: 
+  - `python -m pytest` - Run all tests (backend + E2E + integration + visual)
   - `python -m pytest tests/e2e/` - Run E2E tests only
   - `python -m pytest tests/e2e/test_visual_appearance_windows.py` - Visual tests (Windows only)
-  - `python -m pytest` - Run all tests (backend + E2E + visual)
+  - `python -m pytest tests/test_remote_api.py` - Remote control API tests
+  - `python -m pytest tests/e2e/test_remote_control.py` - Remote control E2E tests
+  - `python -m pytest tests/e2e/test_remote_integration.py` - Remote control integration tests
   - `test.bat` or `./test.sh` - Cross-platform test scripts
 - **Page Objects**: All E2E tests use page object models to minimize test flakiness and improve maintainability
 - **Wait Strategies**: Tests use proper wait strategies (no arbitrary delays) for reliable execution
 - **Visual Testing**: Uses API stubbing via `page.route()` for predictable test states
 - **Bug Detection**: Tests actively identify and help resolve UI/UX issues
+- **Remote Control Testing**: Comprehensive test suite covers API, E2E, integration, and visual validation
+  - Mobile viewport simulation (no iPhone required)
+  - Multi-browser synchronization testing
+  - API mocking for consistent test states
+  - Network resilience and error handling validation
 
 ### Important Guidance
 - **IMPORTANT** - Don't ever start the server. Ask me to do it

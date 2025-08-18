@@ -12,6 +12,7 @@ from tests.e2e.pages.main_page import MainPage
 from tests.e2e.pages.favorites_gallery import FavoritesGallery
 from tests.e2e.pages.image_manager_page import ImageManagerPage
 from tests.e2e.pages.gallery_manager_page import GalleryManagerPage
+from tests.e2e.pages.remote_page import RemotePage
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
@@ -619,3 +620,215 @@ class TestFilterEffectsVisuals:
         
         # Verify canvas is visible
         assert canvas_container.is_visible(), "Canvas container should be visible"
+
+
+# Remote Control Visual Tests
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
+@pytest.mark.visual
+def test_remote_interface_mobile_layout(visual_page: Page, live_server):
+    """Test the visual appearance of remote interface in mobile viewport."""
+    # Set mobile viewport (iPhone SE size)
+    visual_page.set_viewport_size({"width": 375, "height": 667})
+    
+    remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+    
+    # Mock settings API for consistent testing
+    default_settings = {
+        "speed": 1,
+        "layers": 4,
+        "volume": 50,
+        "isWhiteBackground": False,
+        "gallery": {
+            "brightness": 100,
+            "contrast": 100,
+            "saturation": 100,
+            "whiteBalance": 100,
+            "textureIntensity": 0
+        }
+    }
+    visual_page.route("**/api/settings", lambda route: route.fulfill(
+        content_type="application/json",
+        body=json.dumps(default_settings)
+    ))
+    
+    remote_page.load_remote_page()
+    remote_page.wait_for_remote_ready()
+    
+    # Take screenshot of full mobile interface
+    screenshot_path = Path("test-results/visual/remote-mobile-interface.png")
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+    visual_page.screenshot(path=str(screenshot_path))
+    
+    # Verify mobile layout elements
+    remote_page.verify_mobile_layout()
+    remote_page.verify_responsive_design()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
+@pytest.mark.visual
+def test_remote_control_sections(visual_page: Page, live_server):
+    """Test visual appearance of different control sections."""
+    visual_page.set_viewport_size({"width": 375, "height": 667})
+    
+    remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+    
+    remote_page.load_remote_page()
+    remote_page.wait_for_remote_ready()
+    
+    # Screenshot quick actions section
+    quick_actions = visual_page.locator(".quick-actions-grid")
+    screenshot_path = Path("test-results/visual/remote-quick-actions.png")
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+    quick_actions.screenshot(path=str(screenshot_path))
+    
+    # Screenshot basic controls section  
+    basic_controls = visual_page.locator(".control-section").first
+    screenshot_path = Path("test-results/visual/remote-basic-controls.png")
+    basic_controls.screenshot(path=str(screenshot_path))
+    
+    # Screenshot gallery manager controls
+    gallery_controls = visual_page.locator(".control-section").nth(2)
+    screenshot_path = Path("test-results/visual/remote-gallery-controls.png")
+    gallery_controls.screenshot(path=str(screenshot_path))
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
+@pytest.mark.visual
+def test_remote_sliders_appearance(visual_page: Page, live_server):
+    """Test visual appearance of slider controls."""
+    visual_page.set_viewport_size({"width": 375, "height": 667})
+    
+    remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+    
+    remote_page.load_remote_page()
+    remote_page.wait_for_remote_ready()
+    
+    # Set various slider values for visual testing
+    remote_page.set_speed(7)
+    remote_page.set_layers(6)
+    remote_page.set_volume(80)
+    remote_page.set_brightness(110)
+    remote_page.set_contrast(95)
+    
+    # Screenshot control sliders with values
+    controls_section = visual_page.locator(".controls-list").first
+    screenshot_path = Path("test-results/visual/remote-sliders-values.png")
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+    controls_section.screenshot(path=str(screenshot_path))
+    
+    # Verify slider values are displayed
+    assert "7" in remote_page.get_speed_value()
+    assert "80" in remote_page.get_volume_value()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
+@pytest.mark.visual
+def test_remote_favorites_gallery_visual(visual_page: Page, live_server):
+    """Test visual appearance of favorites section in remote."""
+    visual_page.set_viewport_size({"width": 375, "height": 667})
+    
+    remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+    
+    # Mock favorites with test data
+    mock_favorites = [
+        {
+            "id": "test-fav-1",
+            "created_at": "2025-08-18T10:00:00.000Z",
+            "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9AAAAAElFTkSuQmCC",
+            "state": {"backgroundColor": "black"}
+        },
+        {
+            "id": "test-fav-2", 
+            "created_at": "2025-08-18T11:00:00.000Z",
+            "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9AAAAAElFTkSuQmCC",
+            "state": {"backgroundColor": "white"}
+        }
+    ]
+    
+    visual_page.route("**/api/favorites", lambda route: route.fulfill(
+        status=200,
+        content_type="application/json",
+        body=json.dumps(mock_favorites)
+    ))
+    
+    remote_page.load_remote_page()
+    remote_page.wait_for_remote_ready()
+    remote_page.wait_for_favorites_loaded()
+    
+    # Screenshot favorites section
+    favorites_section = visual_page.locator("#remote-favorites-grid")
+    screenshot_path = Path("test-results/visual/remote-favorites-gallery.png")
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+    favorites_section.screenshot(path=str(screenshot_path))
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
+@pytest.mark.visual
+def test_remote_favorites_empty_state(visual_page: Page, live_server):
+    """Test visual appearance of empty favorites in remote."""
+    visual_page.set_viewport_size({"width": 375, "height": 667})
+    
+    remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+    
+    # Mock empty favorites
+    visual_page.route("**/api/favorites", lambda route: route.fulfill(
+        status=200,
+        content_type="application/json",
+        body="[]"
+    ))
+    
+    remote_page.load_remote_page()
+    remote_page.wait_for_remote_ready()
+    remote_page.wait_for_favorites_loaded()
+    
+    # Screenshot empty favorites state
+    favorites_section = visual_page.locator("#remote-favorites-empty")
+    screenshot_path = Path("test-results/visual/remote-favorites-empty.png")
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+    favorites_section.screenshot(path=str(screenshot_path))
+    
+    # Verify empty state is shown
+    remote_page.verify_favorites_empty_state()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
+@pytest.mark.visual
+def test_remote_connection_status_visual(visual_page: Page, live_server):
+    """Test visual appearance of connection status indicator."""
+    visual_page.set_viewport_size({"width": 375, "height": 667})
+    
+    remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+    
+    remote_page.load_remote_page()
+    remote_page.wait_for_remote_ready()
+    
+    # Screenshot connection status area
+    connection_status = visual_page.locator("#connection-status")
+    screenshot_path = Path("test-results/visual/remote-connection-status.png")
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+    connection_status.screenshot(path=str(screenshot_path))
+    
+    # Verify connection status
+    remote_page.verify_connection_status("Connected")
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
+@pytest.mark.visual
+def test_remote_touch_targets_visual(visual_page: Page, live_server):
+    """Test visual verification of touch-friendly target sizes."""
+    visual_page.set_viewport_size({"width": 375, "height": 667})
+    
+    remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+    
+    remote_page.load_remote_page()
+    remote_page.wait_for_remote_ready()
+    
+    # Screenshot action buttons area
+    quick_actions = visual_page.locator(".quick-actions-grid")
+    screenshot_path = Path("test-results/visual/remote-touch-targets.png")
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+    quick_actions.screenshot(path=str(screenshot_path))
+    
+    # Verify responsive design
+    remote_page.verify_responsive_design()

@@ -645,6 +645,25 @@ pip install gunicorn
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
 
+#### Option 6: SystemD Service (Linux/Raspberry Pi)
+For automatic startup and background operation:
+```bash
+# One-time setup
+sudo cp manypaintings-kiosk.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable manypaintings-kiosk.service
+
+# Service management
+sudo systemctl start manypaintings-kiosk.service
+sudo systemctl stop manypaintings-kiosk.service
+sudo systemctl status manypaintings-kiosk.service
+
+# For debugging (kill service)
+./kill-kiosk.sh
+```
+
+**Important**: The systemd service does NOT automatically restart on failure to allow use of `kill-kiosk.sh` for debugging purposes.
+
 ### 6.5. Using the Application
 
 #### Interactive Controls

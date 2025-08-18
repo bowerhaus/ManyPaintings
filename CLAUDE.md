@@ -53,6 +53,24 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### SystemD Service (Raspberry Pi/Linux)
+```bash
+# Install service (one-time setup)
+sudo cp manypaintings-kiosk.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable manypaintings-kiosk.service
+
+# Service management
+sudo systemctl start manypaintings-kiosk.service
+sudo systemctl stop manypaintings-kiosk.service
+sudo systemctl status manypaintings-kiosk.service
+
+# Debug/kill service (use kill-kiosk.sh for debugging)
+./kill-kiosk.sh
+```
+
+**Important**: The systemd service does NOT automatically restart on failure to allow use of `kill-kiosk.sh` for debugging purposes.
+
 ### Access Points
 - Main application: `http://localhost:5000`
 - Kiosk mode: `http://localhost:5000/kiosk`

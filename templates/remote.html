@@ -6,13 +6,21 @@
 
 {% block content %}
 <div id="remote-app" class="remote-app">
-    <!-- Header -->
+    <!-- Header with Hero Image -->
     <div class="remote-header">
-        <h1 class="remote-title">ManyPaintings</h1>
-        <p class="remote-subtitle">Remote Control</p>
-        <div id="connection-status" class="connection-status">
-            <div class="connection-indicator"></div>
-            <span class="connection-text">Connected</span>
+        <div class="hero-container">
+            <!-- Hero images for crossfading -->
+            <div class="hero-image-layer" id="hero-image-1"></div>
+            <div class="hero-image-layer" id="hero-image-2"></div>
+            
+            <!-- Gradient overlay for text readability -->
+            <div class="hero-overlay"></div>
+            
+            <!-- Header content over hero -->
+            <div class="header-content">
+                <h1 class="remote-title">ManyPaintings</h1>
+                <p class="remote-subtitle">Remote Control</p>
+            </div>
         </div>
     </div>
     
@@ -20,7 +28,13 @@
     <div class="remote-content">
         <!-- Quick Actions -->
         <div class="control-section">
-            <h2 class="section-title">Quick Actions</h2>
+            <div class="section-header-with-status">
+                <h2 class="section-title">Quick Actions</h2>
+                <div id="connection-status" class="connection-status">
+                    <div class="connection-indicator"></div>
+                    <span class="connection-text">Connected</span>
+                </div>
+            </div>
             <div class="quick-actions-grid">
                 <button id="remote-play-pause-btn" class="action-btn primary">
                     <svg viewBox="0 0 24 24" class="action-icon">

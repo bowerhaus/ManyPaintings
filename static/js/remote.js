@@ -18,6 +18,13 @@ class RemoteController {
             basic: null     // Timer for basic setting toasts
         };
         
+        // Hero image cycling properties
+        this.heroImages = [];
+        this.currentHeroIndex = 0;
+        this.heroRotationTimer = null;
+        this.heroRotationInterval = 20000; // 20 seconds
+        this.activeHeroLayer = 1; // Track which layer is currently active
+        
         // Elements
         this.elements = {};
         this.initializeElements();
@@ -30,6 +37,10 @@ class RemoteController {
     }
     
     initializeElements() {
+        // Hero image elements
+        this.elements.heroImage1 = document.getElementById('hero-image-1');
+        this.elements.heroImage2 = document.getElementById('hero-image-2');
+        
         // Connection status
         this.elements.connectionIndicator = document.querySelector('.connection-indicator');
         this.elements.connectionText = document.querySelector('.connection-text');
@@ -135,6 +146,9 @@ class RemoteController {
             // Load images
             await this.loadImages();
             
+            // Initialize hero images
+            this.initializeHeroImages();
+            
             // Start polling for changes from main display
             this.startPolling();
             
@@ -200,6 +214,11 @@ class RemoteController {
             
             this.favorites = await response.json();
             this.updateFavoritesDisplay();
+            
+            // Update hero images when favorites change
+            if (this.updateHeroImages) {
+                this.updateHeroImages();
+            }
             
             console.log('Remote Controller: Favorites loaded:', this.favorites.length);
         } catch (error) {
@@ -1078,6 +1097,170 @@ class RemoteController {
     setRefreshState(isRefreshing) {
         // No visual refresh state needed since refresh button was removed
         // Progressive refresh still works in background
+    }
+    
+    /**
+     * Initialize hero image cycling
+     */
+    initializeHeroImages() {
+        console.log('Hero Images: Initializing...');
+        
+        // Setup Page Visibility API to pause/resume rotation
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.pauseHeroRotation();
+            } else {
+                this.resumeHeroRotation();
+            }
+        });
+        
+        // Load hero images from favorites
+        this.loadHeroImages();
+    }
+    
+    /**
+     * Load favorites for hero image cycling
+     */
+    loadHeroImages() {
+        if (this.favorites && this.favorites.length > 0) {
+            // Filter favorites that have thumbnails
+            this.heroImages = this.favorites.filter(fav => fav.thumbnail);
+            
+            if (this.heroImages.length > 0) {
+                console.log(`Hero Images: Loaded ${this.heroImages.length} favorites for cycling`);
+                this.startHeroRotation();
+                return;
+            }
+        }
+        
+        console.log('Hero Images: No favorites found, showing fallback pattern');
+        this.showFallbackHero();
+    }
+    
+    /**
+     * Start hero image rotation
+     */
+    startHeroRotation() {
+        if (this.heroImages.length === 0) {
+            this.showFallbackHero();
+            return;
+        }
+        
+        // Clear any existing timer
+        this.pauseHeroRotation();
+        
+        // Show first image immediately
+        this.showHeroImage(0);
+        
+        // Start rotation if we have more than one image
+        if (this.heroImages.length > 1) {
+            this.heroRotationTimer = setInterval(() => {
+                this.nextHeroImage();
+            }, this.heroRotationInterval);
+        }
+        
+        console.log('Hero Images: Rotation started');
+    }
+    
+    /**
+     * Pause hero image rotation
+     */
+    pauseHeroRotation() {
+        if (this.heroRotationTimer) {
+            clearInterval(this.heroRotationTimer);
+            this.heroRotationTimer = null;
+        }
+    }
+    
+    /**
+     * Resume hero image rotation
+     */
+    resumeHeroRotation() {
+        if (this.heroImages.length > 1) {
+            this.startHeroRotation();
+        }
+    }
+    
+    /**
+     * Show next hero image
+     */
+    nextHeroImage() {
+        this.currentHeroIndex = (this.currentHeroIndex + 1) % this.heroImages.length;
+        this.showHeroImage(this.currentHeroIndex);
+    }
+    
+    /**
+     * Show specific hero image with crossfade
+     */
+    showHeroImage(index) {
+        if (!this.heroImages[index]) return;
+        
+        const heroData = this.heroImages[index];
+        const nextLayer = this.activeHeroLayer === 1 ? 2 : 1;
+        const currentElement = this.elements[`heroImage${this.activeHeroLayer}`];
+        const nextElement = this.elements[`heroImage${nextLayer}`];
+        
+        if (!nextElement) return;
+        
+        // Preload the new image
+        const img = new Image();
+        img.onload = () => {
+            // Set the background image on the next layer
+            nextElement.style.backgroundImage = `url(${heroData.thumbnail})`;
+            nextElement.classList.remove('fallback');
+            
+            // Fade in the next layer
+            nextElement.classList.add('active');
+            
+            // After transition, fade out current layer and switch active
+            setTimeout(() => {
+                if (currentElement) {
+                    currentElement.classList.remove('active');
+                }
+                this.activeHeroLayer = nextLayer;
+            }, 100);
+        };
+        
+        img.src = heroData.thumbnail;
+    }
+    
+    /**
+     * Show fallback hero pattern when no favorites available
+     */
+    showFallbackHero() {
+        const layer1 = this.elements.heroImage1;
+        const layer2 = this.elements.heroImage2;
+        
+        if (layer1) {
+            layer1.style.backgroundImage = '';
+            layer1.classList.add('fallback');
+            layer1.classList.remove('active');
+        }
+        
+        if (layer2) {
+            layer2.style.backgroundImage = '';
+            layer2.classList.remove('active');
+        }
+        
+        // Show layer 1 as fallback
+        setTimeout(() => {
+            if (layer1) {
+                layer1.classList.add('active');
+            }
+        }, 100);
+        
+        this.activeHeroLayer = 1;
+        console.log('Hero Images: Showing fallback pattern');
+    }
+    
+    /**
+     * Update hero images when favorites change
+     */
+    updateHeroImages() {
+        console.log('Hero Images: Favorites updated, reloading hero images');
+        this.pauseHeroRotation();
+        this.currentHeroIndex = 0;
+        this.loadHeroImages();
     }
 }
 

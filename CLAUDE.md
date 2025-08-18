@@ -171,6 +171,14 @@ pip install -r requirements.txt
 - **Mobile Web Interface**: Professional iPhone-optimized remote control accessible at `http://localhost:5000/remote`
 - **Complete Control Suite**: All main application features controllable from mobile device
 - **Real-time Synchronization**: Bidirectional communication via 2-second polling intervals
+- **Hero Image Header**: Dynamic cycling header showcasing saved favorite paintings
+  - **Cycling Display**: Auto-rotates through all saved favorites every 20 seconds
+  - **Smooth Crossfade**: 1.5-second transitions between images with dual-layer system
+  - **Text Visibility**: Dark gradient overlay and text shadows ensure title readability on any background
+  - **Performance Optimized**: Page Visibility API pauses rotation when tab hidden to save battery
+  - **Fallback Design**: Animated gradient pattern displays when no favorites exist
+  - **Responsive Heights**: 240px → 200px → 180px scaling for different screen sizes
+  - **Image Preloading**: Seamless transitions with background image preloading
 - **Image Management Features**:
   - **Upload from iPhone**: Direct integration with iPhone photo library
   - **Browse Images**: Mobile-optimized grid with thumbnails and metadata
@@ -207,6 +215,7 @@ pip install -r requirements.txt
 - **Gallery Manager**: Use C key or click gallery manager button to open professional color adjustment interface
 - **Debug Grid**: Use G key to toggle grid visualization for positioning debugging (works with all layout modes)
 - **Remote Control**: iPhone remote interface includes full favorites management with delete functionality
+- **Connection Status**: Enhanced pulsating connection indicator in Quick Actions header with dramatic fade and expanding shadow ring effect
 
 ## Recent Development Achievements ✅
 

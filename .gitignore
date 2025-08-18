@@ -103,4 +103,7 @@ settings.json
 ManyPaintings-Windows.exe
 test-results/
 
+# Claude Code settings
+.claude/settings.local.json
+
 chrome_data/

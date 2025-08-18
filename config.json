@@ -95,8 +95,8 @@
   },
   "matte_border": {
     "enabled": true,
-    "border_percent": 7,
-    "color": "#F5F2E8",
+    "border_percent": 10,
+    "color": "#F5EFDB",
     "depth": 8,
     "style": "thin",
     "styles": {

@@ -5,6 +5,8 @@
 export const MatteBorderManager = {
   borderElement: null,
   config: null,
+  configPollingInterval: null,
+  lastConfigHash: null,
 
   init() {
     this.borderElement = document.getElementById('matte-border');
@@ -31,12 +33,17 @@ export const MatteBorderManager = {
     // Set up mutation observer to track changes
     this.setupMutationObserver();
 
-    // For now, always use default configuration to bypass API issues
-    console.log('MatteBorderManager: Bypassing API, using default configuration');
-    this.setDefaultConfiguration();
-
-    // Also try to load from API for debugging
+    // Load configuration from API
+    console.log('MatteBorderManager: Loading configuration from API');
     this.loadConfiguration();
+    
+    // Start config polling for hot reload
+    this.startConfigPolling();
+    
+    // Cleanup polling on page unload
+    window.addEventListener('beforeunload', () => {
+      this.stopConfigPolling();
+    });
   },
 
   setupMutationObserver() {
@@ -62,6 +69,93 @@ export const MatteBorderManager = {
     });
   },
 
+  startConfigPolling() {
+    // Clear any existing polling interval
+    if (this.configPollingInterval) {
+      clearInterval(this.configPollingInterval);
+    }
+    
+    // Poll config API every 10 seconds for hot reload
+    this.configPollingInterval = setInterval(() => {
+      this.checkForConfigChanges();
+    }, 10000);
+    
+    console.log('MatteBorderManager: Started config polling (10s interval) for hot reload');
+  },
+  
+  stopConfigPolling() {
+    if (this.configPollingInterval) {
+      clearInterval(this.configPollingInterval);
+      this.configPollingInterval = null;
+      console.log('MatteBorderManager: Stopped config polling');
+    }
+  },
+  
+  async checkForConfigChanges() {
+    try {
+      const response = await fetch('/api/config', {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (!response.ok) {
+        console.warn('MatteBorderManager: Config polling failed:', response.status);
+        return;
+      }
+      
+      const configData = await response.json();
+      const configHash = this.generateConfigHash(configData.matte_border);
+      
+      // Check if matte border config has changed
+      if (this.lastConfigHash && this.lastConfigHash !== configHash) {
+        console.log('MatteBorderManager: Config change detected, reloading matte border');
+        console.log('MatteBorderManager: Previous config:', this.config);
+        console.log('MatteBorderManager: New config:', configData.matte_border);
+        
+        this.config = configData.matte_border || {};
+        this.applyConfiguration();
+        
+        // Also update global config for other components
+        if (window.APP_CONFIG) {
+          window.APP_CONFIG.matte_border = configData.matte_border;
+        }
+        
+        console.log('MatteBorderManager: Configuration successfully updated');
+      }
+      
+      this.lastConfigHash = configHash;
+      
+    } catch (error) {
+      console.warn('MatteBorderManager: Config polling error:', error);
+    }
+  },
+  
+  generateConfigHash(matteBorderConfig) {
+    // Generate a simple hash of the matte border config for change detection
+    if (!matteBorderConfig) return 'null';
+    
+    const configString = JSON.stringify({
+      enabled: matteBorderConfig.enabled,
+      border_percent: matteBorderConfig.border_percent,
+      color: matteBorderConfig.color,
+      depth: matteBorderConfig.depth,
+      style: matteBorderConfig.style
+    });
+    
+    // Simple string hash function
+    let hash = 0;
+    for (let i = 0; i < configString.length; i++) {
+      const char = configString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
+  },
+
   async loadConfiguration() {
     try {
       const response = await fetch('/api/config');
@@ -75,11 +169,13 @@ export const MatteBorderManager = {
       // If config is empty, use default configuration
       if (Object.keys(this.config).length === 0) {
         console.warn('MatteBorderManager: No matte_border config found, using defaults');
-        this.setDefaultConfiguration();
-        return;
+        this.config = this.getDefaultConfig();
       }
 
       console.log('MatteBorderManager: Configuration loaded', this.config);
+
+      // Set initial config hash for change detection
+      this.lastConfigHash = this.generateConfigHash(this.config);
 
       // Delay application to ensure DOM is ready
       setTimeout(() => {
@@ -87,13 +183,17 @@ export const MatteBorderManager = {
       }, 100);
     } catch (error) {
       console.error('MatteBorderManager: Failed to load configuration:', error);
-      this.setDefaultConfiguration();
+      this.config = this.getDefaultConfig();
+      this.lastConfigHash = this.generateConfigHash(this.config);
+      setTimeout(() => {
+        this.applyConfiguration();
+      }, 100);
     }
   },
 
-  setDefaultConfiguration() {
+  getDefaultConfig() {
     console.log('MatteBorderManager: Using default configuration');
-    this.config = {
+    return {
       enabled: true,
       border_percent: 10,
       color: '#F8F8F8',
@@ -132,11 +232,25 @@ export const MatteBorderManager = {
         aspect_ratio: '1:1'
       }
     };
+  },
 
-    // Delay application to ensure DOM is ready
-    setTimeout(() => {
-      this.applyConfiguration();
-    }, 100);
+  cleanupExistingElements() {
+    // Remove existing 3D bevel frame
+    const bevelFrame = document.getElementById('bevel-frame');
+    if (bevelFrame) {
+      bevelFrame.remove();
+    }
+    
+    // Remove existing canvas-based bevel elements
+    this.removeBeveledFrameElements();
+    
+    // Reset border element styles to clean state
+    if (this.borderElement) {
+      this.borderElement.style.removeProperty('clip-path');
+      this.borderElement.style.removeProperty('background-color');
+    }
+    
+    console.log('MatteBorderManager: Cleaned up existing elements');
   },
 
   applyConfiguration() {
@@ -146,6 +260,9 @@ export const MatteBorderManager = {
     }
 
     console.log('MatteBorderManager: Applying configuration:', this.config);
+
+    // Clean up existing matte border elements before applying new configuration
+    this.cleanupExistingElements();
 
     if (!this.config.enabled) {
       this.borderElement.classList.add('disabled');
@@ -172,13 +289,13 @@ export const MatteBorderManager = {
     // Get aspect ratio from config
     let aspect_ratio = '1:1'; // Default to square
 
-    // Check for aspect ratio in client-side config first
-    if (window.APP_CONFIG && window.APP_CONFIG.matte_border && window.APP_CONFIG.matte_border.image_area) {
-      aspect_ratio = window.APP_CONFIG.matte_border.image_area.aspect_ratio;
-    }
-    // Fallback to server config if available
-    else if (this.config && this.config.image_area && this.config.image_area.aspect_ratio) {
+    // Use MatteBorderManager's config first (most current from hot reload)
+    if (this.config && this.config.image_area && this.config.image_area.aspect_ratio) {
       aspect_ratio = this.config.image_area.aspect_ratio;
+    }
+    // Fallback to global client-side config if available
+    else if (window.APP_CONFIG && window.APP_CONFIG.matte_border && window.APP_CONFIG.matte_border.image_area) {
+      aspect_ratio = window.APP_CONFIG.matte_border.image_area.aspect_ratio;
     }
 
     // Parse aspect ratio (e.g., "16:9", "4:3", "1:1")
@@ -207,14 +324,16 @@ export const MatteBorderManager = {
     // Get border percentage from config
     let border_percent = 10; // Default
 
-    // Check client-side config first
-    if (window.APP_CONFIG && window.APP_CONFIG.matte_border && window.APP_CONFIG.matte_border.border_percent) {
-      border_percent = window.APP_CONFIG.matte_border.border_percent;
-    }
-    // Fallback to server config if available
-    else if (this.config && this.config.border_percent) {
+    // Use MatteBorderManager's config first (most current from hot reload)
+    if (this.config && this.config.border_percent !== undefined) {
       border_percent = this.config.border_percent;
     }
+    // Fallback to global client-side config if available
+    else if (window.APP_CONFIG && window.APP_CONFIG.matte_border && window.APP_CONFIG.matte_border.border_percent !== undefined) {
+      border_percent = window.APP_CONFIG.matte_border.border_percent;
+    }
+    
+    console.log(`MatteBorderManager: Using border_percent: ${border_percent}% from ${this.config && this.config.border_percent !== undefined ? 'MatteBorderManager config' : 'fallback config'}`);
 
     // Calculate border size as percentage of the smaller canvas dimension
     const smallerCanvasDimension = Math.min(canvasWidth, canvasHeight);

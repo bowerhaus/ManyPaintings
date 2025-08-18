@@ -149,6 +149,51 @@
                 <!-- Favorites will be populated here -->
             </div>
         </div>
+        
+        <!-- Image Manager -->
+        <div class="control-section">
+            <h2 class="section-title">Image Manager</h2>
+            
+            <!-- Upload Area -->
+            <div class="remote-upload-section">
+                <div id="remote-upload-area" class="remote-upload-area">
+                    <svg viewBox="0 0 24 24" class="upload-icon">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                    </svg>
+                    <p class="upload-title">Tap to upload images</p>
+                    <p class="upload-subtitle">PNG, JPG, JPEG, GIF, WEBP</p>
+                    <input type="file" id="remote-image-upload-input" class="upload-input" accept=".png,.jpg,.jpeg,.gif,.webp" multiple>
+                </div>
+                
+                <!-- Upload Progress -->
+                <div id="remote-upload-progress" class="remote-upload-progress hidden">
+                    <div class="upload-progress-bar">
+                        <div id="remote-upload-progress-bar" class="upload-progress-fill" style="width: 0%"></div>
+                    </div>
+                    <p id="remote-upload-status" class="upload-status">Uploading...</p>
+                </div>
+            </div>
+            
+            <!-- Images Container -->
+            <div class="remote-images-container">
+                <div id="remote-images-loading" class="loading-section hidden">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Loading images...</p>
+                </div>
+                
+                <div id="remote-images-empty" class="empty-section hidden">
+                    <svg viewBox="0 0 24 24" class="empty-icon">
+                        <path d="M21,19V5c0,-1.1 -0.9,-2 -2,-2H5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2zM8.5,13.5l2.5,3.01L14.5,12l4.5,6H5l3.5,-4.5z"/>
+                    </svg>
+                    <p class="empty-title">No images found</p>
+                    <p class="empty-subtitle">Upload images to get started</p>
+                </div>
+                
+                <div id="remote-images-grid" class="remote-images-grid">
+                    <!-- Images will be populated here -->
+                </div>
+            </div>
+        </div>
     </div>
     
     <!-- Toast notifications -->

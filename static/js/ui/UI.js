@@ -155,33 +155,39 @@ export const UI = {
   showSuccess(message) {
     // Create a temporary success toast
     const toast = document.createElement('div');
-    toast.className = 'fixed top-8 left-1/2 transform -translate-x-1/2 bg-green-600/90 text-white px-6 py-3 rounded-lg backdrop-blur-lg z-[400] transition-all duration-300';
     toast.style.cssText = `
       position: fixed;
       top: 32px;
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
-      background: rgba(34, 197, 94, 0.9);
+      background: rgba(76, 175, 80, 0.95);
       color: white;
       padding: 12px 24px;
       border-radius: 8px;
-      backdrop-filter: blur(10px);
-      font-family: monospace;
       font-size: 14px;
-      z-index: 400;
+      font-weight: 500;
+      z-index: 999999;
       transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      word-wrap: break-word;
+      text-align: center;
       opacity: 0;
+      pointer-events: none;
     `;
     toast.textContent = message;
     document.body.appendChild(toast);
     
+    console.log('UI Success:', message);
+    
     // Animate in
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       toast.style.transform = 'translateX(-50%) translateY(0)';
       toast.style.opacity = '1';
-    }, 10);
+    });
     
-    // Remove after 3 seconds
+    // Remove after delay
     setTimeout(() => {
       toast.style.transform = 'translateX(-50%) translateY(-100px)';
       toast.style.opacity = '0';
@@ -190,9 +196,7 @@ export const UI = {
           toast.parentNode.removeChild(toast);
         }
       }, 300);
-    }, 3000);
-    
-    console.log('UI Success:', message);
+    }, 2000);
   },
 
   showLoading() {
@@ -237,7 +241,14 @@ export const UI = {
     // Favorite button (in onscreen controls)
     const favoriteBtn = document.getElementById('favorite-btn');
     if (favoriteBtn) {
-      favoriteBtn.addEventListener('click', this.saveFavorite.bind(this));
+      console.log('UI: Favorite button found, adding click listener');
+      favoriteBtn.addEventListener('click', (e) => {
+        console.log('UI: Favorite button clicked!');
+        e.preventDefault();
+        this.saveFavorite();
+      });
+    } else {
+      console.warn('UI: Favorite button not found');
     }
 
     // Favorites gallery button (in onscreen controls)
@@ -616,13 +627,22 @@ export const UI = {
   },
 
   async saveFavorite() {
+    console.log('UI: saveFavorite method called');
     try {
       const FavoritesManager = window.App?.FavoritesManager;
+      console.log('UI: FavoritesManager available:', !!FavoritesManager);
       if (FavoritesManager) {
+        console.log('UI: Calling FavoritesManager.saveFavorite()');
         await FavoritesManager.saveFavorite();
+        console.log('UI: Favorite saved successfully');
+        this.showSuccess('Favorite saved successfully');
+      } else {
+        console.error('UI: FavoritesManager not available');
+        this.showError('FavoritesManager not available');
       }
     } catch (error) {
       console.error('UI: Failed to save favorite:', error);
+      this.showError(`Failed to save favorite: ${error.message}`);
     }
   },
 

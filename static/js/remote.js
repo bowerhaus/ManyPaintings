@@ -7,6 +7,7 @@ class RemoteController {
     constructor() {
         this.settings = {};
         this.favorites = [];
+        this.images = [];
         this.connectionStatus = 'connecting';
         this.isLoading = false;
         this.pollingInterval = 3000; // Poll every 3 seconds
@@ -64,6 +65,16 @@ class RemoteController {
         this.elements.favoritesEmpty = document.getElementById('remote-favorites-empty');
         this.elements.favoritesGrid = document.getElementById('remote-favorites-grid');
         
+        // Image Manager
+        this.elements.uploadArea = document.getElementById('remote-upload-area');
+        this.elements.uploadInput = document.getElementById('remote-image-upload-input');
+        this.elements.uploadProgress = document.getElementById('remote-upload-progress');
+        this.elements.uploadProgressBar = document.getElementById('remote-upload-progress-bar');
+        this.elements.uploadStatus = document.getElementById('remote-upload-status');
+        this.elements.imagesLoading = document.getElementById('remote-images-loading');
+        this.elements.imagesEmpty = document.getElementById('remote-images-empty');
+        this.elements.imagesGrid = document.getElementById('remote-images-grid');
+        
         // Toast
         this.elements.toast = document.getElementById('remote-toast');
         this.elements.toastMessage = document.getElementById('remote-toast-message');
@@ -91,6 +102,20 @@ class RemoteController {
         // Gallery reset
         this.elements.galleryResetBtn?.addEventListener('click', () => this.resetGallerySettings());
         
+        // Image Manager upload events
+        if (this.elements.uploadArea && this.elements.uploadInput) {
+            this.elements.uploadArea.addEventListener('click', () => {
+                this.elements.uploadInput.click();
+            });
+
+            this.elements.uploadInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    this.uploadFiles(Array.from(files));
+                }
+            });
+        }
+        
         // Touch improvements for iOS
         document.addEventListener('touchstart', function() {}, { passive: true });
     }
@@ -105,6 +130,9 @@ class RemoteController {
             
             // Load favorites
             await this.loadFavorites();
+            
+            // Load images
+            await this.loadImages();
             
             // Start polling for changes from main display
             this.startPolling();
@@ -431,6 +459,227 @@ class RemoteController {
             console.error('Failed to delete favorite:', error);
             this.showToast('Failed to delete favorite');
         }
+    }
+    
+    async loadImages() {
+        try {
+            this.showImagesLoading(true);
+            
+            // Add cache-busting parameter to prevent stale data
+            const cacheBuster = Date.now();
+            const response = await fetch(`/api/images?_t=${cacheBuster}`, {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            this.images = data.images || [];
+            this.updateImagesDisplay();
+            
+            console.log('Remote Controller: Images loaded:', this.images.length);
+        } catch (error) {
+            console.error('Remote Controller: Failed to load images:', error);
+            this.showImagesEmpty(true);
+        } finally {
+            this.showImagesLoading(false);
+        }
+    }
+    
+    updateImagesDisplay() {
+        if (!this.elements.imagesGrid) return;
+        
+        if (this.images.length === 0) {
+            this.showImagesEmpty(true);
+            return;
+        }
+        
+        this.showImagesEmpty(false);
+        
+        // Clear existing images
+        this.elements.imagesGrid.innerHTML = '';
+        
+        // Add image items
+        this.images.forEach(image => {
+            const imageElement = this.createImageElement(image);
+            this.elements.imagesGrid.appendChild(imageElement);
+        });
+    }
+    
+    createImageElement(image) {
+        const item = document.createElement('div');
+        item.className = 'remote-image-item';
+        
+        const thumbnail = document.createElement('img');
+        thumbnail.className = 'remote-image-thumbnail';
+        thumbnail.src = image.path;
+        thumbnail.alt = image.filename;
+        thumbnail.loading = 'lazy';
+        
+        // Create delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'remote-image-delete-btn';
+        deleteBtn.title = 'Delete';
+        deleteBtn.innerHTML = `
+            <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+        `;
+        
+        const info = document.createElement('div');
+        info.className = 'remote-image-info';
+        info.innerHTML = `
+            <p class="remote-image-filename" title="${image.filename}">${image.filename}</p>
+            <div class="remote-image-details">
+                <span>${image.width}×${image.height}</span>
+                <span>${this.formatFileSize(image.size)}</span>
+            </div>
+        `;
+        
+        // Add delete button click handler
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            this.deleteImage(image.filename, item);
+        });
+        
+        item.appendChild(thumbnail);
+        item.appendChild(deleteBtn);
+        item.appendChild(info);
+        
+        return item;
+    }
+    
+    async uploadFiles(files) {
+        const validFiles = files.filter(file => {
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+            return validTypes.includes(file.type);
+        });
+
+        if (validFiles.length === 0) {
+            this.showToast('Please select valid image files (PNG, JPG, JPEG, GIF, WEBP)');
+            return;
+        }
+
+        this.showUploadProgress();
+
+        for (let i = 0; i < validFiles.length; i++) {
+            const file = validFiles[i];
+            const progress = ((i + 1) / validFiles.length) * 100;
+            
+            this.updateUploadProgress(progress, `Uploading ${file.name}...`);
+
+            try {
+                await this.uploadSingleFile(file);
+                console.log(`Remote Controller: Uploaded ${file.name}`);
+            } catch (error) {
+                console.error(`Failed to upload ${file.name}:`, error);
+                this.showToast(`Failed to upload ${file.name}: ${error.message}`);
+            }
+        }
+
+        this.hideUploadProgress();
+        await this.loadImages(); // Refresh the grid
+        this.showToast(`Successfully uploaded ${validFiles.length} image(s)`);
+        
+        // Clear the input
+        if (this.elements.uploadInput) {
+            this.elements.uploadInput.value = '';
+        }
+    }
+    
+    async uploadSingleFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/images/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Upload failed');
+        }
+
+        return result;
+    }
+    
+    async deleteImage(filename, itemElement) {
+        try {
+            const response = await fetch(`/api/images/${encodeURIComponent(filename)}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                const result = await response.json();
+                throw new Error(result.error || 'Delete failed');
+            }
+
+            // Remove the element from the UI
+            itemElement.remove();
+            
+            // Update local images array
+            this.images = this.images.filter(img => img.filename !== filename);
+            
+            // Check if grid is now empty
+            if (this.images.length === 0) {
+                this.showImagesEmpty(true);
+            }
+            
+            this.showToast(`Image "${filename}" deleted`);
+        } catch (error) {
+            console.error('Failed to delete image:', error);
+            this.showToast(`Failed to delete image: ${error.message}`);
+        }
+    }
+    
+    showImagesLoading(show) {
+        if (this.elements.imagesLoading) {
+            this.elements.imagesLoading.classList.toggle('hidden', !show);
+        }
+    }
+    
+    showImagesEmpty(show) {
+        if (this.elements.imagesEmpty) {
+            this.elements.imagesEmpty.classList.toggle('hidden', !show);
+        }
+    }
+    
+    showUploadProgress() {
+        if (this.elements.uploadProgress) {
+            this.elements.uploadProgress.classList.remove('hidden');
+        }
+    }
+
+    hideUploadProgress() {
+        if (this.elements.uploadProgress) {
+            this.elements.uploadProgress.classList.add('hidden');
+        }
+    }
+
+    updateUploadProgress(percentage, status) {
+        if (this.elements.uploadProgressBar) {
+            this.elements.uploadProgressBar.style.width = `${percentage}%`;
+        }
+        if (this.elements.uploadStatus) {
+            this.elements.uploadStatus.textContent = status;
+        }
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
     
     updateFavoritesDisplay() {

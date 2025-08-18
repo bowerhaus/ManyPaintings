@@ -36,12 +36,22 @@ This document outlines the requirements and implementation approach for adding i
 4. **Gallery Manager Controls** - All 5 color grading adjustments
 5. **Speed Control** - Animation speed multiplier (1-10x)
 6. **Volume Control** - Audio volume (0-100%)
+7. **Image Manager** - Complete image management from mobile device
+   - View all uploaded images with thumbnails
+   - Upload new images directly from iPhone photos
+   - Delete images with mobile-optimized touch targets
+   - Real-time image grid with file details (size, dimensions)
 
 ### User Experience Requirements
 - **Immediate Feedback**: Visual changes appear on TV instantly when adjusting iPhone controls
 - **Favorites Display**: Thumbnails visible on iPhone during selection with proper background color theming
 - **Mobile-Friendly Interface**: Enhanced delete buttons with proper touch targets for mobile devices
 - **Theme Consistency**: Favorites gallery adapts to black/white background mode
+- **Image Management**: Complete image library management with mobile-optimized interface
+  - Touch-friendly upload area for iPhone photo selection
+  - 2-column responsive grid layout for optimal mobile viewing
+  - Progress indicators during upload operations
+  - Immediate UI updates after image operations
 - **Response Time**: <200ms from control input to screen feedback
 - **No App Store**: Browser-based solution requiring no installation
 
@@ -71,6 +81,9 @@ This document outlines the requirements and implementation approach for adding i
 ```python
 @app.route('/remote')                    # iPhone web app interface
 @app.route('/api/settings', methods=['GET', 'POST'])  # Settings storage API
+@app.route('/api/images', methods=['GET'])            # Image listing (existing)
+@app.route('/api/images/upload', methods=['POST'])    # Image upload (existing)
+@app.route('/api/images/<filename>', methods=['DELETE']) # Image deletion (existing)
 ```
 
 #### API Protocol
@@ -202,6 +215,15 @@ setInterval(async () => {
 │ [🖼️❌] [🖼️❌] [🖼️❌] [🖼️❌] │
 │ [🖼️❌] [🖼️❌] [+ Save]     │
 │ (Enhanced delete UI) │
+├─────────────────────┤
+│ Image Manager       │
+│ [📁 Upload Images]   │
+│ ┌─────────────────┐ │
+│ │ [🖼️❌] [🖼️❌]   │ │
+│ │ [🖼️❌] [🖼️❌]   │ │
+│ │ [🖼️❌] [🖼️❌]   │ │
+│ └─────────────────┘ │
+│ (2-column grid)     │
 └─────────────────────┘
 ```
 
@@ -224,7 +246,14 @@ setInterval(async () => {
 2. **Smooth Updates**: Apply changes without disrupting animations
 3. **Conditional Updates**: Only update UI if values actually changed
 
-### Phase 4: Polish & Testing
+### Phase 4: Image Manager Integration
+1. **Image Display**: Mobile-optimized grid layout for image browsing
+2. **Upload Interface**: Touch-friendly file selection and progress tracking
+3. **Delete Functionality**: Mobile-optimized delete buttons with confirmation
+4. **API Integration**: Reuse existing image management endpoints
+5. **Theme Support**: Dark/light mode compatibility for image interface
+
+### Phase 5: Polish & Testing
 1. **Error Handling**: Network failure recovery
 2. **Performance**: Optimize polling frequency
 3. **Testing**: Cross-device validation

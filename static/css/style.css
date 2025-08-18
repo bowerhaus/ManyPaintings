@@ -2051,6 +2051,232 @@ body.remote-control.white-theme .favorite-title {
     color: #666;
 }
 
+/* Remote control image manager styles */
+.remote-upload-section {
+    margin-bottom: 1rem;
+}
+
+.remote-upload-area {
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.remote-upload-area:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.remote-upload-area .upload-icon {
+    width: 2rem;
+    height: 2rem;
+    fill: rgba(255, 255, 255, 0.6);
+    margin-bottom: 0.5rem;
+}
+
+.remote-upload-area .upload-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.25rem;
+}
+
+.remote-upload-area .upload-subtitle {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.remote-upload-area .upload-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* White theme for upload area */
+body.remote-control.white-theme .remote-upload-area {
+    border-color: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.remote-control.white-theme .remote-upload-area:hover {
+    border-color: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .remote-upload-area .upload-icon {
+    fill: rgba(0, 0, 0, 0.6);
+}
+
+body.remote-control.white-theme .remote-upload-area .upload-title {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+body.remote-control.white-theme .remote-upload-area .upload-subtitle {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+/* Upload progress */
+.remote-upload-progress {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.remote-upload-progress .upload-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.remote-upload-progress .upload-progress-fill {
+    height: 100%;
+    background: #4CAF50;
+    transition: width 0.3s ease;
+    border-radius: 3px;
+}
+
+.remote-upload-progress .upload-status {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+}
+
+/* White theme for upload progress */
+body.remote-control.white-theme .remote-upload-progress {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.remote-control.white-theme .remote-upload-progress .upload-progress-bar {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+body.remote-control.white-theme .remote-upload-progress .upload-status {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+/* Images container */
+.remote-images-container {
+    margin-top: 0.75rem;
+}
+
+.remote-images-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+/* Remote image items */
+.remote-image-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.remote-image-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.remote-image-thumbnail {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: #333;
+    display: block;
+}
+
+.remote-image-info {
+    padding: 0.5rem;
+}
+
+.remote-image-filename {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.25rem;
+}
+
+.remote-image-details {
+    font-size: 0.625rem;
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Remote image delete buttons */
+.remote-image-delete-btn {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.remote-image-delete-btn:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.remote-image-delete-btn svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    opacity: 0.9;
+}
+
+/* White theme for remote images */
+body.remote-control.white-theme .remote-image-item {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .remote-image-item:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .remote-image-thumbnail {
+    background: #f3f4f6;
+}
+
+body.remote-control.white-theme .remote-image-filename {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+body.remote-control.white-theme .remote-image-details {
+    color: rgba(0, 0, 0, 0.6);
+}
+
 /* Remote control favorite delete buttons */
 .remote-favorite-delete-btn {
     position: absolute !important;

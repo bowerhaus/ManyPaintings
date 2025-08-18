@@ -41,6 +41,7 @@ This document outlines the requirements and implementation approach for adding i
    - Upload new images directly from iPhone photos
    - Delete images with mobile-optimized touch targets
    - Real-time image grid with file details (size, dimensions)
+   - **✅ CRITICAL: Automatic Image Appearance** - Newly uploaded images automatically appear on main display immediately after upload
 
 ### User Experience Requirements
 - **Immediate Feedback**: Visual changes appear on TV instantly when adjusting iPhone controls
@@ -52,6 +53,7 @@ This document outlines the requirements and implementation approach for adding i
   - 2-column responsive grid layout for optimal mobile viewing
   - Progress indicators during upload operations
   - Immediate UI updates after image operations
+  - **Automatic Image Display**: Uploaded images appear immediately on main display without manual intervention
 - **Response Time**: <200ms from control input to screen feedback
 - **No App Store**: Browser-based solution requiring no installation
 
@@ -84,6 +86,9 @@ This document outlines the requirements and implementation approach for adding i
 @app.route('/api/images', methods=['GET'])            # Image listing (existing)
 @app.route('/api/images/upload', methods=['POST'])    # Image upload (existing)
 @app.route('/api/images/<filename>', methods=['DELETE']) # Image deletion (existing)
+@app.route('/api/images/refresh', methods=['POST'])   # NEW: Trigger main display image refresh
+@app.route('/api/check-refresh-images', methods=['GET']) # NEW: Check for refresh requests
+@app.route('/api/refresh-images-status', methods=['DELETE']) # NEW: Clear refresh requests
 ```
 
 #### API Protocol

@@ -1738,6 +1738,20 @@ body.remote-control.white-theme .section-title {
     border-bottom-color: rgba(0, 0, 0, 0.1);
 }
 
+body.remote-control.white-theme .refresh-button {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .refresh-button:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.remote-control.white-theme .refresh-icon {
+    fill: #333;
+}
+
 body.remote-control.white-theme .connection-text {
     color: #666;
 }
@@ -1824,6 +1838,59 @@ body.remote-control.white-theme .connection-text {
     color: #ffffff;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 0.5rem;
+}
+
+.section-header-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-header-with-button .section-title {
+    margin: 0;
+    flex: 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.refresh-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 8px;
+    margin-left: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+}
+
+.refresh-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.refresh-button:active {
+    transform: scale(0.95);
+}
+
+.refresh-button.refreshing {
+    animation: spin 1s linear infinite;
+}
+
+.refresh-icon {
+    width: 20px;
+    height: 20px;
+    fill: #ffffff;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* Quick actions grid */

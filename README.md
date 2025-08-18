@@ -155,6 +155,46 @@ The application now includes a comprehensive favouriting system that allows user
 *   **Viewport Adaptation:** Automatic scaling and positioning adjustment for different screen sizes
 *   **Browser Compatibility:** Works with all modern browsers supporting Fetch API and Clipboard API
 
+### 3.4. iPhone Remote Control System ✅ NEW FEATURE
+
+The application now features a comprehensive **iPhone Remote Control System** that enables complete control of the main display from any iPhone or mobile device through a web interface.
+
+#### Core Features
+*   **Mobile-Optimized Interface:** Professional iPhone web app accessible at `/remote` endpoint
+*   **Real-time Synchronization:** Bidirectional communication between main display and remote control
+*   **Complete Control Suite:** All main application features accessible from mobile device
+*   **Instant Feedback:** Changes appear immediately on main display with visual confirmation
+
+#### Control Capabilities
+*   **Animation Controls:** Speed multiplier (1-10x), maximum layers (1-8), play/pause functionality
+*   **Audio Management:** Volume control (0-100%) with mute capability
+*   **Gallery Management:** Complete Samsung Frame TV-style color grading controls
+    - Brightness (25-115%), Contrast (85-115%), Saturation (50-120%)
+    - White Balance (80-120%), Canvas Texture Intensity (0-100%)
+*   **Favorites System:** Browse, load, and delete saved paintings with thumbnails
+*   **Image Management:** Complete image library management with mobile-optimized interface
+    - Upload images directly from iPhone photo library
+    - Browse all images with thumbnails and metadata
+    - Delete images with touch-friendly controls
+    - **✅ CRITICAL: Automatic Image Display** - Uploaded images appear immediately on main display
+
+#### User Experience
+*   **Touch-Optimized Design:** Large touch targets and gesture-friendly interfaces
+*   **Theme Synchronization:** Remote interface automatically matches main display theme (dark/light)
+*   **Connection Status:** Real-time connection indicators and error recovery
+*   **Progressive Enhancement:** Works on all modern mobile browsers without app installation
+
+#### Technical Implementation
+*   **RESTful API:** Server-side settings storage with real-time polling
+*   **Responsive Design:** Optimized for iPhone Safari with proper viewport handling
+*   **Performance Optimized:** 2-3 second polling intervals for real-time synchronization
+*   **Automatic Image Triggering:** New API endpoints enable immediate display of uploaded images
+    - `POST /api/images/refresh` - Triggers main display refresh with uploaded image IDs
+    - `GET /api/check-refresh-images` - Polling endpoint for refresh request detection
+    - Smart layer management removes oldest layers to make room for new images
+
+**Access URL:** `http://[device-ip]:5000/remote` from any iPhone or mobile browser
+
 ### 3.5. Intelligent Distribution System ✅ NEW FEATURE
 
 The application now features an advanced **Weighted Random Distribution System** that provides the perfect balance between natural randomness and equitable image representation.
@@ -205,7 +245,7 @@ Where:
 *   **Scalability:** Efficient with large collections (tested with 1000+ images)
 *   **Real-time Updates:** Selection calculations happen instantly during animation
 
-### 3.6. Multi-Mode Layout System ✅ RECENT IMPROVEMENT
+### 3.7. Multi-Mode Layout System ✅ RECENT IMPROVEMENT
 
 The application now features a sophisticated **Multi-Mode Layout System** with four distinct positioning strategies that provide different visual experiences and use cases.
 
@@ -262,7 +302,7 @@ Options: `rule_of_thirds`, `rule_of_thirds_and_centre`, `rule_of_fifths_thirds_a
 Press **G** to toggle grid visualization and see how images are positioned.
 
 
-### 3.7. UI Controls
+### 3.8. UI Controls
 *   **Speed Control:** 0.1x to 20x animation speed multiplier
 *   **Layer Control:** 1-8 concurrent image layers  
 *   **Audio Controls:** Volume and play/pause
@@ -272,15 +312,17 @@ Press **G** to toggle grid visualization and see how images are positioned.
 *   **Favorites Gallery:** ✅ **NEW FEATURE** - Visual gallery with thumbnails to browse and manage saved favorites
 *   **Gallery Manager:** ✅ **NEW FEATURE** - Professional Samsung Frame TV-style display calibration controls
 
-#### 3.7.1 User Preferences ✅ **NEW FEATURE**
-The application automatically saves and restores user preferences across browser sessions using localStorage:
+#### 3.8.1 User Preferences ✅ **NEW FEATURE**
+The application automatically saves and restores user preferences across browser sessions using server-side storage:
 *   **Auto-Save:** All control panel changes saved instantly without user action
 *   **Cross-Session:** Settings persist when browser is closed and reopened  
-*   **Settings Saved:** Speed multiplier, max layers, audio volume, background color
-*   **Smart Defaults:** Graceful fallbacks if localStorage unavailable
+*   **Settings Saved:** Speed multiplier, max layers, audio volume, background color, gallery settings
+*   **Server-Side Storage:** Settings stored in `settings.json` file on server for cross-device access
+*   **Remote Sync:** Settings synchronized between main display and iPhone remote control
+*   **Smart Defaults:** Graceful fallbacks with sensible defaults
 *   **No Configuration:** Works automatically with no setup required
 
-#### 3.7.2 Gallery Manager ✅ **NEW FEATURE**
+#### 3.8.2 Gallery Manager ✅ **NEW FEATURE**
 Professional Samsung Frame TV-style display calibration system for optimal artwork presentation:
 
 **Color Grading Controls:**
@@ -303,7 +345,7 @@ Professional Samsung Frame TV-style display calibration system for optimal artwo
 **Professional Interface:**
 *   **Bottom-Sheet Modal:** Samsung Frame TV-style interface positioned at bottom for artwork visibility
 *   **Real-Time Preview:** All adjustments apply instantly while controls remain visible
-*   **Persistent Settings:** All gallery settings automatically saved to localStorage
+*   **Persistent Settings:** All gallery settings automatically saved to server-side storage
 *   **Reset to Defaults:** One-click restoration of neutral calibration settings
 *   **Keyboard Access:** C key or Gallery Manager button for quick access
 
@@ -320,14 +362,14 @@ Professional Samsung Frame TV-style display calibration system for optimal artwo
 4. **Reset:** Click "Reset to Defaults" to return to neutral calibration
 5. **Auto-Save:** All settings automatically persist across browser sessions
 
-#### 3.7.3 Pattern Behavior ✅ **CONFIG-DRIVEN**
+#### 3.8.3 Pattern Behavior ✅ **CONFIG-DRIVEN**
 Pattern generation follows strict configuration-based logic:
 *   **Config `initial_pattern_code: null`** → Fresh random pattern each refresh
 *   **Config `initial_pattern_code: "code"`** → Always use that specific pattern
 *   **No LocalStorage:** Pattern codes never saved to browser storage
 *   **Deterministic:** Same config produces same pattern sequences
 
-### 3.8. Keyboard Shortcuts
+### 3.9. Keyboard Shortcuts
 *   **Spacebar:** Play/Pause animations
 *   **N:** Generate new pattern  
 *   **B:** Toggle background (black/white)
@@ -938,7 +980,7 @@ The testing system ensures reliable, maintainable code and has actively improved
 ## 10. Future Enhancements
 
 ### ✅ Recently Completed
-*   **User Preferences & LocalStorage:** ✅ COMPLETED - Comprehensive browser localStorage system for persisting user settings
+*   **User Preferences & Server Storage:** ✅ COMPLETED - Comprehensive server-side storage system for persisting user settings across devices
 *   **Pattern Behavior System:** ✅ COMPLETED - Config-driven pattern generation with no localStorage interference
 *   **Background Preference Fix:** ✅ COMPLETED - Proper background color restoration with !important styling priority
 *   **JavaScript Modularization:** ✅ COMPLETED - Refactored 3,684-line main.js into manageable ES6 modules

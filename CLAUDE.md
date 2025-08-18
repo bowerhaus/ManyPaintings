@@ -91,12 +91,13 @@ pip install -r requirements.txt
 - **Centralized Layout System**: ✅ **RECENT REFACTOR** - Eliminated ~420 lines of duplicate code between AnimationEngine and GridManager by extracting shared layout logic into dedicated constants and utilities modules
 
 ### User Preferences System
-- **LocalStorage Integration**: Comprehensive browser localStorage for persistent user settings
+- **Server-Side Storage**: Comprehensive server-side settings storage via `settings.json` file
 - **UserPreferences Module**: Centralized preferences management with validation and error handling
 - **Settings Persisted**: Speed multiplier (1-10), max layers (1-8), audio volume (0-100%), background color (black/white), gallery settings (brightness, contrast, saturation, white balance)
 - **Auto-Save**: All control panel changes saved instantly without user action
+- **Cross-Device Sync**: Settings synchronized between main display and iPhone remote control
 - **Smart Restoration**: Preferences applied during initialization and after all modules loaded
-- **Error Resilience**: Graceful fallbacks when localStorage unavailable or corrupted
+- **Error Resilience**: Graceful fallbacks with sensible defaults when server unavailable
 
 ### Pattern Behavior System
 - **Config-Driven Logic**: Pattern generation strictly follows configuration settings
@@ -122,7 +123,7 @@ pip install -r requirements.txt
   - **Saturation**: 50-120% range for color intensity control
   - **White Balance**: 80-120% (±20%) for warm/cool gallery lighting temperature
   - **Canvas Texture Intensity**: 0-100% authentic linen weave canvas texture overlay
-- **Persistent Settings**: All adjustments automatically saved to localStorage and restored on startup
+- **Persistent Settings**: All adjustments automatically saved to server-side storage and restored on startup
 - **Professional Interface**: Centered bottom modal (400-500px width) with transparent background
 - **Reset Functionality**: One-click reset to defaults button
 - **Module Architecture**: Separate `GalleryManager.js` module following existing patterns
@@ -165,6 +166,27 @@ pip install -r requirements.txt
 - **Optimized Layering**: Texture positioning adapts to background for best visual experience
 - **Filter Integration**: Texture responds to all Gallery Manager color grading adjustments
 - **Performance Optimized**: CSS background-image with repeat pattern for efficient rendering
+
+### iPhone Remote Control System
+- **Mobile Web Interface**: Professional iPhone-optimized remote control accessible at `http://localhost:5000/remote`
+- **Complete Control Suite**: All main application features controllable from mobile device
+- **Real-time Synchronization**: Bidirectional communication via 2-second polling intervals
+- **Image Management Features**:
+  - **Upload from iPhone**: Direct integration with iPhone photo library
+  - **Browse Images**: Mobile-optimized grid with thumbnails and metadata
+  - **Delete Images**: Touch-friendly delete controls with immediate UI feedback
+  - **✅ CRITICAL: Automatic Image Appearance** - **NEW FUNCTIONALITY**
+    - Remote uploads now automatically trigger display on main application
+    - Uploaded images inserted at current sequence position for immediate viewing
+    - Smart layer management removes oldest layers when at capacity
+    - Real-time communication via new API endpoints:
+      - `POST /api/images/refresh` - Triggers main display refresh
+      - `GET /api/check-refresh-images` - Polling for refresh requests
+      - `DELETE /api/refresh-images-status` - Clears processed requests
+- **Favorites Management**: Full browsing, loading, and deletion with mobile-optimized interface
+- **Gallery Controls**: All Samsung Frame TV-style color grading controls accessible on mobile
+- **Theme Synchronization**: Remote interface automatically matches main display theme
+- **Touch Optimization**: Large touch targets and gesture-friendly interfaces
 
 ### Layout System
 - **Four Layout Modes**: Sophisticated positioning system with corner-focused placement
@@ -214,7 +236,7 @@ The ManyPaintings application has achieved full production readiness with:
 - ✅ **Cross-Platform Support**: Windows executables, Raspberry Pi optimization, development environment
 - ✅ **Professional Polish**: Gallery-grade presentation with Samsung Frame TV-style interface
 - ✅ **Enhanced Favorites System**: Complete favorites management with background preservation and cross-platform delete functionality
-- ✅ **Remote Control Integration**: Full iPhone remote interface with favorites management and theme synchronization
+- ✅ **Remote Control Integration**: Full iPhone remote interface with automatic image appearance, favorites management, and theme synchronization
 - ✅ **Documentation**: Complete README, STATUS, and developer guidance
 
 The project stands as a complete implementation of the original vision with significant enhancements beyond initial requirements, including comprehensive remote control capabilities and advanced favorites management.

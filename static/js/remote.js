@@ -12,6 +12,7 @@ class RemoteController {
         this.isLoading = false;
         this.pollingInterval = 3000; // Poll every 3 seconds
         this.pollTimer = null;
+        this.refreshTimeout = null; // Timer for progressive refresh
         this.toastThrottle = {
             gallery: null,  // Timer for gallery setting toasts
             basic: null     // Timer for basic setting toasts
@@ -368,13 +369,10 @@ class RemoteController {
                     break;
                     
                 case 'save-favorite':
-                    // Simple approach: just call the endpoint, main display will handle it
+                    // Request save and start progressive refresh
                     await fetch('/api/save-current-favorite', { method: 'POST' });
-                    message = 'Save favorite requested';
-                    // Reload favorites after a delay to catch the new favorite
-                    setTimeout(async () => {
-                        await this.loadFavorites();
-                    }, 2000);
+                    message = 'Saving favorite...';
+                    this.startProgressiveRefresh();
                     break;
             }
             
@@ -568,6 +566,8 @@ class RemoteController {
         }
 
         this.showUploadProgress();
+        
+        const uploadedImageIds = [];
 
         for (let i = 0; i < validFiles.length; i++) {
             const file = validFiles[i];
@@ -576,8 +576,19 @@ class RemoteController {
             this.updateUploadProgress(progress, `Uploading ${file.name}...`);
 
             try {
-                await this.uploadSingleFile(file);
-                console.log(`Remote Controller: Uploaded ${file.name}`);
+                const uploadResult = await this.uploadSingleFile(file);
+                console.log(`Remote Controller: Upload result for ${file.name}:`, uploadResult);
+                if (uploadResult && uploadResult.image && uploadResult.image.id) {
+                    uploadedImageIds.push(uploadResult.image.id);
+                    console.log(`Remote Controller: Added image ID ${uploadResult.image.id} to array. Array now:`, uploadedImageIds);
+                    if (uploadResult.duplicate) {
+                        console.log(`Remote Controller: Duplicate detected for ${file.name}, triggering existing image with ID: ${uploadResult.image.id}`);
+                    } else {
+                        console.log(`Remote Controller: Uploaded ${file.name} with ID: ${uploadResult.image.id}`);
+                    }
+                } else {
+                    console.log(`Remote Controller: No image ID found in upload result for ${file.name}`);
+                }
             } catch (error) {
                 console.error(`Failed to upload ${file.name}:`, error);
                 this.showToast(`Failed to upload ${file.name}: ${error.message}`);
@@ -586,7 +597,44 @@ class RemoteController {
 
         this.hideUploadProgress();
         await this.loadImages(); // Refresh the grid
-        this.showToast(`Successfully uploaded ${validFiles.length} image(s)`);
+        
+        // Trigger main display refresh with the specific uploaded image IDs
+        console.log('Remote Controller: BEFORE REFRESH - About to send refresh request with uploaded IDs:', uploadedImageIds);
+        console.log('Remote Controller: BEFORE REFRESH - uploadedImageIds.length:', uploadedImageIds.length);
+        console.log('Remote Controller: BEFORE REFRESH - validFiles.length:', validFiles.length);
+        
+        try {
+            console.log('Remote Controller: Making fetch request to /api/images/refresh');
+            const refreshResponse = await fetch('/api/images/refresh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    uploaded_image_ids: uploadedImageIds
+                })
+            });
+            
+            console.log('Remote Controller: Refresh response status:', refreshResponse.status);
+            console.log('Remote Controller: Refresh response ok:', refreshResponse.ok);
+            
+            if (refreshResponse.ok) {
+                const responseData = await refreshResponse.json();
+                console.log('Remote Controller: Refresh response data:', responseData);
+                console.log('Remote Controller: Successfully requested image refresh on main display with IDs:', uploadedImageIds);
+                if (uploadedImageIds.length > 0) {
+                    this.showToast(`Successfully uploaded ${validFiles.length} image(s) - triggering immediate display`);
+                } else {
+                    this.showToast(`Successfully uploaded ${validFiles.length} image(s) - refresh requested`);
+                }
+            } else {
+                console.warn('Remote Controller: Failed to request image refresh, status:', refreshResponse.status);
+                this.showToast(`Successfully uploaded ${validFiles.length} image(s)`);
+            }
+        } catch (error) {
+            console.error('Remote Controller: Error requesting image refresh:', error);
+            this.showToast(`Successfully uploaded ${validFiles.length} image(s) - error: ${error.message}`);
+        }
         
         // Clear the input
         if (this.elements.uploadInput) {
@@ -957,6 +1005,79 @@ class RemoteController {
             console.warn('Remote Controller: Polling error:', error);
             this.updateConnectionStatus('disconnected');
         }
+    }
+    
+    /**
+     * Start progressive refresh after saving a favorite
+     */
+    startProgressiveRefresh() {
+        console.log('Remote Controller: Starting progressive refresh for new favorite');
+        
+        // Cancel any existing refresh
+        if (this.refreshTimeout) {
+            clearTimeout(this.refreshTimeout);
+        }
+        
+        // Track original favorites count to detect new ones
+        const originalCount = this.favorites.length;
+        let attempts = 0;
+        const maxAttempts = 5;
+        
+        const tryRefresh = async () => {
+            attempts++;
+            
+            try {
+                // Set refresh visual state
+                this.setRefreshState(true);
+                
+                const response = await fetch('/api/favorites');
+                if (response.ok) {
+                    const newFavorites = await response.json();
+                    
+                    // Check if we got a new favorite
+                    if (newFavorites.length > originalCount) {
+                        console.log('Remote Controller: New favorite detected, refreshing display');
+                        this.favorites = newFavorites;
+                        this.updateFavoritesDisplay();
+                        this.setRefreshState(false);
+                        this.showToast('Favorite saved');
+                        return; // Success - stop trying
+                    }
+                }
+                
+                // If no new favorite yet and we haven't exceeded max attempts
+                if (attempts < maxAttempts) {
+                    const delay = attempts === 1 ? 2000 : 1000; // 2s first attempt, then 1s
+                    this.refreshTimeout = setTimeout(tryRefresh, delay);
+                } else {
+                    console.log('Remote Controller: Max refresh attempts reached');
+                    this.setRefreshState(false);
+                    this.showToast('Favorite saved (refresh manually if needed)');
+                }
+                
+            } catch (error) {
+                console.error('Remote Controller: Progressive refresh error:', error);
+                this.setRefreshState(false);
+                if (attempts >= maxAttempts) {
+                    this.showToast('Favorite saved (refresh manually if needed)');
+                } else {
+                    // Retry on error unless max attempts reached
+                    const delay = 1000;
+                    this.refreshTimeout = setTimeout(tryRefresh, delay);
+                }
+            }
+        };
+        
+        // Start with first attempt after 2 seconds
+        this.refreshTimeout = setTimeout(tryRefresh, 2000);
+    }
+    
+    /**
+     * Set visual refresh state (spinner animation)
+     */
+    setRefreshState(isRefreshing) {
+        // No visual refresh state needed since refresh button was removed
+        // Progressive refresh still works in background
     }
 }
 

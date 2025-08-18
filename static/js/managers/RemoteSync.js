@@ -108,6 +108,9 @@ export class RemoteSync {
             // Check for play/pause requests
             await this.checkPlayPauseRequests();
             
+            // Check for image refresh requests
+            await this.checkImageRefreshRequests();
+            
         } catch (error) {
             console.warn('RemoteSync: Polling error:', error);
         } finally {
@@ -423,6 +426,167 @@ export class RemoteSync {
             }
         } catch (error) {
             console.error('RemoteSync: Failed to load favorite from remote:', error);
+        }
+    }
+    
+    /**
+     * Check for image refresh requests from remote control
+     */
+    async checkImageRefreshRequests() {
+        try {
+            const response = await fetch('/api/check-refresh-images');
+            if (response.ok) {
+                const result = await response.json();
+                
+                if (result.has_request) {
+                    console.log('RemoteSync: Detected image refresh request from remote with uploaded IDs:', result.uploaded_image_ids);
+                    await this.handleImageRefreshFromRemote(result.uploaded_image_ids || []);
+                    
+                    // Clear the request
+                    await fetch('/api/refresh-images-status', { method: 'DELETE' }).catch(() => {});
+                }
+            }
+        } catch (error) {
+            // This is expected when no requests are pending
+        }
+    }
+    
+    /**
+     * Handle image refresh triggered by remote control
+     */
+    async handleImageRefreshFromRemote(uploadedImageIds) {
+        try {
+            console.log('RemoteSync: Processing image refresh with uploaded IDs:', uploadedImageIds);
+            
+            // First refresh the ImageManager catalog
+            const ImageManager = window.App?.ImageManager;
+            if (!ImageManager) {
+                console.error('RemoteSync: ImageManager not available on window.App');
+                this.showToast('ImageManager not available');
+                return;
+            }
+            
+            if (!ImageManager.init) {
+                console.error('RemoteSync: ImageManager.init method not available');
+                this.showToast('ImageManager.init not available');
+                return;
+            }
+            
+            console.log('RemoteSync: Refreshing ImageManager catalog...');
+            await ImageManager.init();
+            console.log('RemoteSync: ImageManager catalog refreshed');
+            
+            // If we have specific uploaded image IDs, trigger immediate display
+            if (uploadedImageIds.length > 0) {
+                console.log('RemoteSync: Processing specific uploaded image IDs:', uploadedImageIds);
+                
+                const PatternManager = window.App?.PatternManager;
+                if (!PatternManager) {
+                    console.error('RemoteSync: PatternManager not available on window.App');
+                    this.showToast('PatternManager not available');
+                    return;
+                }
+                
+                // Verify uploaded image IDs exist in the catalog
+                const catalogImageIds = Array.from(ImageManager.images.keys());
+                const validUploadedIds = uploadedImageIds.filter(id => catalogImageIds.includes(id));
+                
+                console.log('RemoteSync: Catalog has', catalogImageIds.length, 'images');
+                console.log('RemoteSync: Valid uploaded IDs:', validUploadedIds);
+                
+                if (validUploadedIds.length > 0) {
+                    try {
+                        // Preload the newly uploaded images
+                        if (ImageManager.preloadImages) {
+                            console.log('RemoteSync: Preloading uploaded images...');
+                            await ImageManager.preloadImages(validUploadedIds, true);
+                        }
+                        
+                        // Insert uploaded images at the current sequence position
+                        const currentIndex = PatternManager.sequenceIndex || 0;
+                        const sequenceLengthBefore = PatternManager.imageSequence.length;
+                        
+                        console.log('RemoteSync: Current sequence index:', currentIndex);
+                        console.log('RemoteSync: Sequence length before insertion:', sequenceLengthBefore);
+                        
+                        // Insert new images at the current position, pushing existing images forward
+                        // Reverse the array so they appear in the same order they were uploaded
+                        validUploadedIds.reverse().forEach(imageId => {
+                            PatternManager.imageSequence.splice(currentIndex, 0, imageId);
+                        });
+                        
+                        console.log('RemoteSync: Inserted', validUploadedIds.length, 'images at position', currentIndex);
+                        console.log('RemoteSync: Sequence length after insertion:', PatternManager.imageSequence.length);
+                        console.log('RemoteSync: Next few images in sequence:', PatternManager.imageSequence.slice(currentIndex, currentIndex + 5));
+                        
+                        // Free up layer slots if we're at the limit
+                        const AnimationEngine = window.App?.AnimationEngine;
+                        if (AnimationEngine) {
+                            const config = window.APP_CONFIG || {};
+                            const maxLayers = config.layer_management?.max_concurrent_layers || 4;
+                            const currentLayerCount = AnimationEngine.activeLayers.size;
+                            
+                            console.log('RemoteSync: Current layer count:', currentLayerCount, 'Max layers:', maxLayers);
+                            
+                            if (currentLayerCount >= maxLayers) {
+                                console.log(`RemoteSync: At layer limit (${currentLayerCount}/${maxLayers}), removing oldest layer to make room`);
+                                
+                                // Find the oldest layer (earliest startTime) and remove it immediately
+                                let oldestLayer = null;
+                                let oldestTime = Date.now();
+                                
+                                AnimationEngine.activeLayers.forEach((layerInfo, imageId) => {
+                                    if (layerInfo.startTime < oldestTime) {
+                                        oldestTime = layerInfo.startTime;
+                                        oldestLayer = layerInfo;
+                                    }
+                                });
+                                
+                                if (oldestLayer) {
+                                    console.log('RemoteSync: Removing oldest layer with imageId:', oldestLayer.imageId || 'unknown', 'startTime:', oldestTime);
+                                    if (AnimationEngine.removeLayer) {
+                                        AnimationEngine.removeLayer(oldestLayer);
+                                        console.log('RemoteSync: Successfully removed oldest layer. New layer count:', AnimationEngine.activeLayers.size);
+                                    } else {
+                                        console.error('RemoteSync: AnimationEngine.removeLayer method not available');
+                                    }
+                                } else {
+                                    console.warn('RemoteSync: No oldest layer found to remove');
+                                }
+                            }
+                        } else {
+                            console.error('RemoteSync: AnimationEngine not available for layer management');
+                        }
+                        
+                        // Trigger the next image to appear immediately
+                        console.log('RemoteSync: Triggering immediate display of uploaded images');
+                        if (PatternManager.showNextImage) {
+                            await PatternManager.showNextImage();
+                            console.log('RemoteSync: Successfully triggered showNextImage');
+                        } else {
+                            console.error('RemoteSync: PatternManager.showNextImage method not available');
+                        }
+                        
+                        this.showToast(`${validUploadedIds.length} image(s) uploaded - displaying now`);
+                    } catch (preloadError) {
+                        console.error('RemoteSync: Error in preload/display logic:', preloadError);
+                        // Still show the toast as the catalog was refreshed
+                        this.showToast('Images uploaded - catalog refreshed');
+                    }
+                } else {
+                    console.warn('RemoteSync: No valid uploaded image IDs found in catalog');
+                    console.log('RemoteSync: Uploaded IDs:', uploadedImageIds);
+                    console.log('RemoteSync: First 10 catalog IDs:', catalogImageIds.slice(0, 10));
+                    this.showToast('Images uploaded - catalog refreshed');
+                }
+            } else {
+                console.log('RemoteSync: No specific uploaded IDs, just refreshed catalog');
+                this.showToast('Image catalog refreshed');
+            }
+            
+        } catch (error) {
+            console.error('RemoteSync: Failed to handle image refresh from remote:', error);
+            this.showToast('Failed to refresh images: ' + error.message);
         }
     }
     

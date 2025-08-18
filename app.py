@@ -9,6 +9,7 @@ from config import config
 # Global variables to track requests
 save_favorite_request = {'timestamp': None, 'processed': True}
 play_pause_request = {'timestamp': None, 'processed': True, 'action': None}
+refresh_images_request = {'timestamp': None, 'processed': True, 'uploaded_images': []}
 
 def create_app(config_name=None):
     if config_name is None:
@@ -627,6 +628,65 @@ def create_app(config_name=None):
                 'success': True,
                 'message': 'Image deleted successfully'
             })
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/images/refresh', methods=['POST'])
+    def refresh_images():
+        """Request to refresh ImageManager and trigger newly uploaded images."""
+        global refresh_images_request
+        
+        try:
+            data = request.get_json() or {}
+            uploaded_image_ids = data.get('uploaded_image_ids', [])
+            
+            print(f"DEBUG: Image refresh request received with IDs: {uploaded_image_ids}")
+            
+            # Create refresh request
+            refresh_images_request['timestamp'] = datetime.now().isoformat()
+            refresh_images_request['processed'] = False
+            refresh_images_request['uploaded_images'] = uploaded_image_ids
+            
+            return jsonify({
+                'success': True,
+                'message': 'Image refresh requested',
+                'uploaded_image_ids': uploaded_image_ids
+            })
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/check-refresh-images', methods=['GET'])
+    def check_refresh_images():
+        """Check for refresh images requests from remote control."""
+        global refresh_images_request
+        
+        try:
+            if not refresh_images_request['processed'] and refresh_images_request['timestamp']:
+                # Return the request
+                return jsonify({
+                    'has_request': True,
+                    'timestamp': refresh_images_request['timestamp'],
+                    'uploaded_image_ids': refresh_images_request['uploaded_images']
+                })
+            else:
+                return jsonify({'has_request': False})
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/refresh-images-status', methods=['DELETE'])
+    def clear_refresh_images_request():
+        """Mark the refresh images request as processed."""
+        global refresh_images_request
+        
+        try:
+            refresh_images_request['processed'] = True
+            refresh_images_request['timestamp'] = None
+            refresh_images_request['uploaded_images'] = []
+            
+            return jsonify({'success': True})
             
         except Exception as e:
             return jsonify({'error': str(e)}), 500

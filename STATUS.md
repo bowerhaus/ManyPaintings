@@ -325,6 +325,11 @@ Following the completion of the core application, we have successfully implement
   - File type validation (PNG, JPG, JPEG, GIF, WEBP)
   - Real-time progress tracking with status updates
   - Automatic grid refresh after successful uploads
+  - **✅ CRITICAL: Automatic Image Appearance** - Newly uploaded images automatically appear on main display
+    - Remote uploads trigger immediate display refresh on main application
+    - Uploaded images are inserted at current sequence position for immediate viewing
+    - Smart layer management removes oldest layers when at capacity to make room for new images
+    - Real-time communication between remote and main display via polling system
 
 - **Delete Functionality**: Mobile-optimized image removal
   - Touch-friendly delete buttons positioned in thumbnail corners
@@ -337,11 +342,20 @@ Following the completion of the core application, we have successfully implement
   - `GET /api/images` - Image listing with cache-busting
   - `POST /api/images/upload` - Multi-file upload with FormData
   - `DELETE /api/images/{filename}` - Individual image deletion
+  - **NEW: `POST /api/images/refresh`** - Triggers main display image refresh with uploaded image IDs
+  - **NEW: `GET /api/check-refresh-images`** - Polling endpoint for main display to detect refresh requests
+  - **NEW: `DELETE /api/refresh-images-status`** - Marks refresh requests as processed
 - **JavaScript Enhancement**: Extended RemoteController class with comprehensive image management
   - Modular method structure following existing patterns
   - Async/await for reliable network operations
   - Proper error handling and user feedback
   - Real-time UI state management
+  - **NEW: Automatic Display Triggering** - Collects uploaded image IDs and triggers main display refresh
+- **RemoteSync Enhancement**: Extended main display polling system for image refresh detection
+  - **NEW: `checkImageRefreshRequests()`** - Polls for image refresh requests every 2 seconds
+  - **NEW: `handleImageRefreshFromRemote()`** - Processes refresh requests with layer management
+  - **Smart Layer Management** - Removes oldest layers when at capacity to make room for new images
+  - **Sequence Insertion Logic** - Inserts uploaded images at current position for immediate display
 - **CSS Styling**: Complete mobile-first responsive design
   - Theme-aware styling for both dark and light modes
   - Touch-optimized layouts and interaction zones

@@ -13,7 +13,12 @@
       "Bash(pip show:*)",
       "WebSearch",
       "Bash(cec-client:*)",
-      "Bash(cec-ctl:*)"
+      "Bash(cec-ctl:*)",
+      "Bash(for i in 1 2 3)",
+      "Bash(do echo:*)",
+      "Bash(done)",
+      "Bash(for i in {1..10})",
+      "Bash(do cec-ctl:*)"
     ],
     "deny": []
   }

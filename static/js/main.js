@@ -13,6 +13,7 @@ import { DropShadowManager } from './managers/DropShadowManager.js';
 import { CPUTemperatureManager } from './managers/CPUTemperatureManager.js';
 import { userPreferences } from './managers/UserPreferences.js';
 import { remoteSync } from './managers/RemoteSync.js';
+import ConfigManager from './managers/ConfigManager.js';
 import { UI } from './ui/UI.js';
 import { FavoritesGallery } from './ui/FavoritesGallery.js';
 import { GalleryManager } from './ui/GalleryManager.js';
@@ -39,13 +40,19 @@ const App = {
     try {
       console.log('Initializing Many Paintings App...');
 
-      // Load configuration from API
-      console.log('Loading configuration from /api/config...');
+      // Initialize ConfigManager and load configuration
+      console.log('Initializing ConfigManager and loading configuration...');
+      const configManager = new ConfigManager();
+      window.configManager = configManager; // Make globally available
+      
       const configResponse = await fetch('/api/config');
       if (!configResponse.ok) {
         throw new Error(`Failed to load config: ${configResponse.status}`);
       }
       const apiConfig = await configResponse.json();
+      
+      // Start config polling for hot reload (every 10 seconds)
+      configManager.startPolling(10000);
       
       // Merge with any options passed in
       config = { ...apiConfig, ...options };

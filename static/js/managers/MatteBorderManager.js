@@ -37,13 +37,28 @@ export const MatteBorderManager = {
     console.log('MatteBorderManager: Loading configuration from API');
     this.loadConfiguration();
     
-    // Start config polling for hot reload
-    this.startConfigPolling();
-    
-    // Cleanup polling on page unload
-    window.addEventListener('beforeunload', () => {
-      this.stopConfigPolling();
-    });
+    // Register with ConfigManager for config changes
+    if (window.configManager) {
+      console.log('MatteBorderManager: Using ConfigManager for config updates');
+      window.configManager.addListener((config, changes) => {
+        // Check if matte_border config has changed
+        const matteBorderChanges = Object.keys(changes).filter(key => key.startsWith('matte_border'));
+        if (matteBorderChanges.length > 0) {
+          console.log('MatteBorderManager: Config change detected via ConfigManager:', matteBorderChanges);
+          this.config = config.matte_border || {};
+          this.applyConfiguration();
+        }
+      });
+    } else {
+      // Fallback to old polling method if ConfigManager not available
+      console.log('MatteBorderManager: ConfigManager not found, using legacy polling');
+      this.startConfigPolling();
+      
+      // Cleanup polling on page unload
+      window.addEventListener('beforeunload', () => {
+        this.stopConfigPolling();
+      });
+    }
   },
 
   setupMutationObserver() {
@@ -158,8 +173,14 @@ export const MatteBorderManager = {
 
   async loadConfiguration() {
     try {
-      const response = await fetch('/api/config');
-      const configData = await response.json();
+      // Use ConfigManager if available, otherwise fetch directly
+      let configData;
+      if (window.configManager) {
+        configData = window.configManager.getConfig();
+      } else {
+        const response = await fetch('/api/config');
+        configData = await response.json();
+      }
 
       console.log('MatteBorderManager: Full API response:', configData);
       console.log('MatteBorderManager: matte_border section:', configData.matte_border);

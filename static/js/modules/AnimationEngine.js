@@ -213,7 +213,9 @@ export const AnimationEngine = {
       return null;
     }
 
-    const config = window.APP_CONFIG || {};
+    // Get fresh config from ConfigManager if available, fallback to window.APP_CONFIG
+    const configManager = window.configManager;
+    const config = configManager ? configManager.getConfig() : (window.APP_CONFIG || {});
     // Check if we've reached the concurrent layer limit
     if (this.activeLayers.size >= (config.layer_management?.max_concurrent_layers || 5)) {
       console.log(`AnimationEngine: Max concurrent layers (${config.layer_management?.max_concurrent_layers || 5}) reached, skipping ${imageId}`);
@@ -238,15 +240,17 @@ export const AnimationEngine = {
       const animationSeed = options.seed ? `${imageId}-${options.seed}-animation` : imageId;
       const animationRandom = this.seededRandom(this.hashCode(animationSeed));
 
-      const baseFadeInDuration = this.seededRandomBetween(animationRandom, config.animation_timing?.fade_in_min_sec || 2, config.animation_timing?.fade_in_max_sec || 5) * 1000;
-      const baseFadeOutDuration = this.seededRandomBetween(animationRandom, config.animation_timing?.fade_out_min_sec || 3, config.animation_timing?.fade_out_max_sec || 6) * 1000;
-      const baseHoldTime = this.seededRandomBetween(animationRandom, config.animation_timing?.min_hold_time_sec || 4, config.animation_timing?.max_hold_time_sec || 12) * 1000;
+      // Get fresh config for timing values
+      const currentConfig = configManager ? configManager.getConfig() : config;
+      const baseFadeInDuration = this.seededRandomBetween(animationRandom, currentConfig.animation_timing?.fade_in_min_sec || 2, currentConfig.animation_timing?.fade_in_max_sec || 5) * 1000;
+      const baseFadeOutDuration = this.seededRandomBetween(animationRandom, currentConfig.animation_timing?.fade_out_min_sec || 3, currentConfig.animation_timing?.fade_out_max_sec || 6) * 1000;
+      const baseHoldTime = this.seededRandomBetween(animationRandom, currentConfig.animation_timing?.min_hold_time_sec || 4, currentConfig.animation_timing?.max_hold_time_sec || 12) * 1000;
 
       const fadeInDuration = baseFadeInDuration / speedMultiplier;
       const fadeOutDuration = baseFadeOutDuration / speedMultiplier;
       const holdTime = baseHoldTime / speedMultiplier;
-      const minOpacity = config.layer_management?.min_opacity || 0.7;
-      const maxOpacity = config.layer_management?.max_opacity || 0.8;
+      const minOpacity = currentConfig.layer_management?.min_opacity || 0.7;
+      const maxOpacity = currentConfig.layer_management?.max_opacity || 0.8;
       const opacity = Math.min(maxOpacity, animationRandom() * (maxOpacity - minOpacity) + minOpacity);
 
       console.log(`AnimationEngine: Speed ${speedMultiplier}x - fadeIn: ${fadeInDuration}ms, hold: ${holdTime}ms, fadeOut: ${fadeOutDuration}ms`);

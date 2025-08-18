@@ -17,12 +17,12 @@
     "lazy_loading": true
   },
   "animation_timing": {
-    "fade_in_min_sec": 15.0,
-    "fade_in_max_sec": 60.0,
-    "fade_out_min_sec": 15.0,
-    "fade_out_max_sec": 60.0,
-    "min_hold_time_sec": 60.0,
-    "max_hold_time_sec": 360.0,
+    "fade_in_min_sec": 40.0,
+    "fade_in_max_sec": 90.0,
+    "fade_out_min_sec": 40.0,
+    "fade_out_max_sec": 90.0,
+    "min_hold_time_sec": 60,
+    "max_hold_time_sec": 180.0,
     "layer_spawn_interval_sec": 4.0
   },
   "layer_management": {
@@ -96,15 +96,15 @@
   "matte_border": {
     "enabled": true,
     "border_percent": 10,
-    "color": "#F5EFDB",
+    "color": "#F0EAD9",
     "depth": 8,
     "style": "thin",
     "styles": {
       "thin": {
         "depth": 6,
-        "top_edge_offset": -25,
-        "left_edge_offset": -10,
-        "right_edge_offset": -3,
+        "top_edge_offset": -35,
+        "left_edge_offset": -20,
+        "right_edge_offset": -13,
         "bottom_edge_offset": 10,
         "shadow_width_multiplier": 12,
         "shadow_opacity": 0.02
@@ -147,11 +147,6 @@
         "debug": false,
         "secret_key": "CHANGE-THIS-IN-PRODUCTION"
       },
-      "transformations": {
-        "translation": {
-          "layout_mode": "rule_of_fifths_thirds_and_centre"
-        }
-      },
       "performance": {
         "animation_quality": "high"
       }
@@ -165,22 +160,6 @@
         "max_concurrent_images": 8,
         "preload_buffer_size": 3,
         "animation_fps": 24
-      },
-      "layer_management": {
-        "max_concurrent_layers": 2
-      },
-      "animation_timing": {
-        "fade_in_min_sec": 2.5,
-        "fade_in_max_sec": 4.5,
-        "fade_out_min_sec": 3.5,
-        "fade_out_max_sec": 5.5
-      },
-      "transformations": {
-        "translation": {
-          "enabled": true,
-          "layout_mode": "rule_of_fifths_thirds_and_centre",
-          "minimum_visible_percent": 70
-        }
       },
       "performance": {
         "animation_quality": "medium",

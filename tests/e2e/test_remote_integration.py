@@ -39,133 +39,56 @@ def dual_browser_setup(browser: Browser, live_server):
     remote_context.close()
 
 
-# Dual Browser Sync Tests
+# Comprehensive Dual Browser Sync Tests
 
 @pytest.mark.e2e
-def test_remote_to_main_speed_sync(dual_browser_setup):
-    """Test speed change from remote appears on main display."""
+def test_comprehensive_remote_to_main_sync(dual_browser_setup):
+    """Comprehensive test of all remote control sync functionality with main display."""
     main_page = dual_browser_setup['main_page']
     remote_page = dual_browser_setup['remote_page']
     
-    # Change speed on remote
+    # Test speed sync
     remote_page.set_speed(8)
-    
-    # Wait for polling cycle to sync changes
     remote_page.wait_for_settings_sync(delay=4.0)
-    
-    # Verify change appears on main display
-    # Note: This requires the main page to have visible speed indicators
-    # which may need to be triggered by showing the control panel
     main_page.move_mouse_to_center()  # Trigger UI visibility
-    
-    # The exact verification depends on main page UI structure
-    # This test validates the communication mechanism
     main_page.wait_for_animation_frame()
-
-
-@pytest.mark.e2e
-def test_remote_to_main_volume_sync(dual_browser_setup):
-    """Test volume change from remote syncs to main display."""
-    main_page = dual_browser_setup['main_page']
-    remote_page = dual_browser_setup['remote_page']
     
-    # Change volume on remote
+    # Test volume sync
     remote_page.set_volume(85)
-    
-    # Wait for sync
     remote_page.wait_for_settings_sync(delay=4.0)
-    
-    # Verify the change is persisted (can be verified through API)
     main_page.wait_for_animation_frame()
-
-
-@pytest.mark.e2e
-def test_remote_to_main_gallery_sync(dual_browser_setup):
-    """Test gallery manager changes sync between browsers."""
-    main_page = dual_browser_setup['main_page']
-    remote_page = dual_browser_setup['remote_page']
     
-    # Change gallery settings on remote
+    # Test gallery manager settings sync
     remote_page.set_brightness(110)
     remote_page.set_contrast(95)
-    
-    # Wait for sync
     remote_page.wait_for_settings_sync(delay=4.0)
-    
-    # Verify sync occurred
     main_page.wait_for_animation_frame()
-
-
-@pytest.mark.e2e
-def test_remote_play_pause_sync(dual_browser_setup):
-    """Test play/pause action from remote affects main display."""
-    main_page = dual_browser_setup['main_page']
-    remote_page = dual_browser_setup['remote_page']
     
-    # Trigger play/pause from remote
+    # Test quick action syncs
     remote_page.click_play_pause()
-    
-    # Wait for action to be processed
     remote_page.wait_for_settings_sync(delay=4.0)
-    
-    # Verify action was communicated
     main_page.wait_for_animation_frame()
-
-
-@pytest.mark.e2e
-def test_remote_new_pattern_sync(dual_browser_setup):
-    """Test new pattern trigger from remote affects main display."""
-    main_page = dual_browser_setup['main_page']
-    remote_page = dual_browser_setup['remote_page']
     
-    # Trigger new pattern from remote
     remote_page.click_new_pattern()
-    
-    # Wait for action to be processed
     remote_page.wait_for_settings_sync(delay=4.0)
-    
-    # Verify action was communicated
     main_page.wait_for_animation_frame()
-
-
-@pytest.mark.e2e
-def test_remote_background_toggle_sync(dual_browser_setup):
-    """Test background toggle from remote syncs to main display."""
-    main_page = dual_browser_setup['main_page']
-    remote_page = dual_browser_setup['remote_page']
     
-    # Toggle background from remote
     remote_page.click_background_toggle()
-    
-    # Wait for sync
     remote_page.wait_for_settings_sync(delay=4.0)
-    
-    # Verify background change on main display
     main_page.wait_for_animation_frame()
-
-
-@pytest.mark.e2e
-def test_remote_save_favorite_sync(dual_browser_setup):
-    """Test save favorite from remote triggers main display."""
-    main_page = dual_browser_setup['main_page']
-    remote_page = dual_browser_setup['remote_page']
     
-    # Save favorite from remote
+    # Test save favorite sync
     remote_page.click_save_favorite()
-    
-    # Wait for action to be processed
     remote_page.wait_for_settings_sync(delay=4.0)
-    
-    # Verify action was communicated
     main_page.wait_for_animation_frame()
 
 
-# Polling Mechanism Tests
+# Polling and Persistence Tests
 
 @pytest.mark.e2e
-def test_polling_interval_timing(browser: Browser, live_server):
-    """Test that polling happens at expected intervals."""
-    # Create main display page
+def test_polling_and_persistence_mechanisms(browser: Browser, live_server):
+    """Comprehensive test of polling intervals and settings persistence."""
+    # Test polling interval timing
     main_context = browser.new_context()
     main_page_obj = main_context.new_page()
     main_page = MainPage(main_page_obj).set_base_url(f"http://localhost:{live_server.port}")
@@ -183,16 +106,11 @@ def test_polling_interval_timing(browser: Browser, live_server):
     
     # Verify polling is happening
     settings_requests = [req for req in requests if "/api/settings" in req.url and req.method == "GET"]
-    
-    # Should have at least 2 polling requests (one initial, one+ polling)
     assert len(settings_requests) >= 2
     
     main_context.close()
-
-
-@pytest.mark.e2e
-def test_settings_persistence_across_browsers(browser: Browser, live_server):
-    """Test that settings changes persist across browser sessions."""
+    
+    # Test settings persistence across browser sessions
     # First browser session - make changes
     context1 = browser.new_context()
     remote_page_obj1 = context1.new_page()
@@ -216,28 +134,26 @@ def test_settings_persistence_across_browsers(browser: Browser, live_server):
     # Wait for settings to load
     time.sleep(2)
     
-    # Verify persisted values (depending on implementation, values may load automatically)
-    # This test verifies the persistence mechanism works
-    speed_slider = remote_page_obj2.locator("#remote-speed-slider")
-    volume_slider = remote_page_obj2.locator("#remote-volume-slider")
-    
-    expect(speed_slider).to_be_attached()
-    expect(volume_slider).to_be_attached()
+    # Verify persisted values using proper page object methods
+    # Check that sliders are properly loaded and functional
+    remote_page2.wait_for_element_visible(remote_page2.speed_slider)
+    remote_page2.wait_for_element_visible(remote_page2.volume_slider)
     
     context2.close()
 
 
-# Network Resilience Tests
+# Network Resilience and Error Handling Tests
 
 @pytest.mark.e2e
-def test_network_interruption_recovery(browser: Browser, live_server):
-    """Test recovery from network interruptions."""
+def test_network_resilience_and_error_handling(browser: Browser, live_server):
+    """Comprehensive test of network interruption recovery and API error handling."""
     context = browser.new_context()
     remote_page_obj = context.new_page()
     remote_page = RemotePage(remote_page_obj).set_base_url(f"http://localhost:{live_server.port}")
     
     remote_page.load_remote_page().wait_for_remote_ready()
     
+    # Test network interruption recovery
     # Simulate network failure by blocking API requests
     remote_page_obj.route("**/api/settings", lambda route: route.abort())
     
@@ -252,18 +168,7 @@ def test_network_interruption_recovery(browser: Browser, live_server):
     remote_page.set_volume(70)
     remote_page.wait_for_animation_frame()
     
-    context.close()
-
-
-@pytest.mark.e2e
-def test_api_error_handling(browser: Browser, live_server):
-    """Test handling of API errors."""
-    context = browser.new_context()
-    remote_page_obj = context.new_page()
-    remote_page = RemotePage(remote_page_obj).set_base_url(f"http://localhost:{live_server.port}")
-    
-    remote_page.load_remote_page().wait_for_remote_ready()
-    
+    # Test API error handling
     # Simulate API server error
     remote_page_obj.route("**/api/settings", lambda route: route.fulfill(
         status=500,
@@ -287,8 +192,8 @@ def test_api_error_handling(browser: Browser, live_server):
 # Multiple Remote Sessions Tests
 
 @pytest.mark.e2e
-def test_multiple_remotes_concurrent_access(browser: Browser, live_server):
-    """Test multiple remote sessions don't interfere with each other."""
+def test_multiple_remote_sessions_comprehensive(browser: Browser, live_server):
+    """Comprehensive test of multiple remote sessions and concurrent access."""
     # Create two remote control sessions
     context1 = browser.new_context(viewport={"width": 375, "height": 667})
     remote_page_obj1 = context1.new_page()
@@ -302,7 +207,7 @@ def test_multiple_remotes_concurrent_access(browser: Browser, live_server):
     remote_page1.load_remote_page().wait_for_remote_ready()
     remote_page2.load_remote_page().wait_for_remote_ready()
     
-    # Make changes from both remotes
+    # Test non-conflicting changes from both remotes
     remote_page1.set_speed(7)
     remote_page2.set_volume(80)
     
@@ -313,34 +218,7 @@ def test_multiple_remotes_concurrent_access(browser: Browser, live_server):
     remote_page1.set_layers(6)
     remote_page2.set_brightness(105)
     
-    # Wait for final processing
-    time.sleep(2)
-    
-    # Verify both pages are still responsive
-    expect(remote_page_obj1.locator("#remote-app")).to_be_visible()
-    expect(remote_page_obj2.locator("#remote-app")).to_be_visible()
-    
-    context1.close()
-    context2.close()
-
-
-@pytest.mark.e2e
-def test_concurrent_settings_changes(browser: Browser, live_server):
-    """Test concurrent settings changes from multiple remotes."""
-    # Create two remote sessions
-    context1 = browser.new_context()
-    remote1 = context1.new_page()
-    remote_page1 = RemotePage(remote1).set_base_url(f"http://localhost:{live_server.port}")
-    
-    context2 = browser.new_context()
-    remote2 = context2.new_page()
-    remote_page2 = RemotePage(remote2).set_base_url(f"http://localhost:{live_server.port}")
-    
-    # Load both pages
-    remote_page1.load_remote_page().wait_for_remote_ready()
-    remote_page2.load_remote_page().wait_for_remote_ready()
-    
-    # Make simultaneous changes to same setting
+    # Test concurrent settings changes (conflicting)
     remote_page1.set_speed(8)
     remote_page2.set_speed(5)  # Conflicting change
     
@@ -351,9 +229,9 @@ def test_concurrent_settings_changes(browser: Browser, live_server):
     remote_page1.wait_for_animation_frame()
     remote_page2.wait_for_animation_frame()
     
-    # Verify both remotes are still functional
-    expect(remote1.locator("#remote-app")).to_be_visible()
-    expect(remote2.locator("#remote-app")).to_be_visible()
+    # Verify both pages are still responsive using page object methods
+    remote_page1.wait_for_element_visible("#remote-app")
+    remote_page2.wait_for_element_visible("#remote-app")
     
     context1.close()
     context2.close()

@@ -16,7 +16,7 @@ class BasePage:
         """Navigate to a page."""
         if self.base_url:
             url = f"{self.base_url}{path}"
-            self.page.goto(url)
+            self.page.goto(url, timeout=10000)  # 10 second timeout for navigation
             return self
         raise ValueError("Base URL not set")
     

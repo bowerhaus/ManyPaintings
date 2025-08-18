@@ -6,6 +6,7 @@ import os
 import json
 import tempfile
 import pytest
+import glob
 from pathlib import Path
 from unittest.mock import patch
 
@@ -147,3 +148,38 @@ def mock_image_manager():
             ]
         }
         yield mock
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Cleanup test files after all tests complete."""
+    cleanup_test_files()
+
+
+def cleanup_test_files():
+    """Remove test files from static/images directory."""
+    static_images_dir = Path(__file__).parent.parent / "static" / "images"
+    
+    if not static_images_dir.exists():
+        return
+    
+    # List of test file patterns to clean up
+    test_patterns = [
+        "test*.png",
+        "test*.jpg", 
+        "test*.jpeg",
+        "workflow*.png",
+        "delete*.png",
+        "metadata*.png"
+    ]
+    
+    removed_files = []
+    for pattern in test_patterns:
+        for test_file in static_images_dir.glob(pattern):
+            try:
+                test_file.unlink()
+                removed_files.append(test_file.name)
+            except OSError:
+                pass  # File might already be removed or in use
+    
+    if removed_files:
+        print(f"\n[CLEANUP] Removed test files: {', '.join(removed_files)}")

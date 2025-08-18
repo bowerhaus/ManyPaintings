@@ -155,6 +155,84 @@ The application now includes a comprehensive favouriting system that allows user
 *   **Viewport Adaptation:** Automatic scaling and positioning adjustment for different screen sizes
 *   **Browser Compatibility:** Works with all modern browsers supporting Fetch API and Clipboard API
 
+### 3.4. iPhone Remote Control System ✅ NEW FEATURE
+
+The application now features a comprehensive **iPhone Remote Control System** that enables complete control of the main display from any iPhone or mobile device through a web interface.
+
+#### Core Features
+*   **Mobile-Optimized Interface:** Professional iPhone web app accessible at `/remote` endpoint
+*   **Real-time Synchronization:** Bidirectional communication between main display and remote control
+*   **Complete Control Suite:** All main application features accessible from mobile device
+*   **Instant Feedback:** Changes appear immediately on main display with visual confirmation
+
+#### Control Capabilities
+*   **Animation Controls:** Speed multiplier (1-10x), maximum layers (1-8), play/pause functionality
+*   **Audio Management:** Volume control (0-100%) with mute capability
+*   **Gallery Management:** Complete Samsung Frame TV-style color grading controls
+    - Brightness (25-115%), Contrast (85-115%), Saturation (50-120%)
+    - White Balance (80-120%), Canvas Texture Intensity (0-100%)
+*   **Favorites System:** Browse, load, and delete saved paintings with thumbnails
+*   **Image Management:** Complete image library management with mobile-optimized interface
+    - Upload images directly from iPhone photo library
+    - Browse all images with thumbnails and metadata
+    - Delete images with touch-friendly controls
+    - **✅ CRITICAL: Automatic Image Display** - Uploaded images appear immediately on main display
+
+#### User Experience
+*   **Touch-Optimized Design:** Large touch targets and gesture-friendly interfaces
+*   **Theme Synchronization:** Remote interface automatically matches main display theme (dark/light)
+*   **Connection Status:** Real-time connection indicators and error recovery
+*   **Progressive Enhancement:** Works on all modern mobile browsers without app installation
+
+#### Technical Implementation
+*   **RESTful API:** Server-side settings storage with real-time polling
+*   **Responsive Design:** Optimized for iPhone Safari with proper viewport handling
+*   **Performance Optimized:** 2-3 second polling intervals for real-time synchronization
+*   **Automatic Image Triggering:** New API endpoints enable immediate display of uploaded images
+    - `POST /api/images/refresh` - Triggers main display refresh with uploaded image IDs
+    - `GET /api/check-refresh-images` - Polling endpoint for refresh request detection
+    - Smart layer management removes oldest layers to make room for new images
+
+**Access URL:** `http://[device-ip]:5000/remote` from any iPhone or mobile browser
+
+#### Smart Polling Optimization ✅ NEW FEATURE (August 2025)
+
+The iPhone Remote Control System now features an intelligent **Smart Disconnect/Reconnect Architecture** that dramatically improves battery life and reduces unnecessary network traffic.
+
+##### Core Benefits
+*   **Battery Conservation:** Eliminates 100% of unnecessary polling when remote is idle (vs progressive reduction)
+*   **Server Efficiency:** Dramatic reduction in API requests when no remote controls are active
+*   **Network Optimization:** Zero bandwidth usage during inactive periods
+*   **Instant Responsiveness:** Immediate reconnection on any user interaction
+
+##### Technical Implementation
+*   **Activity Monitoring:** Tracks all user interactions (touches, clicks, slider changes, scrolling)
+*   **Auto-Disconnect:** Remote automatically disconnects after 30 seconds of inactivity
+*   **Heartbeat System:** Server tracks active remote connections via timestamp validation  
+*   **Conditional Polling:** Main application only polls for remote changes when remotes are connected
+*   **Smart Reconnection:** Any user interaction instantly resumes full functionality
+
+##### Architecture Details
+*   **Remote Control Behavior:**
+    - Monitors user activity with global event listeners
+    - Stops polling after 30 seconds of inactivity
+    - Includes heartbeat timestamp with all API requests
+    - Instantly reconnects on touch/interaction detection
+
+*   **Main Application Optimization:**
+    - Checks `/api/remote-status` before polling for remote changes
+    - Active Mode: 1-second polling for maximum responsiveness when remotes connected
+    - Heartbeat Mode: 10-second polling when no remotes (10x efficiency improvement)
+    - Only processes remote requests when active connections detected
+    - Considers remotes active if heartbeat within last 35 seconds
+
+*   **Server-Side Intelligence:**
+    - Tracks heartbeat timestamps per session
+    - Automatically cleans up stale heartbeat data
+    - Provides real-time active remote counts
+
+This optimization maintains the seamless user experience while achieving dramatic efficiency improvements for mobile devices and server resources.
+
 ### 3.5. Intelligent Distribution System ✅ NEW FEATURE
 
 The application now features an advanced **Weighted Random Distribution System** that provides the perfect balance between natural randomness and equitable image representation.
@@ -205,7 +283,7 @@ Where:
 *   **Scalability:** Efficient with large collections (tested with 1000+ images)
 *   **Real-time Updates:** Selection calculations happen instantly during animation
 
-### 3.6. Multi-Mode Layout System ✅ RECENT IMPROVEMENT
+### 3.7. Multi-Mode Layout System ✅ RECENT IMPROVEMENT
 
 The application now features a sophisticated **Multi-Mode Layout System** with four distinct positioning strategies that provide different visual experiences and use cases.
 
@@ -262,7 +340,7 @@ Options: `rule_of_thirds`, `rule_of_thirds_and_centre`, `rule_of_fifths_thirds_a
 Press **G** to toggle grid visualization and see how images are positioned.
 
 
-### 3.7. UI Controls
+### 3.8. UI Controls
 *   **Speed Control:** 0.1x to 20x animation speed multiplier
 *   **Layer Control:** 1-8 concurrent image layers  
 *   **Audio Controls:** Volume and play/pause
@@ -272,15 +350,17 @@ Press **G** to toggle grid visualization and see how images are positioned.
 *   **Favorites Gallery:** ✅ **NEW FEATURE** - Visual gallery with thumbnails to browse and manage saved favorites
 *   **Gallery Manager:** ✅ **NEW FEATURE** - Professional Samsung Frame TV-style display calibration controls
 
-#### 3.7.1 User Preferences ✅ **NEW FEATURE**
-The application automatically saves and restores user preferences across browser sessions using localStorage:
+#### 3.8.1 User Preferences ✅ **NEW FEATURE**
+The application automatically saves and restores user preferences across browser sessions using server-side storage:
 *   **Auto-Save:** All control panel changes saved instantly without user action
 *   **Cross-Session:** Settings persist when browser is closed and reopened  
-*   **Settings Saved:** Speed multiplier, max layers, audio volume, background color
-*   **Smart Defaults:** Graceful fallbacks if localStorage unavailable
+*   **Settings Saved:** Speed multiplier, max layers, audio volume, background color, gallery settings
+*   **Server-Side Storage:** Settings stored in `settings.json` file on server for cross-device access
+*   **Remote Sync:** Settings synchronized between main display and iPhone remote control
+*   **Smart Defaults:** Graceful fallbacks with sensible defaults
 *   **No Configuration:** Works automatically with no setup required
 
-#### 3.7.2 Gallery Manager ✅ **NEW FEATURE**
+#### 3.8.2 Gallery Manager ✅ **NEW FEATURE**
 Professional Samsung Frame TV-style display calibration system for optimal artwork presentation:
 
 **Color Grading Controls:**
@@ -303,7 +383,7 @@ Professional Samsung Frame TV-style display calibration system for optimal artwo
 **Professional Interface:**
 *   **Bottom-Sheet Modal:** Samsung Frame TV-style interface positioned at bottom for artwork visibility
 *   **Real-Time Preview:** All adjustments apply instantly while controls remain visible
-*   **Persistent Settings:** All gallery settings automatically saved to localStorage
+*   **Persistent Settings:** All gallery settings automatically saved to server-side storage
 *   **Reset to Defaults:** One-click restoration of neutral calibration settings
 *   **Keyboard Access:** C key or Gallery Manager button for quick access
 
@@ -320,14 +400,14 @@ Professional Samsung Frame TV-style display calibration system for optimal artwo
 4. **Reset:** Click "Reset to Defaults" to return to neutral calibration
 5. **Auto-Save:** All settings automatically persist across browser sessions
 
-#### 3.7.3 Pattern Behavior ✅ **CONFIG-DRIVEN**
+#### 3.8.3 Pattern Behavior ✅ **CONFIG-DRIVEN**
 Pattern generation follows strict configuration-based logic:
 *   **Config `initial_pattern_code: null`** → Fresh random pattern each refresh
 *   **Config `initial_pattern_code: "code"`** → Always use that specific pattern
 *   **No LocalStorage:** Pattern codes never saved to browser storage
 *   **Deterministic:** Same config produces same pattern sequences
 
-### 3.8. Keyboard Shortcuts
+### 3.9. Keyboard Shortcuts
 *   **Spacebar:** Play/Pause animations
 *   **N:** Generate new pattern  
 *   **B:** Toggle background (black/white)
@@ -518,7 +598,30 @@ For developers who want to modify the code:
 
 ### 6.4. Running the Application
 
-#### Option 1: Pre-Built Executable (Recommended)
+#### Option 1: Quick Kiosk Launch (Recommended)
+For immediate full-screen kiosk mode with hidden cursor and action buttons:
+```bash
+# Linux/macOS - Streamlined kiosk launcher
+./launch-kiosk.sh
+
+# Windows - Streamlined kiosk launcher  
+launch-kiosk.bat
+```
+
+#### Option 2: Advanced Launch Modes
+For other display modes using the core launcher:
+```bash
+# Full-screen kiosk mode (programmatic)
+python launcher.py kiosk
+
+# Normal windowed mode
+python launcher.py normal
+
+# Normal full-screen mode (with browser UI)
+python launcher.py normal-fullscreen
+```
+
+#### Option 3: Pre-Built Executable (Alternative)
 ```bash
 # Windows
 ManyPaintings-Windows.exe
@@ -527,13 +630,13 @@ ManyPaintings-Windows.exe
 ./ManyPaintings-RaspberryPi
 ```
 
-#### Option 2: Development Server
+#### Option 4: Development Server
 ```bash
 # Activate virtual environment first
 python app.py
 ```
 
-#### Option 3: Production Deployment
+#### Option 5: Production Deployment
 ```bash
 # Install Gunicorn
 pip install gunicorn
@@ -818,12 +921,48 @@ ManyPaintings/
 - **Images don't load**: Verify `static/images/` contains PNG files
 - **Config changes ignored**: Refresh browser (F5) after editing `config.json`
 
+### Debug API for Troubleshooting
+
+When console access is limited (e.g., kiosk mode), the application provides debug logging endpoints:
+
+#### Debug Logging Endpoints
+- **`POST /api/debug-log`** - Log messages to `debug.log` file
+  ```bash
+  curl -X POST http://localhost:5000/api/debug-log \
+    -H "Content-Type: application/json" \
+    -d '{"message": "Debug message here"}'
+  ```
+
+- **`POST /api/debug-clear`** - Clear debug log file
+  ```bash
+  curl -X POST http://localhost:5000/api/debug-clear
+  ```
+
+- **`GET /api/debug-config`** - View current config state and environment detection
+  ```bash
+  curl http://localhost:5000/api/debug-config
+  ```
+
+#### Using Debug API in Code
+For temporary debugging, add logging calls to JavaScript:
+```javascript
+// In AnimationEngine or other modules
+this.debugLog(`Debug info: ${JSON.stringify(data)}`);
+```
+
+#### Config System Debug Logging
+Enable detailed config merge logging:
+```bash
+DEBUG_CONFIG=1 python launcher.py
+```
+
 ### Getting Help
 
 1. Check console output for detailed error messages
-2. Verify all prerequisites are installed
-3. Try running `python launcher.py` directly for debugging
-4. Review [BUILD-INSTRUCTIONS.md](BUILD-INSTRUCTIONS.md) for build issues
+2. Use debug API endpoints when console access is limited
+3. Verify all prerequisites are installed  
+4. Try running `python launcher.py` directly for debugging
+5. Review [BUILD-INSTRUCTIONS.md](BUILD-INSTRUCTIONS.md) for build issues
 
 ## 9. Development
 
@@ -860,20 +999,30 @@ The project includes comprehensive VS Code support:
 
 ### Testing System ✅ **ENTERPRISE-GRADE IMPLEMENTATION**
 
-ManyPaintings includes a comprehensive automated testing system with 24+ test cases covering all functionality:
+ManyPaintings includes a comprehensive three-tier automated testing system with 24+ test cases covering all functionality:
 
 #### Testing Architecture
 - **Backend Testing**: pytest with Flask integration for API endpoints and business logic
 - **End-to-End Testing**: Playwright with page object models for reliable UI testing  
-- **No Arbitrary Delays**: Smart wait strategies eliminate test flakiness
-- **Cross-Browser Support**: Tests run on Chromium, Firefox, and WebKit
+- **Visual Testing**: Windows-only screenshot-based UI validation with API stubbing
+- **Smart Wait Strategies**: No arbitrary delays, reliable element waiting
+- **Cross-Platform**: Tests auto-skip on unsupported platforms
 
 #### Page Object Model E2E Tests
 - **`tests/e2e/pages/`** - Maintainable page object classes
 - **`MainPage`** - Core application interactions and keyboard shortcuts
-- **`FavoritesGallery`** - Gallery modal operations and validations  
-- **`ApiClient`** - Backend API testing utilities
+- **`FavoritesGallery`** - Gallery modal operations and validations
+- **`ImageManagerPage`** - Image management interface testing
+- **`GalleryManagerPage`** - Color grading controls testing
 - **Smart Selectors** - Uses actual HTML IDs and semantic selectors for stability
+
+#### Visual Testing Suite ✅ NEW FEATURE
+- **Windows-Only**: Platform-specific screenshot validation
+- **API Stubbing**: Route interception for predictable test states
+  - Mock `/api/favorites` for empty/populated favorites scenarios
+  - Mock `/api/images` for empty/populated image manager scenarios
+- **Automated Screenshots**: Generated to `test-results/visual/` directory
+- **CSS Bug Detection**: Tests uncovered and fixed empty state visibility issues
 
 #### Running Tests
 
@@ -893,6 +1042,11 @@ python -m pytest
 python -m pytest tests/e2e/ -v
 ```
 
+**Visual tests (Windows only):**
+```bash
+python -m pytest tests/e2e/test_visual_appearance_windows.py -v
+```
+
 **With coverage:**
 ```bash
 python -m pytest --cov=. --cov-report=html
@@ -901,22 +1055,29 @@ python -m pytest --cov=. --cov-report=html
 #### Test Coverage
 - **Core Functionality**: Application loading, animations, controls (15 tests)
 - **Favorites System**: Save, load, gallery, persistence (9 tests)  
-- **Keyboard Shortcuts**: All major keys (F, V, G, C, I, Space, B, N)
-- **API Endpoints**: Health, config, images, favorites APIs
-- **Visual Elements**: Canvas rendering, styling, error detection
+- **Visual Validation**: UI component appearance and behavior (12+ tests)
+- **Keyboard Shortcuts**: All major keys (F, V, G, C, I, Space, B, N, A)
+- **API Endpoints**: All REST endpoints with error handling
+- **Bug Detection**: Tests have identified and resolved several UI issues
+
+#### Recent Testing Achievements ✅
+- **Visual Test Implementation**: Comprehensive UI validation with screenshot capture
+- **API Stubbing Strategy**: Predictable test data without filesystem complexity
+- **CSS Bug Fixes**: Identified and resolved image manager empty state visibility
+- **Unicode Compatibility**: Fixed Windows console output for reliable CI/CD
 
 #### VS Code Integration
-- **Test Explorer**: Visual test runner with ▶️ buttons
-- **Debug Tests**: Full breakpoint support for test debugging
-- **Test Discovery**: All tests automatically visible in VS Code
-- **Launch Configs**: Pre-configured test running configurations
+- **Test Explorer**: Visual test runner with ▶️ buttons for all test types
+- **Debug Support**: Full breakpoint support for backend, E2E, and visual tests
+- **Test Discovery**: All 24+ tests automatically visible in VS Code
+- **Launch Configs**: Pre-configured test running and debugging configurations
 
-The testing system ensures reliable, maintainable code with confidence for both development and production deployments.
+The testing system ensures reliable, maintainable code and has actively improved the application by identifying and resolving bugs during development.
 
 ## 10. Future Enhancements
 
 ### ✅ Recently Completed
-*   **User Preferences & LocalStorage:** ✅ COMPLETED - Comprehensive browser localStorage system for persisting user settings
+*   **User Preferences & Server Storage:** ✅ COMPLETED - Comprehensive server-side storage system for persisting user settings across devices
 *   **Pattern Behavior System:** ✅ COMPLETED - Config-driven pattern generation with no localStorage interference
 *   **Background Preference Fix:** ✅ COMPLETED - Proper background color restoration with !important styling priority
 *   **JavaScript Modularization:** ✅ COMPLETED - Refactored 3,684-line main.js into manageable ES6 modules
@@ -935,6 +1096,7 @@ The testing system ensures reliable, maintainable code with confidence for both 
 *   **Favorites Opacity Fix:** ✅ COMPLETED - Fixed favorites saving to capture current animated opacity values instead of target opacity
 *   **UI Polish:** ✅ COMPLETED - Removed "successfully" from toast messages and added ESC key support to close favorites modal
 *   **Gallery Manager System:** ✅ COMPLETED - Professional Samsung Frame TV-style display calibration with brightness, contrast, saturation, white balance, and canvas texture controls
+*   **Launcher System Overhaul:** ✅ COMPLETED (August 2025) - Streamlined launcher scripts focused on kiosk mode with hidden cursor and smart action button management
 
 ### 🚀 Potential Future Features
 *   **Advanced Audio Features:** Add multiple audio tracks, crossfading, and synchronization with visual patterns.

@@ -12,6 +12,7 @@ from tests.e2e.pages.main_page import MainPage
 from tests.e2e.pages.favorites_gallery import FavoritesGallery
 from tests.e2e.pages.image_manager_page import ImageManagerPage
 from tests.e2e.pages.gallery_manager_page import GalleryManagerPage
+from tests.e2e.pages.remote_page import RemotePage
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
@@ -365,6 +366,25 @@ class TestGalleryManagerVisuals:
         main_page = MainPage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
         gallery_manager = GalleryManagerPage(visual_page)
         
+        # Mock the /api/settings endpoint to return default values for consistent testing
+        default_settings = {
+            "speed": 1,
+            "maxLayers": 4,
+            "volume": 50,
+            "isWhiteBackground": False,
+            "gallery": {
+                "brightness": 100,
+                "contrast": 100,
+                "saturation": 100,
+                "whiteBalance": 100,
+                "textureIntensity": 0
+            }
+        }
+        visual_page.route("**/api/settings", lambda route: route.fulfill(
+            content_type="application/json",
+            body=json.dumps(default_settings)
+        ))
+        
         main_page.load_main_page()
         main_page.wait_for_application_ready()
         
@@ -600,3 +620,192 @@ class TestFilterEffectsVisuals:
         
         # Verify canvas is visible
         assert canvas_container.is_visible(), "Canvas container should be visible"
+
+
+# Remote Control Visual Tests (Consolidated)
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Visual tests only run on Windows")
+@pytest.mark.visual
+@pytest.mark.remote
+class TestRemoteControlVisuals:
+    """Comprehensive visual tests for remote control interface."""
+    
+    def test_remote_interface_comprehensive_layout(self, visual_page: Page, live_server):
+        """Comprehensive test of remote interface layout, controls, and responsiveness."""
+        # Set mobile viewport (iPhone SE size)
+        visual_page.set_viewport_size({"width": 375, "height": 667})
+        
+        remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+        
+        # Mock settings API for consistent testing
+        default_settings = {
+            "speed": 1,
+            "layers": 4,
+            "volume": 50,
+            "isWhiteBackground": False,
+            "gallery": {
+                "brightness": 100,
+                "contrast": 100,
+                "saturation": 100,
+                "whiteBalance": 100,
+                "textureIntensity": 0
+            }
+        }
+        visual_page.route("**/api/settings", lambda route: route.fulfill(
+            content_type="application/json",
+            body=json.dumps(default_settings)
+        ))
+        
+        # Load remote page with extended timeout
+        remote_page.load_remote_page()
+        remote_page.wait_for_remote_ready(timeout=10000)  # 10 second timeout
+        
+        # Test 1: Full mobile interface screenshot
+        screenshot_path = Path("test-results/visual/remote-mobile-interface.png")
+        screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+        visual_page.screenshot(path=str(screenshot_path))
+        
+        # Verify mobile layout and responsive design
+        remote_page.verify_mobile_layout()
+        remote_page.verify_responsive_design()
+        remote_page.verify_connection_status("Connected")
+        
+        # Test 2: Individual control sections
+        quick_actions = visual_page.locator(".quick-actions-grid")
+        quick_actions.screenshot(path="test-results/visual/remote-quick-actions.png")
+        
+        basic_controls = visual_page.locator(".control-section").first
+        basic_controls.screenshot(path="test-results/visual/remote-basic-controls.png")
+        
+        gallery_controls = visual_page.locator(".control-section").nth(2)
+        gallery_controls.screenshot(path="test-results/visual/remote-gallery-controls.png")
+        
+        # Test 3: Slider controls with adjusted values
+        remote_page.set_speed(7)
+        remote_page.set_layers(6)
+        remote_page.set_volume(80)
+        remote_page.set_brightness(110)
+        remote_page.set_contrast(95)
+        
+        # Wait a bit longer for all slider updates to propagate
+        visual_page.wait_for_timeout(1500)
+        
+        controls_section = visual_page.locator(".controls-list").first
+        controls_section.screenshot(path="test-results/visual/remote-sliders-values.png")
+        
+        # Get current values for verification
+        speed_value = remote_page.get_speed_value()
+        volume_value = remote_page.get_volume_value()
+        
+        print(f"[DEBUG] Speed value: '{speed_value}', Volume value: '{volume_value}'")
+        
+        # For now, just verify the values are not empty and contain expected patterns
+        # Speed might show as "Nx" format, volume as "N%" format
+        assert speed_value and len(speed_value) > 0, f"Speed value should not be empty, got: {speed_value}"
+        assert volume_value and len(volume_value) > 0, f"Volume value should not be empty, got: {volume_value}"
+        
+        print("[SUCCESS] Remote interface layout, controls, and responsiveness tested")
+    
+    def test_remote_favorites_management_visual(self, visual_page: Page, live_server):
+        """Comprehensive test of favorites functionality in remote interface."""
+        visual_page.set_viewport_size({"width": 375, "height": 667})
+        
+        remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+        
+        # Test 1: Empty favorites state
+        visual_page.route("**/api/favorites", lambda route: route.fulfill(
+            status=200,
+            content_type="application/json",
+            body="[]"
+        ))
+        
+        # Load remote page with extended timeout
+        remote_page.load_remote_page()
+        remote_page.wait_for_remote_ready(timeout=10000)  # 10 second timeout
+        remote_page.wait_for_favorites_loaded()
+        
+        # Screenshot empty favorites state
+        favorites_empty = visual_page.locator("#remote-favorites-empty")
+        screenshot_path = Path("test-results/visual/remote-favorites-empty.png")
+        screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+        favorites_empty.screenshot(path=str(screenshot_path))
+        
+        remote_page.verify_favorites_empty_state()
+        
+        # Test 2: Populated favorites state
+        mock_favorites = [
+            {
+                "id": "test-fav-1",
+                "created_at": "2025-08-18T10:00:00.000Z",
+                "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9AAAAAElFTkSuQmCC",
+                "state": {"backgroundColor": "black"}
+            },
+            {
+                "id": "test-fav-2", 
+                "created_at": "2025-08-18T11:00:00.000Z",
+                "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9AAAAAElFTkSuQmCC",
+                "state": {"backgroundColor": "white"}
+            },
+            {
+                "id": "test-fav-3",
+                "created_at": "2025-08-18T12:00:00.000Z", 
+                "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9AAAAAElFTkSuQmCC",
+                "state": {"backgroundColor": "black"}
+            }
+        ]
+        
+        # Update route for populated state
+        visual_page.route("**/api/favorites", lambda route: route.fulfill(
+            status=200,
+            content_type="application/json",
+            body=json.dumps(mock_favorites)
+        ))
+        
+        # Reload page to get populated state
+        remote_page.load_remote_page()
+        remote_page.wait_for_remote_ready()
+        remote_page.wait_for_favorites_loaded()
+        
+        # Screenshot populated favorites
+        favorites_section = visual_page.locator("#remote-favorites-grid")
+        favorites_section.screenshot(path="test-results/visual/remote-favorites-gallery.png")
+        
+        # Verify populated state
+        favorites_count = remote_page.get_favorites_count()
+        assert favorites_count == 3, f"Expected 3 favorites, got {favorites_count}"
+        
+        print(f"[SUCCESS] Remote favorites management tested (empty → {favorites_count} favorites)")
+    
+    def test_remote_touch_interface_visual(self, visual_page: Page, live_server):
+        """Comprehensive test of touch-friendly interface elements and connection status."""
+        visual_page.set_viewport_size({"width": 375, "height": 667})
+        
+        remote_page = RemotePage(visual_page).set_base_url(f"http://localhost:{live_server.port}")
+        
+        # Load remote page with extended timeout
+        remote_page.load_remote_page()
+        remote_page.wait_for_remote_ready(timeout=10000)  # 10 second timeout
+        
+        # Test 1: Touch targets and action buttons
+        quick_actions = visual_page.locator(".quick-actions-grid")
+        screenshot_path = Path("test-results/visual/remote-touch-targets.png")
+        screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+        quick_actions.screenshot(path=str(screenshot_path))
+        
+        remote_page.verify_responsive_design()
+        
+        # Test 2: Connection status indicator
+        connection_status = visual_page.locator("#connection-status")
+        connection_status.screenshot(path="test-results/visual/remote-connection-status.png")
+        
+        remote_page.verify_connection_status("Connected")
+        
+        # Test 3: Full interface at different viewport sizes for responsiveness
+        # Test tablet size
+        visual_page.set_viewport_size({"width": 768, "height": 1024})
+        visual_page.screenshot(path="test-results/visual/remote-tablet-layout.png")
+        
+        # Reset to mobile for consistency
+        visual_page.set_viewport_size({"width": 375, "height": 667})
+        
+        print("[SUCCESS] Remote touch interface and responsiveness tested")

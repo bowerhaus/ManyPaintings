@@ -16,7 +16,7 @@ export const GalleryManager = {
     textureIntensity: 0
   },
 
-  init() {
+  async init() {
     this.modal = document.getElementById('gallery-manager-modal');
     
     const closeBtn = document.getElementById('gallery-manager-modal-close');
@@ -42,7 +42,7 @@ export const GalleryManager = {
     document.addEventListener('keydown', this.escKeyHandler);
 
     // Load preferences
-    this.loadGallerySettings();
+    await this.loadGallerySettings();
     
     // Setup controls
     this.setupSliderControls();
@@ -50,13 +50,13 @@ export const GalleryManager = {
     console.log('GalleryManager: Initialized with settings:', this.gallerySettings);
   },
 
-  loadGallerySettings() {
+  async loadGallerySettings() {
     this.gallerySettings = {
-      brightness: userPreferences.get('brightness'),
-      contrast: userPreferences.get('contrast'),
-      saturation: userPreferences.get('saturation'),
-      whiteBalance: userPreferences.get('whiteBalance'),
-      textureIntensity: userPreferences.get('textureIntensity') || 0
+      brightness: await userPreferences.get('gallery.brightness') || 100,
+      contrast: await userPreferences.get('gallery.contrast') || 100,
+      saturation: await userPreferences.get('gallery.saturation') || 100,
+      whiteBalance: await userPreferences.get('gallery.whiteBalance') || 100,
+      textureIntensity: await userPreferences.get('gallery.textureIntensity') || 0
     };
   },
 
@@ -87,10 +87,10 @@ export const GalleryManager = {
     const brightnessSlider = document.getElementById('gallery-brightness-slider');
     const brightnessValue = document.getElementById('gallery-brightness-value');
     if (brightnessSlider && brightnessValue) {
-      brightnessSlider.addEventListener('input', (e) => {
+      brightnessSlider.addEventListener('input', async (e) => {
         this.gallerySettings.brightness = parseInt(e.target.value);
         brightnessValue.textContent = `${this.gallerySettings.brightness}%`;
-        userPreferences.set('brightness', this.gallerySettings.brightness);
+        await userPreferences.set('gallery.brightness', this.gallerySettings.brightness);
         console.log(`GalleryManager: Brightness changed to ${this.gallerySettings.brightness}%`);
         this.applyGallerySettings();
       });
@@ -100,10 +100,10 @@ export const GalleryManager = {
     const contrastSlider = document.getElementById('gallery-contrast-slider');
     const contrastValue = document.getElementById('gallery-contrast-value');
     if (contrastSlider && contrastValue) {
-      contrastSlider.addEventListener('input', (e) => {
+      contrastSlider.addEventListener('input', async (e) => {
         this.gallerySettings.contrast = parseInt(e.target.value);
         contrastValue.textContent = `${this.gallerySettings.contrast}%`;
-        userPreferences.set('contrast', this.gallerySettings.contrast);
+        await userPreferences.set('gallery.contrast', this.gallerySettings.contrast);
         console.log(`GalleryManager: Contrast changed to ${this.gallerySettings.contrast}%`);
         this.applyGallerySettings();
       });
@@ -113,10 +113,10 @@ export const GalleryManager = {
     const saturationSlider = document.getElementById('gallery-saturation-slider');
     const saturationValue = document.getElementById('gallery-saturation-value');
     if (saturationSlider && saturationValue) {
-      saturationSlider.addEventListener('input', (e) => {
+      saturationSlider.addEventListener('input', async (e) => {
         this.gallerySettings.saturation = parseInt(e.target.value);
         saturationValue.textContent = `${this.gallerySettings.saturation}%`;
-        userPreferences.set('saturation', this.gallerySettings.saturation);
+        await userPreferences.set('gallery.saturation', this.gallerySettings.saturation);
         console.log(`GalleryManager: Saturation changed to ${this.gallerySettings.saturation}%`);
         this.applyGallerySettings();
       });
@@ -126,10 +126,10 @@ export const GalleryManager = {
     const whiteBalanceSlider = document.getElementById('gallery-white-balance-slider');
     const whiteBalanceValue = document.getElementById('gallery-white-balance-value');
     if (whiteBalanceSlider && whiteBalanceValue) {
-      whiteBalanceSlider.addEventListener('input', (e) => {
+      whiteBalanceSlider.addEventListener('input', async (e) => {
         this.gallerySettings.whiteBalance = parseInt(e.target.value);
         whiteBalanceValue.textContent = `${this.gallerySettings.whiteBalance}%`;
-        userPreferences.set('whiteBalance', this.gallerySettings.whiteBalance);
+        await userPreferences.set('gallery.whiteBalance', this.gallerySettings.whiteBalance);
         console.log(`GalleryManager: White balance changed to ${this.gallerySettings.whiteBalance}%`);
         this.applyGallerySettings();
       });
@@ -139,10 +139,10 @@ export const GalleryManager = {
     const textureIntensitySlider = document.getElementById('gallery-texture-intensity-slider');
     const textureIntensityValue = document.getElementById('gallery-texture-intensity-value');
     if (textureIntensitySlider && textureIntensityValue) {
-      textureIntensitySlider.addEventListener('input', (e) => {
+      textureIntensitySlider.addEventListener('input', async (e) => {
         this.gallerySettings.textureIntensity = parseInt(e.target.value);
         textureIntensityValue.textContent = `${this.gallerySettings.textureIntensity}%`;
-        userPreferences.set('textureIntensity', this.gallerySettings.textureIntensity);
+        await userPreferences.set('gallery.textureIntensity', this.gallerySettings.textureIntensity);
         console.log(`GalleryManager: Texture intensity changed to ${this.gallerySettings.textureIntensity}%`);
         this.applyTextureSettings();
       });
@@ -275,5 +275,29 @@ export const GalleryManager = {
     this.applyGallerySettings();
     this.applyTextureSettings();
     console.log('GalleryManager: Initialized on startup with saved settings');
+  },
+
+  // Apply changes from remote control
+  async applyRemoteChanges(changes) {
+    console.log('GalleryManager: Applying remote changes:', changes);
+    
+    // Update local gallery settings with changes
+    for (const [key, value] of Object.entries(changes)) {
+      if (this.gallerySettings.hasOwnProperty(key)) {
+        this.gallerySettings[key] = value;
+        console.log(`GalleryManager: Updated ${key} to ${value} from remote`);
+      }
+    }
+    
+    // Update the UI sliders if the modal is open
+    if (this.modal && !this.modal.classList.contains('hidden')) {
+      this.updateSliders();
+    }
+    
+    // Apply the visual changes immediately
+    this.applyGallerySettings();
+    this.applyTextureSettings();
+    
+    console.log('GalleryManager: Applied remote changes successfully');
   }
 };

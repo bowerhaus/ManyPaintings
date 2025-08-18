@@ -291,6 +291,14 @@ body.white-background .image-layer {
     cursor: none !important;
 }
 
+/* Force hide kiosk controls when hidden via JavaScript */
+.kiosk-mode #kiosk-controls[style*="display: none"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 /* ===== PATTERN DISPLAY FOR KIOSK MODE ===== */
 .pattern-display.kiosk-pattern {
     position: absolute;
@@ -1398,6 +1406,17 @@ body.white-background .texture-overlay {
     transition: all 0.2s ease;
 }
 
+body.white-background .favorite-card {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body:not(.white-background) .favorite-card {
+    background: #333;
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
 .favorite-card:hover {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     transform: translateY(-2px);
@@ -1441,14 +1460,26 @@ body.white-background .texture-overlay {
     color: rgba(0, 0, 0, 0.7);
 }
 
+body:not(.white-background) .date-info {
+    color: rgba(255, 255, 255, 0.8);
+}
+
 .time-info {
     font-size: 0.75rem;
     color: rgba(0, 0, 0, 0.5);
 }
 
+body:not(.white-background) .time-info {
+    color: rgba(255, 255, 255, 0.6);
+}
+
 .layer-count {
     font-size: 0.75rem;
     color: rgba(0, 0, 0, 0.5);
+}
+
+body:not(.white-background) .layer-count {
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .favorite-delete-btn {
@@ -1485,6 +1516,7 @@ body.white-background .texture-overlay {
 .favorite-delete-btn:hover svg {
     opacity: 1;
 }
+
 
 /* Canvas thumbnails only - no complex preview layer styles needed */
 
@@ -1671,5 +1703,983 @@ body.white-background .texture-overlay {
     
     .gallery-description {
         margin: 0 0 0.75rem 0;
+    }
+}
+
+/* ===== REMOTE CONTROL STYLES ===== */
+
+/* Base remote styles */
+body.remote-control {
+    background: #1a1a1a;
+    color: #ffffff;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-size: 16px;
+    line-height: 1.5;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* White background theme for remote */
+body.remote-control.white-theme {
+    background: #f5f5f5;
+    color: #333;
+}
+
+body.remote-control.white-theme .remote-app {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%);
+}
+
+body.remote-control.white-theme .remote-header {
+    background: linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%);
+    border-bottom-color: #ccc;
+    color: #333;
+}
+
+body.remote-control.white-theme .control-section {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+body.remote-control.white-theme .section-title {
+    color: #333;
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .refresh-button {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .refresh-button:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.remote-control.white-theme .refresh-icon {
+    fill: #333;
+}
+
+body.remote-control.white-theme .connection-text {
+    color: #666;
+}
+
+.remote-app {
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+}
+
+/* Header with Hero Image */
+.remote-header {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 2px solid #555;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.hero-container {
+    position: relative;
+    height: 240px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-image-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+.hero-image-layer.active {
+    opacity: 1;
+}
+
+.hero-image-layer.fallback {
+    background: linear-gradient(135deg, 
+        rgba(51, 51, 51, 0.9) 0%, 
+        rgba(68, 68, 68, 0.8) 25%, 
+        rgba(85, 85, 85, 0.9) 50%, 
+        rgba(68, 68, 68, 0.8) 75%, 
+        rgba(51, 51, 51, 0.9) 100%);
+    animation: gradientShift 8s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { transform: translateX(0%); }
+    50% { transform: translateX(5%); }
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.7) 0%,
+        rgba(0, 0, 0, 0.5) 40%,
+        rgba(0, 0, 0, 0.3) 70%,
+        rgba(0, 0, 0, 0.2) 100%
+    );
+    z-index: 2;
+}
+
+.header-content {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    padding: 1.5rem 1rem 1rem 1rem;
+    width: 100%;
+}
+
+.remote-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 
+                 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.remote-subtitle {
+    font-size: 0.9rem;
+    margin: 0 0 1rem 0;
+    color: #ffffff;
+    opacity: 0.9;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8), 
+                 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.connection-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    animation: pulse 2s infinite;
+}
+
+.connection-indicator.disconnected {
+    background: #f44336;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% { 
+        opacity: 1; 
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    50% { 
+        opacity: 0.3; 
+        box-shadow: 0 0 0 4px rgba(76, 175, 80, 0);
+    }
+    100% { 
+        opacity: 1; 
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+}
+
+.connection-text {
+    color: #ccc;
+}
+
+/* Main content */
+.remote-content {
+    padding: 1rem;
+}
+
+/* Control sections */
+.control-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.section-header-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-header-with-button .section-title {
+    margin: 0;
+    flex: 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.section-header-with-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.section-header-with-status .section-title {
+    margin: 0;
+    flex: 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+    padding-right: 1rem;
+    line-height: 1.2;
+}
+
+.section-header-with-status .connection-status {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 0.8rem;
+    height: 1.32rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.refresh-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 8px;
+    margin-left: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+}
+
+.refresh-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.refresh-button:active {
+    transform: scale(0.95);
+}
+
+.refresh-button.refreshing {
+    animation: spin 1s linear infinite;
+}
+
+.refresh-icon {
+    width: 20px;
+    height: 20px;
+    fill: #ffffff;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Quick actions grid */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.action-btn {
+    background: linear-gradient(135deg, #444 0%, #555 100%);
+    border: 1px solid #666;
+    border-radius: 8px;
+    padding: 1rem 0.5rem;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-height: 80px;
+}
+
+.action-btn:hover {
+    background: linear-gradient(135deg, #555 0%, #666 100%);
+    border-color: #777;
+    transform: translateY(-1px);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+    background: linear-gradient(135deg, #333 0%, #444 100%);
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    border-color: #4CAF50;
+}
+
+.action-btn.primary:hover {
+    background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+}
+
+.action-icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.action-label {
+    font-size: 0.75rem;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Control inputs */
+.controls-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.control-input-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.control-slider {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #333;
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.control-slider::-webkit-slider-thumb:hover {
+    background: #45a049;
+    transform: scale(1.1);
+}
+
+.control-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.control-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4CAF50;
+    min-width: 3rem;
+    text-align: right;
+}
+
+/* Control actions */
+.control-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reset-btn {
+    background: linear-gradient(135deg, #666 0%, #777 100%);
+    border: 1px solid #888;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    width: 100%;
+}
+
+.reset-btn:hover {
+    background: linear-gradient(135deg, #777 0%, #888 100%);
+    border-color: #999;
+}
+
+.reset-btn:active {
+    background: linear-gradient(135deg, #555 0%, #666 100%);
+}
+
+/* Favorites grid */
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.favorite-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.favorite-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #4CAF50;
+    transform: translateY(-2px);
+}
+
+/* White theme for remote control favorites */
+body.remote-control.white-theme .favorite-item {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+body.remote-control.white-theme .favorite-item:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: #4CAF50;
+}
+
+.favorite-thumbnail {
+    width: 100%;
+    height: 70%;
+    border-radius: 4px;
+    object-fit: cover;
+    background: #333;
+}
+
+/* White theme for remote control favorite thumbnails */
+body.remote-control.white-theme .favorite-thumbnail {
+    background: #f3f4f6;
+}
+
+.favorite-title {
+    font-size: 0.7rem;
+    color: #ccc;
+    text-align: center;
+    margin-top: 0.25rem;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+/* White theme for remote control favorite titles */
+body.remote-control.white-theme .favorite-title {
+    color: #666;
+}
+
+/* Remote control image manager styles */
+.remote-upload-section {
+    margin-bottom: 1rem;
+}
+
+.remote-upload-area {
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.remote-upload-area:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.remote-upload-area .upload-icon {
+    width: 2rem;
+    height: 2rem;
+    fill: rgba(255, 255, 255, 0.6);
+    margin-bottom: 0.5rem;
+}
+
+.remote-upload-area .upload-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.25rem;
+}
+
+.remote-upload-area .upload-subtitle {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.remote-upload-area .upload-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* White theme for upload area */
+body.remote-control.white-theme .remote-upload-area {
+    border-color: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.remote-control.white-theme .remote-upload-area:hover {
+    border-color: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .remote-upload-area .upload-icon {
+    fill: rgba(0, 0, 0, 0.6);
+}
+
+body.remote-control.white-theme .remote-upload-area .upload-title {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+body.remote-control.white-theme .remote-upload-area .upload-subtitle {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+/* Upload progress */
+.remote-upload-progress {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.remote-upload-progress .upload-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.remote-upload-progress .upload-progress-fill {
+    height: 100%;
+    background: #4CAF50;
+    transition: width 0.3s ease;
+    border-radius: 3px;
+}
+
+.remote-upload-progress .upload-status {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+}
+
+/* White theme for upload progress */
+body.remote-control.white-theme .remote-upload-progress {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.remote-control.white-theme .remote-upload-progress .upload-progress-bar {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+body.remote-control.white-theme .remote-upload-progress .upload-status {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+/* Images container */
+.remote-images-container {
+    margin-top: 0.75rem;
+}
+
+.remote-images-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+/* Remote image items */
+.remote-image-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.remote-image-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.remote-image-thumbnail {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: #333;
+    display: block;
+}
+
+.remote-image-info {
+    padding: 0.5rem;
+}
+
+.remote-image-filename {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.25rem;
+}
+
+.remote-image-details {
+    font-size: 0.625rem;
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Remote image delete buttons */
+.remote-image-delete-btn {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.remote-image-delete-btn:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.remote-image-delete-btn svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    opacity: 0.9;
+}
+
+/* White theme for remote images */
+body.remote-control.white-theme .remote-image-item {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .remote-image-item:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.remote-control.white-theme .remote-image-thumbnail {
+    background: #f3f4f6;
+}
+
+body.remote-control.white-theme .remote-image-filename {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+body.remote-control.white-theme .remote-image-details {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+/* Remote control favorite delete buttons */
+.remote-favorite-delete-btn {
+    position: absolute !important;
+    top: 0.25rem !important;
+    right: 0.25rem !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    background: rgba(239, 68, 68, 0.9) !important;
+    color: white !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    z-index: 30 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.remote-favorite-delete-btn:hover {
+    background: rgba(220, 38, 38, 1) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(255, 255, 255, 1) !important;
+}
+
+.remote-favorite-delete-btn svg {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+    opacity: 0.9 !important;
+    transition: opacity 0.2s ease !important;
+}
+
+.remote-favorite-delete-btn:hover svg {
+    opacity: 1 !important;
+}
+
+/* Loading and empty states */
+.loading-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: #ccc;
+}
+
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #333;
+    border-top: 2px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.empty-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: #ccc;
+    text-align: center;
+}
+
+.empty-section:not(.hidden) {
+    display: flex;
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    fill: #555;
+}
+
+.empty-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    color: #ffffff;
+}
+
+.empty-subtitle {
+    font-size: 0.85rem;
+    margin: 0;
+    opacity: 0.8;
+    line-height: 1.4;
+}
+
+/* Toast notifications - Green style matching main app */
+.toast {
+    position: fixed;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: rgba(76, 175, 80, 0.95);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10000;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-width: 300px;
+    word-wrap: break-word;
+    text-align: center;
+    opacity: 0;
+}
+
+.toast:not(.hidden) {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 375px) {
+    .remote-header {
+        padding: 1rem 0.75rem 0.75rem 0.75rem;
+    }
+    
+    .remote-content {
+        padding: 0.75rem;
+    }
+    
+    .control-section {
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .quick-actions-grid {
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        padding: 0.75rem 0.5rem;
+        min-height: 70px;
+    }
+    
+    .favorites-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+}
+
+/* Safe area adjustments for iPhone */
+@supports (padding: max(0px)) {
+    .remote-header {
+        padding-top: max(1.5rem, env(safe-area-inset-top) + 1rem);
+    }
+    
+    .remote-content {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom) + 1rem);
+    }
+}
+
+/* Landscape mode adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+    .remote-header {
+        padding: 0.75rem 1rem 0.5rem 1rem;
+    }
+    
+    .remote-title {
+        font-size: 1.25rem;
+    }
+    
+    .control-section {
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .action-btn {
+        min-height: 60px;
+        padding: 0.5rem;
+    }
+    
+    /* Hero section responsive adjustments */
+    .hero-container {
+        height: 200px;
+    }
+    
+    .remote-title {
+        font-size: 1.3rem;
+    }
+    
+    .remote-subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .header-content {
+        padding: 1rem 0.75rem 0.75rem 0.75rem;
+    }
+}
+
+/* Additional responsive styles for very small screens */
+@media (max-width: 360px) {
+    .hero-container {
+        height: 180px;
+    }
+    
+    .remote-title {
+        font-size: 1.2rem;
+    }
+    
+    .connection-status {
+        font-size: 0.8rem;
+    }
+    
+    .header-content {
+        padding: 0.75rem 0.5rem;
     }
 }

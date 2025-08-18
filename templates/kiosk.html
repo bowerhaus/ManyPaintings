@@ -159,21 +159,40 @@
         function updateKioskControls() {
             const isFullscreen = document.fullscreenElement || 
                                 document.webkitFullscreenElement || 
-                                document.msFullscreenElement;
+                                document.msFullscreenElement ||
+                                document.mozFullScreenElement;
+                                
+            // Check if we're in browser kiosk mode (no address bar, etc)
+            const isBrowserKiosk = window.navigator.standalone || 
+                                  window.outerHeight === screen.height ||
+                                  window.innerHeight === screen.height;
             
-            console.log('Kiosk: updateKioskControls called, isFullscreen:', !!isFullscreen);
+            console.log('Kiosk: updateKioskControls called');
+            console.log('Kiosk: Detection results:', {
+                isFullscreen: !!isFullscreen,
+                isBrowserKiosk: isBrowserKiosk,
+                windowHeight: window.innerHeight,
+                screenHeight: screen.height,
+                outerHeight: window.outerHeight,
+                standalone: window.navigator.standalone
+            });
             
-            if (isFullscreen) {
-                console.log('Kiosk: Hiding all kiosk controls');
+            // Hide controls if in fullscreen OR browser kiosk mode
+            if (isFullscreen || isBrowserKiosk) {
+                console.log('Kiosk: Hiding all kiosk controls (fullscreen or kiosk mode detected)');
                 if (kioskControls) {
                     kioskControls.style.display = 'none';
+                    kioskControls.style.visibility = 'hidden';
+                    kioskControls.style.opacity = '0';
+                    kioskControls.style.pointerEvents = 'none';
                 }
             } else {
-                console.log('Kiosk: Showing all kiosk controls');
+                console.log('Kiosk: Showing kiosk controls (windowed mode)');
                 if (kioskControls) {
                     kioskControls.style.display = 'flex';
                     kioskControls.style.visibility = 'visible';
                     kioskControls.style.opacity = '1';
+                    kioskControls.style.pointerEvents = 'auto';
                 }
                 
                 // Reset fullscreen button content
@@ -186,6 +205,10 @@
                     fullscreenBtn.title = "Enter Fullscreen";
                 }
             }
+            
+            // Force cursor hiding in kiosk mode regardless
+            document.body.style.cursor = 'none';
+            document.documentElement.style.cursor = 'none';
         }
         
         // Event listeners for kiosk controls
@@ -239,6 +262,14 @@
         document.addEventListener('fullscreenchange', updateKioskControls);
         document.addEventListener('webkitfullscreenchange', updateKioskControls);
         document.addEventListener('msfullscreenchange', updateKioskControls);
+        document.addEventListener('mozfullscreenchange', updateKioskControls);
+        
+        // Listen for window resize (kiosk mode changes)
+        window.addEventListener('resize', updateKioskControls);
+        window.addEventListener('orientationchange', updateKioskControls);
+        
+        // Additional timeout-based check for kiosk state
+        setInterval(updateKioskControls, 2000);
         
         // Initial controls state
         updateKioskControls();

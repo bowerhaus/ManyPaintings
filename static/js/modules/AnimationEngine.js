@@ -56,6 +56,10 @@ export const AnimationEngine = {
       this.layersContainer.style.height = '100vh';
       this.layersContainer.style.zIndex = '10';
       console.log('AnimationEngine: Virtual coordinate system initialized - container set to full viewport');
+      console.log(`AnimationEngine: Screen dimensions - innerWidth: ${window.innerWidth}px, innerHeight: ${window.innerHeight}px`);
+      console.log(`AnimationEngine: Viewport dimensions - vw: ${window.innerWidth}px, vh: ${window.innerHeight}px`);
+      
+      // Debug API available for troubleshooting when needed
     }
   },
 
@@ -461,6 +465,13 @@ export const AnimationEngine = {
     // Translation logic based on layout mode
     if (config.transformations?.translation?.enabled) {
       const layoutMode = config.transformations?.translation?.layout_mode;
+      console.log(`AnimationEngine: Translation enabled, layout mode: ${layoutMode}`);
+      
+      // Check for layout mode (debug logging can be added here when needed)
+      if (!layoutMode) {
+        console.error('AnimationEngine: Layout mode is undefined! Cannot proceed with positioning.');
+        return transformations;
+      }
       
       if (layoutMode === LAYOUT_MODES.RANDOM) {
         // Random mode
@@ -469,10 +480,13 @@ export const AnimationEngine = {
         
         transformations.translateX = (random() - 0.5) * viewportWidth * 0.3;
         transformations.translateY = (random() - 0.5) * viewportHeight * 0.3;
+        console.log(`AnimationEngine: Random mode - viewport: ${viewportWidth}x${viewportHeight}, translate: ${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px`);
       } else {
         // Use structured layout mode
         const MatteBorderManager = window.App?.MatteBorderManager;
         const imageArea = MatteBorderManager ? MatteBorderManager.getImageArea() : null;
+        console.log(`AnimationEngine: MatteBorderManager available: ${!!MatteBorderManager}`);
+        console.log(`AnimationEngine: Image area:`, imageArea);
         
         // Get next layout point
         const { point, nextIndex } = LayoutUtils.getNextLayoutPoint(
@@ -482,6 +496,7 @@ export const AnimationEngine = {
         );
         
         this.layoutPointIndex = nextIndex;
+        console.log(`AnimationEngine: Layout point ${this.layoutPointIndex === 0 ? 'last' : this.layoutPointIndex}:`, point);
         
         // Apply deviation if configured
         const deviationConfig = config.transformations?.translation?.[layoutMode];
@@ -497,6 +512,7 @@ export const AnimationEngine = {
             maxVerticalDev,
             random
           );
+          console.log(`AnimationEngine: After deviation:`, finalPoint);
         }
         
         if (imageArea) {
@@ -506,7 +522,9 @@ export const AnimationEngine = {
           transformations.translateY = offset.y;
           transformations.useViewportUnits = false;
           
-          console.log(`${layoutMode}: Point ${this.layoutPointIndex === 0 ? 'last' : this.layoutPointIndex} → translate(${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px)`);
+          console.log(`AnimationEngine: ${layoutMode}: Point ${this.layoutPointIndex === 0 ? 'last' : this.layoutPointIndex} → absolute(${finalPoint.x}, ${finalPoint.y}) → translate(${transformations.translateX.toFixed(1)}px, ${transformations.translateY.toFixed(1)}px)`);
+          
+          // Debug positioning info available via debugLog() when troubleshooting
         } else {
           // Fallback to viewport percentage points
           const { point: vpPoint, nextIndex: vpNextIndex } = LayoutUtils.getNextViewportPercentagePoint(
@@ -572,6 +590,8 @@ export const AnimationEngine = {
       transform += `scale(${scale}) `;
     }
 
+    console.log(`AnimationEngine: Applied transform for ${imageId}: ${transform}`);
+    
     imageElement.style.transform = transform;
 
     if (hueShift !== 0) {
@@ -717,13 +737,14 @@ export const AnimationEngine = {
    * @param {number} colorGrading.hue - Hue rotation degrees (0-360)
    */
   applyColorGrading(colorGrading) {
-    // Apply to entire canvas container to include background and matte border
-    const canvasContainer = document.getElementById('canvas-container');
-    if (!canvasContainer) return;
+    // Apply to artwork layers and texture overlay only, not the background
+    const imageLayers = document.getElementById('image-layers');
+    const textureOverlay = document.getElementById('texture-overlay');
+    if (!imageLayers) return;
 
     const { brightness = 100, contrast = 100, saturation = 100, hue = 0 } = colorGrading;
     
-    // Build CSS filter string for global application
+    // Build CSS filter string for artwork application
     const filters = [
       `brightness(${brightness}%)`,
       `contrast(${contrast}%)`,
@@ -731,19 +752,34 @@ export const AnimationEngine = {
       `hue-rotate(${hue}deg)`
     ];
 
-    canvasContainer.style.filter = filters.join(' ');
+    // Apply to image layers (artwork)
+    imageLayers.style.filter = filters.join(' ');
     
-    console.log(`AnimationEngine: Applied global color grading to entire canvas - brightness:${brightness}% contrast:${contrast}% saturation:${saturation}% hue:${hue}°`);
+    // Apply to texture overlay if it exists
+    if (textureOverlay) {
+      textureOverlay.style.filter = filters.join(' ');
+    }
+    
+    console.log(`AnimationEngine: Applied color grading to artwork layers - brightness:${brightness}% contrast:${contrast}% saturation:${saturation}% hue:${hue}°`);
   },
 
   /**
    * Reset color grading to defaults
    */
   resetColorGrading() {
-    const canvasContainer = document.getElementById('canvas-container');
-    if (!canvasContainer) return;
-    canvasContainer.style.filter = '';
-    console.log('AnimationEngine: Reset global color grading to defaults');
+    const imageLayers = document.getElementById('image-layers');
+    const textureOverlay = document.getElementById('texture-overlay');
+    if (!imageLayers) return;
+    
+    // Reset filters on artwork layers
+    imageLayers.style.filter = '';
+    
+    // Reset filters on texture overlay if it exists
+    if (textureOverlay) {
+      textureOverlay.style.filter = '';
+    }
+    
+    console.log('AnimationEngine: Reset color grading to defaults on artwork layers');
   },
 
   /**
@@ -773,5 +809,72 @@ export const AnimationEngine = {
     }
     
     return result;
+  },
+
+  // Method to update max layers from remote control
+  setMaxLayers(newMaxLayers) {
+    console.log(`AnimationEngine: Setting max layers to ${newMaxLayers}`);
+    
+    // Update config
+    const config = window.APP_CONFIG || {};
+    if (!config.layer_management) config.layer_management = {};
+    config.layer_management.max_concurrent_layers = newMaxLayers;
+    
+    // If we have more active layers than the new limit, remove excess layers
+    const currentLayerCount = this.activeLayers.size;
+    if (currentLayerCount > newMaxLayers) {
+      const excessLayers = currentLayerCount - newMaxLayers;
+      console.log(`AnimationEngine: Removing ${excessLayers} excess layers (${currentLayerCount} -> ${newMaxLayers})`);
+      this.removeExcessLayers(excessLayers);
+    }
+  },
+
+  removeExcessLayers(excessCount) {
+    // Remove the oldest layers first
+    let removed = 0;
+    for (const [imageId, layerInfo] of this.activeLayers.entries()) {
+      if (removed >= excessCount) break;
+      
+      // Clear any pending timeouts
+      if (layerInfo.holdTimeout) {
+        clearTimeout(layerInfo.holdTimeout);
+      }
+      
+      // Remove from DOM
+      if (layerInfo.layer && layerInfo.layer.parentNode) {
+        layerInfo.layer.parentNode.removeChild(layerInfo.layer);
+      }
+      
+      // Remove from active layers
+      this.activeLayers.delete(imageId);
+      removed++;
+    }
+    
+    console.log(`AnimationEngine: Removed ${removed} excess layers`);
+  },
+
+  // Debug Logging Methods
+  async debugLog(message) {
+    try {
+      await fetch('/api/debug-log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: message })
+      });
+    } catch (error) {
+      console.error('Failed to send debug log:', error);
+    }
+  },
+
+  async clearDebugLog() {
+    try {
+      await fetch('/api/debug-clear', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Failed to clear debug log:', error);
+    }
   }
 };

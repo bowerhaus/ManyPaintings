@@ -10,7 +10,7 @@ export const AudioManager = {
   volume: 0.5,
   filePath: null,
 
-  init() {
+  async init() {
     const config = window.APP_CONFIG || {};
     console.log('AudioManager: Initializing with config:', config);
     console.log('AudioManager: Audio config section:', config.audio);
@@ -21,10 +21,14 @@ export const AudioManager = {
     }
 
     this.isEnabled = config.audio.enabled;
-    this.volume = userPreferences.get('volume') || config.audio.volume || 0.5;
+    
+    // Get volume from preferences (0-100) and convert to 0-1 range
+    const volumePercent = await userPreferences.get('volume') || 50;
+    this.volume = volumePercent / 100; // Convert percentage to decimal
+    
     this.filePath = config.audio.file_path || 'static/audio/ambient.mp3';
 
-    console.log(`AudioManager: Initialized with file: ${this.filePath}, volume: ${this.volume}`);
+    console.log(`AudioManager: Initialized with file: ${this.filePath}, volume: ${this.volume} (${volumePercent}%)`);
 
     // Test if the audio file URL is accessible
     fetch(this.filePath, { method: 'HEAD' })
@@ -168,16 +172,17 @@ export const AudioManager = {
     console.log('AudioManager: Audio stopped');
   },
 
-  setVolume(volume) {
+  async setVolume(volume) {
     if (!this.audioElement) return;
 
-    this.volume = Math.max(0, Math.min(1, volume));
+    this.volume = Math.max(0, Math.min(1, volume)); // Keep internal volume as 0-1
     this.audioElement.volume = this.volume;
     
-    // Save to user preferences
-    userPreferences.set('volume', this.volume);
+    // Save to user preferences as percentage (0-100)
+    const volumePercent = Math.round(this.volume * 100);
+    await userPreferences.set('volume', volumePercent);
     
-    console.log(`AudioManager: Volume set to ${this.volume}`);
+    console.log(`AudioManager: Volume set to ${this.volume} (${volumePercent}%)`);
   },
 
   toggle() {

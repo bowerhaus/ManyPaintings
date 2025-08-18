@@ -13,12 +13,11 @@ export const UI = {
   speedMultiplier: 1.0,
   maxLayers: 4,
 
-  init() {
+  async init() {
     this.errorElement = document.getElementById('error-message');
     this.loadingElement = document.getElementById('loading-indicator');
     this.onscreenControls = document.getElementById('onscreen-controls');
     this.controlsTriggerArea = document.getElementById('controls-trigger-area');
-
 
     console.log('UI: Elements found:', {
       onscreenControls: !!this.onscreenControls,
@@ -28,12 +27,15 @@ export const UI = {
     // Initialize UI values from config and user preferences
     const config = window.APP_CONFIG || {};
     
-    // Load user preferences
-    this.speedMultiplier = userPreferences.get('speed');
-    this.maxLayers = userPreferences.get('maxLayers');
-    this.isWhiteBackground = userPreferences.get('isWhiteBackground');
+    // Load user preferences from server
+    console.log('UI: Loading preferences from server...');
+    await userPreferences.init();
     
-    console.log(`UI: Loaded preferences from userPreferences - speed: ${this.speedMultiplier}, maxLayers: ${this.maxLayers}, isWhiteBackground: ${this.isWhiteBackground}`);
+    this.speedMultiplier = await userPreferences.get('speed');
+    this.maxLayers = await userPreferences.get('maxLayers');
+    this.isWhiteBackground = await userPreferences.get('isWhiteBackground');
+    
+    console.log(`UI: Loaded preferences from server - speed: ${this.speedMultiplier}, maxLayers: ${this.maxLayers}, isWhiteBackground: ${this.isWhiteBackground}`);
     
     // Override with config if maxLayers not set in preferences
     if (this.maxLayers === userPreferences.defaults.maxLayers) {
@@ -96,7 +98,7 @@ export const UI = {
     this.updateBackgroundToggle();
     
     // Apply UI slider values when DOM is ready
-    setTimeout(() => {
+    setTimeout(async () => {
       // Set speed slider
       const speedSlider = document.getElementById('speed-slider');
       if (speedSlider) {
@@ -120,14 +122,13 @@ export const UI = {
       // Set volume slider
       const volumeSlider = document.getElementById('audio-volume-slider');
       if (volumeSlider) {
-        const savedVolume = userPreferences.get('volume');
-        const volumePercent = Math.round(savedVolume * 100);
+        const volumePercent = await userPreferences.get('volume') || 50;
         volumeSlider.value = volumePercent.toString();
         const volumeValue = document.getElementById('audio-volume-value');
         if (volumeValue) {
           volumeValue.textContent = `${volumePercent}%`;
         }
-        console.log(`UI: Set volume slider to ${volumePercent}% (${savedVolume})`);
+        console.log(`UI: Set volume slider to ${volumePercent}%`);
       }
 
       
@@ -154,33 +155,39 @@ export const UI = {
   showSuccess(message) {
     // Create a temporary success toast
     const toast = document.createElement('div');
-    toast.className = 'fixed top-8 left-1/2 transform -translate-x-1/2 bg-green-600/90 text-white px-6 py-3 rounded-lg backdrop-blur-lg z-[400] transition-all duration-300';
     toast.style.cssText = `
       position: fixed;
       top: 32px;
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
-      background: rgba(34, 197, 94, 0.9);
+      background: rgba(76, 175, 80, 0.95);
       color: white;
       padding: 12px 24px;
       border-radius: 8px;
-      backdrop-filter: blur(10px);
-      font-family: monospace;
       font-size: 14px;
-      z-index: 400;
+      font-weight: 500;
+      z-index: 999999;
       transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      word-wrap: break-word;
+      text-align: center;
       opacity: 0;
+      pointer-events: none;
     `;
     toast.textContent = message;
     document.body.appendChild(toast);
     
+    console.log('UI Success:', message);
+    
     // Animate in
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       toast.style.transform = 'translateX(-50%) translateY(0)';
       toast.style.opacity = '1';
-    }, 10);
+    });
     
-    // Remove after 3 seconds
+    // Remove after delay
     setTimeout(() => {
       toast.style.transform = 'translateX(-50%) translateY(-100px)';
       toast.style.opacity = '0';
@@ -189,9 +196,7 @@ export const UI = {
           toast.parentNode.removeChild(toast);
         }
       }, 300);
-    }, 3000);
-    
-    console.log('UI Success:', message);
+    }, 2000);
   },
 
   showLoading() {
@@ -236,7 +241,14 @@ export const UI = {
     // Favorite button (in onscreen controls)
     const favoriteBtn = document.getElementById('favorite-btn');
     if (favoriteBtn) {
-      favoriteBtn.addEventListener('click', this.saveFavorite.bind(this));
+      console.log('UI: Favorite button found, adding click listener');
+      favoriteBtn.addEventListener('click', (e) => {
+        console.log('UI: Favorite button clicked!');
+        e.preventDefault();
+        this.saveFavorite();
+      });
+    } else {
+      console.warn('UI: Favorite button not found');
     }
 
     // Favorites gallery button (in onscreen controls)
@@ -300,7 +312,7 @@ export const UI = {
     const speedSlider = document.getElementById('speed-slider');
     const speedValue = document.getElementById('speed-value');
     if (speedSlider && speedValue) {
-      speedSlider.addEventListener('input', (e) => {
+      speedSlider.addEventListener('input', async (e) => {
         const sliderValue = parseInt(e.target.value);
         // Map 1-10 to speed multipliers: 1=1x, 2=2x, 3=3x, 4=4x, 5=5x, 6=6x, 7=7x, 8=8x, 9=9x, 10=10x
         const speedMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -309,7 +321,7 @@ export const UI = {
         console.log(`UI: Speed changed to level ${sliderValue} (${this.speedMultiplier}x)`);
         
         // Save to user preferences
-        userPreferences.set('speed', this.speedMultiplier);
+        await userPreferences.set('speed', this.speedMultiplier);
         
         this.updateAnimationSpeed();
       });
@@ -319,13 +331,13 @@ export const UI = {
     const layersSlider = document.getElementById('layers-slider');
     const layersValue = document.getElementById('layers-value');
     if (layersSlider && layersValue) {
-      layersSlider.addEventListener('input', (e) => {
+      layersSlider.addEventListener('input', async (e) => {
         this.maxLayers = parseInt(e.target.value);
         layersValue.textContent = this.maxLayers.toString();
         console.log(`UI: Max layers changed to ${this.maxLayers}`);
         
         // Save to user preferences
-        userPreferences.set('maxLayers', this.maxLayers);
+        await userPreferences.set('maxLayers', this.maxLayers);
         
         this.updateMaxLayers();
       });
@@ -335,14 +347,14 @@ export const UI = {
     const audioVolumeSlider = document.getElementById('audio-volume-slider');
     const audioVolumeValue = document.getElementById('audio-volume-value');
     if (audioVolumeSlider && audioVolumeValue) {
-      audioVolumeSlider.addEventListener('input', (e) => {
+      audioVolumeSlider.addEventListener('input', async (e) => {
         const volumePercent = parseInt(e.target.value);
         const volume = volumePercent / 100; // Convert to 0-1 range for audio API
         audioVolumeValue.textContent = `${volumePercent}%`;
         console.log(`UI: Audio volume changed to ${volumePercent}% (${volume})`);
         const AudioManager = window.App?.AudioManager;
         if (AudioManager) {
-          AudioManager.setVolume(volume);
+          await AudioManager.setVolume(volume);
         }
       });
     }
@@ -371,7 +383,7 @@ export const UI = {
     console.log('UI: Main controls shown');
   },
 
-  togglePlayPause() {
+  async togglePlayPause() {
     const AnimationEngine = window.App?.AnimationEngine;
     const PatternManager = window.App?.PatternManager;
     if (!AnimationEngine) return;
@@ -383,6 +395,9 @@ export const UI = {
         PatternManager.stopPatternSequence();
       }
       this.updatePlayPauseButton(false);
+      
+      // Save playing state
+      await userPreferences.set('isPlaying', false);
     } else {
       console.log('UI: Resuming animations and pattern sequence');
       AnimationEngine.start();
@@ -390,6 +405,9 @@ export const UI = {
         PatternManager.startPatternSequence();
       }
       this.updatePlayPauseButton(true);
+      
+      // Save playing state
+      await userPreferences.set('isPlaying', true);
     }
   },
 
@@ -436,7 +454,7 @@ export const UI = {
     }
   },
 
-  toggleBackground() {
+  async toggleBackground() {
     this.isWhiteBackground = !this.isWhiteBackground;
     
     // Control filterable background element instead of CSS background-color
@@ -459,7 +477,7 @@ export const UI = {
     }
     
     // Save to user preferences
-    userPreferences.set('isWhiteBackground', this.isWhiteBackground);
+    await userPreferences.set('isWhiteBackground', this.isWhiteBackground);
     
     this.updateBackgroundToggle();
     console.log('UI: Background toggled to', this.isWhiteBackground ? 'white' : 'black');
@@ -609,13 +627,22 @@ export const UI = {
   },
 
   async saveFavorite() {
+    console.log('UI: saveFavorite method called');
     try {
       const FavoritesManager = window.App?.FavoritesManager;
+      console.log('UI: FavoritesManager available:', !!FavoritesManager);
       if (FavoritesManager) {
+        console.log('UI: Calling FavoritesManager.saveFavorite()');
         await FavoritesManager.saveFavorite();
+        console.log('UI: Favorite saved successfully');
+        // Toast handled by FavoritesManager
+      } else {
+        console.error('UI: FavoritesManager not available');
+        this.showError('FavoritesManager not available');
       }
     } catch (error) {
       console.error('UI: Failed to save favorite:', error);
+      this.showError(`Failed to save favorite: ${error.message}`);
     }
   },
 
@@ -760,5 +787,100 @@ export const UI = {
     }
     
     console.log(`UI: Removed ${removed} excess layers`);
+  },
+
+  // Methods for RemoteSync to update UI from remote control changes
+  updateSpeedDisplay() {
+    const speedSlider = document.getElementById('speed-slider');
+    const speedValue = document.getElementById('speed-value');
+    
+    if (speedSlider) {
+      speedSlider.value = this.speedMultiplier.toString();
+    }
+    if (speedValue) {
+      speedValue.textContent = `${this.speedMultiplier}`;
+    }
+    
+    this.updateAnimationSpeed();
+    console.log(`UI: Speed display updated to ${this.speedMultiplier}x from remote`);
+  },
+
+  updateMaxLayersDisplay() {
+    const layersSlider = document.getElementById('layers-slider');
+    const layersValue = document.getElementById('layers-value');
+    
+    if (layersSlider) {
+      layersSlider.value = this.maxLayers.toString();
+    }
+    if (layersValue) {
+      layersValue.textContent = this.maxLayers.toString();
+    }
+    
+    this.updateMaxLayers();
+    console.log(`UI: Max layers display updated to ${this.maxLayers} from remote`);
+  },
+
+  async updateVolumeDisplay() {
+    const volumeSlider = document.getElementById('audio-volume-slider');
+    const volumeValue = document.getElementById('audio-volume-value');
+    
+    try {
+      const volumePercent = await userPreferences.get('volume') || 50;
+      
+      if (volumeSlider) {
+        volumeSlider.value = volumePercent.toString();
+      }
+      if (volumeValue) {
+        volumeValue.textContent = `${volumePercent}%`;
+      }
+      
+      console.log(`UI: Volume display updated to ${volumePercent}% from remote`);
+    } catch (error) {
+      console.warn('UI: Failed to update volume display:', error);
+    }
+  },
+
+  showToast(message, duration = 2000) {
+    // Create green toast matching main app style (upper middle)
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(76, 175, 80, 0.95);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10000;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      word-wrap: break-word;
+      text-align: center;
+      opacity: 0;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      toast.style.opacity = '1';
+    }, 10);
+    
+    // Animate out and remove
+    setTimeout(() => {
+      toast.style.transform = 'translateX(-50%) translateY(-100px)';
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, duration);
   }
 };

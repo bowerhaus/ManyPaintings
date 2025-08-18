@@ -12,6 +12,7 @@ import { MatteBorderManager } from './managers/MatteBorderManager.js';
 import { DropShadowManager } from './managers/DropShadowManager.js';
 import { CPUTemperatureManager } from './managers/CPUTemperatureManager.js';
 import { userPreferences } from './managers/UserPreferences.js';
+import { remoteSync } from './managers/RemoteSync.js';
 import { UI } from './ui/UI.js';
 import { FavoritesGallery } from './ui/FavoritesGallery.js';
 import { GalleryManager } from './ui/GalleryManager.js';
@@ -56,18 +57,15 @@ const App = {
       console.log('Config canvas_drop_shadow section:', config.canvas_drop_shadow);
       console.log('Full config keys:', Object.keys(config));
       
-      // UserPreferences is automatically initialized when imported
-      console.log('UserPreferences loaded with preferences:', userPreferences.getAll());
-
       // Initialize modules in sequence
-      UI.init();
+      await UI.init();
       FavoritesGallery.init();
-      GalleryManager.init();
+      await GalleryManager.init();
       ImageManagerUI.init();
 
       await ImageManager.init();
       AnimationEngine.init();
-      AudioManager.init();
+      await AudioManager.init();
 
       // Initialize matte border after other modules are ready
       MatteBorderManager.init();
@@ -108,6 +106,9 @@ const App = {
 
       // Check for favorite parameter in URL
       this.checkForFavoriteParameter();
+
+      // Initialize remote synchronization for detecting remote control changes
+      await remoteSync.init();
 
     } catch (error) {
       console.error('App initialization failed:', error);
@@ -175,6 +176,7 @@ const App = {
   UI,
   GridManager,
   userPreferences,
+  remoteSync
   
   // Getter for CPU temperature manager
   get CPUTemperatureManager() {

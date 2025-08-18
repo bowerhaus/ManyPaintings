@@ -27,7 +27,46 @@ export const FavoritesManager = {
         scale: 200 / Math.max(layersContainer.offsetWidth, layersContainer.offsetHeight), // Scale to fit 200px
         logging: false,
         useCORS: true, // Allow cross-origin images
-        allowTaint: true // Allow images from same origin
+        allowTaint: true, // Allow images from same origin
+        ignoreElements: (element) => {
+          // Don't ignore any elements - capture everything including opacity
+          return false;
+        },
+        onclone: (clonedDoc, element) => {
+          // Ensure all computed styles are preserved in the clone, especially opacity
+          const originalLayers = layersContainer.querySelectorAll('.image-layer');
+          const clonedLayers = element.querySelectorAll('.image-layer');
+          
+          originalLayers.forEach((originalLayer, index) => {
+            if (clonedLayers[index]) {
+              const computedStyle = window.getComputedStyle(originalLayer);
+              const clonedLayer = clonedLayers[index];
+              
+              // Force all styles to ensure they're preserved
+              clonedLayer.style.opacity = computedStyle.opacity;
+              clonedLayer.style.transform = computedStyle.transform;
+              clonedLayer.style.filter = computedStyle.filter;
+              clonedLayer.style.display = computedStyle.display;
+              clonedLayer.style.visibility = computedStyle.visibility;
+              clonedLayer.style.position = computedStyle.position;
+              clonedLayer.style.left = computedStyle.left;
+              clonedLayer.style.top = computedStyle.top;
+              clonedLayer.style.width = computedStyle.width;
+              clonedLayer.style.height = computedStyle.height;
+              clonedLayer.style.zIndex = computedStyle.zIndex;
+              
+              // Force remove any transitions that might interfere
+              clonedLayer.style.transition = 'none';
+              clonedLayer.style.animation = 'none';
+              
+              // Ensure minimum opacity for very low values
+              const opacity = parseFloat(computedStyle.opacity);
+              if (opacity > 0 && opacity < 0.01) {
+                clonedLayer.style.opacity = '0.01'; // Make very low opacity visible
+              }
+            }
+          });
+        }
       });
 
       // Create final thumbnail canvas at 200x200
@@ -36,8 +75,9 @@ export const FavoritesManager = {
       thumbnailCanvas.width = 200;
       thumbnailCanvas.height = 200;
 
-      // Fill background color first
-      const bgColor = window.getComputedStyle(layersContainer).backgroundColor || '#000000';
+      // Fill background color first - check the actual background mode
+      const isWhiteBackground = document.body.classList.contains('white-background');
+      const bgColor = isWhiteBackground ? '#ffffff' : '#000000';
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, 200, 200);
 
@@ -143,7 +183,7 @@ export const FavoritesManager = {
       // Show success feedback
       const UI = window.App?.UI;
       if (UI) {
-        UI.showSuccess('Favorite saved!');
+        UI.showSuccess('Favorite saved');
       }
 
       return result.id;

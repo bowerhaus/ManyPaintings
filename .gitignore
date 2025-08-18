@@ -95,6 +95,12 @@ tmp/
 
 # Generated documentation
 docs/_build/
+
+# Test results and generated files
+test-results/
 favorites.json
+settings.json
 ManyPaintings-Windows.exe
+test-results/
+
 chrome_data/

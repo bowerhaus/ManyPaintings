@@ -3,9 +3,64 @@ import json
 import time
 from threading import Lock
 
+def deep_merge_dict(base_dict, override_dict, path="", log_changes=False):
+    """Deep merge two dictionaries, with override_dict taking precedence"""
+    result = base_dict.copy()
+    
+    for key, value in override_dict.items():
+        current_path = f"{path}.{key}" if path else key
+        
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            # Both are dicts, recursively merge
+            if log_changes:
+                print(f"CONFIG MERGE: Merging nested dict at '{current_path}'")
+            result[key] = deep_merge_dict(result[key], value, current_path, log_changes)
+        else:
+            # Override the value
+            if log_changes:
+                if key in result:
+                    print(f"CONFIG MERGE: Overriding '{current_path}': {result[key]} -> {value}")
+                else:
+                    print(f"CONFIG MERGE: Adding new key '{current_path}': {value}")
+            result[key] = value
+    
+    return result
+
+def validate_critical_config_fields(config, config_name):
+    """Check for critical config fields and log warnings if missing"""
+    critical_fields = [
+        ('transformations.translation.layout_mode', 'Layout positioning mode'),
+        ('transformations.translation.enabled', 'Translation system'),
+        ('layer_management.max_concurrent_layers', 'Layer management'),
+        ('animation_timing.fade_in_min_sec', 'Animation timing'),
+    ]
+    
+    warnings = []
+    for field_path, description in critical_fields:
+        current = config
+        try:
+            for key in field_path.split('.'):
+                current = current[key]
+        except (KeyError, TypeError):
+            warnings.append(f"Missing critical config field '{field_path}' ({description})")
+    
+    if warnings:
+        print(f"CONFIG WARNINGS for {config_name}:")
+        for warning in warnings:
+            print(f"  - {warning}")
+    
+    return warnings
+
 def load_config_from_json(config_name='development'):
     """Load configuration from config.json file"""
     config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
+    
+    # Check if debug logging is enabled via environment
+    debug_config = os.environ.get('DEBUG_CONFIG', '').lower() in ('1', 'true', 'yes')
+    
+    if debug_config:
+        print(f"CONFIG LOAD: Loading configuration for environment '{config_name}'")
+        print(f"CONFIG LOAD: Reading from {config_path}")
     
     try:
         with open(config_path, 'r') as f:
@@ -29,15 +84,36 @@ def load_config_from_json(config_name='development'):
         'matte_border': config_data.get('matte_border', {})
     }
     
-    # Apply environment-specific overrides
+    if debug_config:
+        print(f"CONFIG LOAD: Base configuration sections loaded: {list(base_config.keys())}")
+    
+    # Apply environment-specific overrides using deep merge
     environments = config_data.get('environments', {})
     if config_name in environments:
         env_config = environments[config_name]
+        if debug_config:
+            print(f"CONFIG LOAD: Applying environment overrides for '{config_name}': {list(env_config.keys())}")
+        
         for section, values in env_config.items():
-            if section in base_config:
-                base_config[section].update(values)
+            if section in base_config and isinstance(base_config[section], dict) and isinstance(values, dict):
+                # Deep merge nested dictionaries
+                if debug_config:
+                    print(f"CONFIG LOAD: Deep merging section '{section}'")
+                base_config[section] = deep_merge_dict(base_config[section], values, section, debug_config)
             else:
+                # Simple override for non-dict values
+                if debug_config:
+                    print(f"CONFIG LOAD: Direct override for section '{section}': {values}")
                 base_config[section] = values
+    else:
+        if debug_config:
+            print(f"CONFIG LOAD: No environment-specific config found for '{config_name}'")
+    
+    # Validate critical fields
+    validate_critical_config_fields(base_config, config_name)
+    
+    if debug_config:
+        print("CONFIG LOAD: Configuration loading completed successfully")
     
     return base_config
 

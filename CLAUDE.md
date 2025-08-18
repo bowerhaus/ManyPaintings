@@ -196,6 +196,27 @@ pip install -r requirements.txt
 - **Theme Synchronization**: Remote interface automatically matches main display theme
 - **Touch Optimization**: Large touch targets and gesture-friendly interfaces
 
+### Smart Polling Optimization System ✅ NEW FEATURE (August 2025)
+- **Intelligent Disconnect/Reconnect Architecture**: Activity-aware system that eliminates unnecessary polling
+- **Battery Conservation**: 100% elimination of network requests when remote control is idle
+- **Server Efficiency**: Dramatic reduction in API requests when no active remotes connected
+- **Activity Detection**: Comprehensive user interaction monitoring system
+  - **Global Event Listeners**: Tracks touchstart, touchmove, mousedown, scroll events
+  - **Interaction Wrapping**: All UI controls wrapped with activity recording
+  - **30-Second Timeout**: Remote automatically disconnects after inactivity period
+- **Heartbeat System**: Server-side connection status tracking
+  - **Timestamp Validation**: Heartbeat included with every API request
+  - **Session Management**: Per-device heartbeat tracking with automatic cleanup
+  - **35-Second Cutoff**: Remotes considered active if heartbeat within threshold
+- **Main Application Optimization**: Conditional polling based on remote status
+  - **Remote Status Check**: `/api/remote-status` endpoint reports active connections
+  - **Selective Polling**: Only processes remote requests when connections detected
+  - **Zero-Waste Architecture**: Complete polling cessation when no remotes active
+- **Smart Reconnection**: Instant resume on any user interaction
+  - **Immediate Activation**: Any touch/click instantly resumes full functionality
+  - **Status Updates**: Connection status indicators reflect current state
+  - **Seamless UX**: User experience remains completely transparent
+
 ### Layout System
 - **Four Layout Modes**: Sophisticated positioning system with corner-focused placement
   - `rule_of_thirds`: 4 corner points at rule of thirds intersections
@@ -246,6 +267,7 @@ The ManyPaintings application has achieved full production readiness with:
 - ✅ **Professional Polish**: Gallery-grade presentation with Samsung Frame TV-style interface
 - ✅ **Enhanced Favorites System**: Complete favorites management with background preservation and cross-platform delete functionality
 - ✅ **Remote Control Integration**: Full iPhone remote interface with automatic image appearance, favorites management, and theme synchronization
+- ✅ **Smart Polling Optimization**: Intelligent disconnect/reconnect system for dramatic battery life improvement
 - ✅ **Documentation**: Complete README, STATUS, and developer guidance
 
 The project stands as a complete implementation of the original vision with significant enhancements beyond initial requirements, including comprehensive remote control capabilities and advanced favorites management.

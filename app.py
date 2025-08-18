@@ -11,6 +11,9 @@ save_favorite_request = {'timestamp': None, 'processed': True}
 play_pause_request = {'timestamp': None, 'processed': True, 'action': None}
 refresh_images_request = {'timestamp': None, 'processed': True, 'uploaded_images': []}
 
+# Global variable to track remote control heartbeats
+remote_heartbeats = {}  # {session_id: timestamp}
+
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'default')
@@ -292,7 +295,17 @@ def create_app(config_name=None):
     @app.route('/api/settings', methods=['GET'])
     def get_settings():
         """Get all application settings."""
+        global remote_heartbeats
+        
         try:
+            # Track heartbeat if provided (from remote control)
+            heartbeat = request.args.get('heartbeat')
+            if heartbeat:
+                session_id = request.remote_addr + '_' + request.headers.get('User-Agent', '')[:50]
+                remote_heartbeats[session_id] = float(heartbeat)
+                # Clean up old heartbeats (older than 60 seconds)
+                cutoff_time = float(heartbeat) - 60000  # 60 seconds ago
+                remote_heartbeats = {k: v for k, v in remote_heartbeats.items() if v > cutoff_time}
             settings_file = 'settings.json'
             
             # Default settings
@@ -374,6 +387,28 @@ def create_app(config_name=None):
             return jsonify({
                 'success': True,
                 'settings': updated_settings
+            })
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/remote-status', methods=['GET'])
+    def get_remote_status():
+        """Get the status of active remote controls."""
+        global remote_heartbeats
+        
+        try:
+            current_time = datetime.now().timestamp() * 1000  # Current time in milliseconds
+            active_cutoff = current_time - 35000  # 35 seconds ago
+            
+            # Count active remotes (heartbeats within last 35 seconds)
+            active_remotes = {k: v for k, v in remote_heartbeats.items() if v > active_cutoff}
+            active_count = len(active_remotes)
+            
+            return jsonify({
+                'active_remotes': active_count,
+                'last_heartbeats': {k: int(v) for k, v in active_remotes.items()},
+                'current_time': int(current_time)
             })
             
         except Exception as e:

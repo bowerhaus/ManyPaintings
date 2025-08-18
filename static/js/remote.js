@@ -18,6 +18,13 @@ class RemoteController {
             basic: null     // Timer for basic setting toasts
         };
         
+        // Activity tracking for smart disconnect
+        this.lastActivityTime = Date.now();
+        this.inactivityTimeout = 30000; // 30 seconds
+        this.activityCheckInterval = 5000; // Check every 5 seconds
+        this.activityTimer = null;
+        this.isActive = true;
+        
         // Hero image cycling properties
         this.heroImages = [];
         this.currentHeroIndex = 0;
@@ -93,34 +100,75 @@ class RemoteController {
     }
     
     setupEventListeners() {
-        // Quick action buttons
-        this.elements.playPauseBtn?.addEventListener('click', () => this.handleAction('play-pause'));
-        this.elements.newPatternBtn?.addEventListener('click', () => this.handleAction('new-pattern'));
-        this.elements.backgroundToggleBtn?.addEventListener('click', () => this.handleAction('background-toggle'));
-        this.elements.favoriteBtn?.addEventListener('click', () => this.handleAction('save-favorite'));
+        // Quick action buttons - wrapped with activity tracking
+        this.elements.playPauseBtn?.addEventListener('click', () => {
+            this.recordActivity();
+            this.handleAction('play-pause');
+        });
+        this.elements.newPatternBtn?.addEventListener('click', () => {
+            this.recordActivity();
+            this.handleAction('new-pattern');
+        });
+        this.elements.backgroundToggleBtn?.addEventListener('click', () => {
+            this.recordActivity();
+            this.handleAction('background-toggle');
+        });
+        this.elements.favoriteBtn?.addEventListener('click', () => {
+            this.recordActivity();
+            this.handleAction('save-favorite');
+        });
         
-        // Control sliders
-        this.elements.speedSlider?.addEventListener('input', (e) => this.handleSliderChange('speed', parseInt(e.target.value)));
-        this.elements.layersSlider?.addEventListener('input', (e) => this.handleSliderChange('maxLayers', parseInt(e.target.value)));
-        this.elements.volumeSlider?.addEventListener('input', (e) => this.handleSliderChange('volume', parseInt(e.target.value)));
+        // Control sliders - wrapped with activity tracking
+        this.elements.speedSlider?.addEventListener('input', (e) => {
+            this.recordActivity();
+            this.handleSliderChange('speed', parseInt(e.target.value));
+        });
+        this.elements.layersSlider?.addEventListener('input', (e) => {
+            this.recordActivity();
+            this.handleSliderChange('maxLayers', parseInt(e.target.value));
+        });
+        this.elements.volumeSlider?.addEventListener('input', (e) => {
+            this.recordActivity();
+            this.handleSliderChange('volume', parseInt(e.target.value));
+        });
         
-        // Gallery manager sliders
-        this.elements.brightnessSlider?.addEventListener('input', (e) => this.handleGallerySliderChange('brightness', parseInt(e.target.value)));
-        this.elements.contrastSlider?.addEventListener('input', (e) => this.handleGallerySliderChange('contrast', parseInt(e.target.value)));
-        this.elements.saturationSlider?.addEventListener('input', (e) => this.handleGallerySliderChange('saturation', parseInt(e.target.value)));
-        this.elements.whiteBalanceSlider?.addEventListener('input', (e) => this.handleGallerySliderChange('whiteBalance', parseInt(e.target.value)));
-        this.elements.textureIntensitySlider?.addEventListener('input', (e) => this.handleGallerySliderChange('textureIntensity', parseInt(e.target.value)));
+        // Gallery manager sliders - wrapped with activity tracking
+        this.elements.brightnessSlider?.addEventListener('input', (e) => {
+            this.recordActivity();
+            this.handleGallerySliderChange('brightness', parseInt(e.target.value));
+        });
+        this.elements.contrastSlider?.addEventListener('input', (e) => {
+            this.recordActivity();
+            this.handleGallerySliderChange('contrast', parseInt(e.target.value));
+        });
+        this.elements.saturationSlider?.addEventListener('input', (e) => {
+            this.recordActivity();
+            this.handleGallerySliderChange('saturation', parseInt(e.target.value));
+        });
+        this.elements.whiteBalanceSlider?.addEventListener('input', (e) => {
+            this.recordActivity();
+            this.handleGallerySliderChange('whiteBalance', parseInt(e.target.value));
+        });
+        this.elements.textureIntensitySlider?.addEventListener('input', (e) => {
+            this.recordActivity();
+            this.handleGallerySliderChange('textureIntensity', parseInt(e.target.value));
+        });
         
-        // Gallery reset
-        this.elements.galleryResetBtn?.addEventListener('click', () => this.resetGallerySettings());
+        // Gallery reset - wrapped with activity tracking
+        this.elements.galleryResetBtn?.addEventListener('click', () => {
+            this.recordActivity();
+            this.resetGallerySettings();
+        });
         
-        // Image Manager upload events
+        // Image Manager upload events - wrapped with activity tracking
         if (this.elements.uploadArea && this.elements.uploadInput) {
             this.elements.uploadArea.addEventListener('click', () => {
+                this.recordActivity();
                 this.elements.uploadInput.click();
             });
 
             this.elements.uploadInput.addEventListener('change', (e) => {
+                this.recordActivity();
                 const files = e.target.files;
                 if (files.length > 0) {
                     this.uploadFiles(Array.from(files));
@@ -128,8 +176,11 @@ class RemoteController {
             });
         }
         
-        // Touch improvements for iOS
-        document.addEventListener('touchstart', function() {}, { passive: true });
+        // Global activity tracking for touch and mouse events
+        document.addEventListener('touchstart', () => this.recordActivity(), { passive: true });
+        document.addEventListener('touchmove', () => this.recordActivity(), { passive: true });
+        document.addEventListener('mousedown', () => this.recordActivity());
+        document.addEventListener('scroll', () => this.recordActivity(), { passive: true });
     }
     
     async init() {
@@ -152,12 +203,98 @@ class RemoteController {
             // Start polling for changes from main display
             this.startPolling();
             
+            // Start activity monitoring
+            this.startActivityMonitoring();
+            
             console.log('Remote Controller: Initialized successfully');
         } catch (error) {
             console.error('Remote Controller: Initialization failed:', error);
             this.updateConnectionStatus('disconnected');
             this.showToast('Connection failed. Check your network.');
         }
+    }
+    
+    /**
+     * Record user activity for idle detection
+     */
+    recordActivity() {
+        this.lastActivityTime = Date.now();
+        
+        // If we were inactive, reconnect immediately
+        if (!this.isActive) {
+            console.log('Remote Controller: Activity detected, reconnecting...');
+            this.isActive = true;
+            this.updateConnectionStatus('connecting');
+            
+            // Resume polling immediately
+            this.startPolling();
+            
+            this.showToast('Reconnected to main display');
+        }
+    }
+    
+    /**
+     * Start monitoring for user inactivity
+     */
+    startActivityMonitoring() {
+        if (this.activityTimer) {
+            clearInterval(this.activityTimer);
+        }
+        
+        this.activityTimer = setInterval(() => {
+            this.checkInactivity();
+        }, this.activityCheckInterval);
+        
+        console.log('Remote Controller: Started activity monitoring (30s timeout)');
+    }
+    
+    /**
+     * Check if user has been inactive and disconnect if needed
+     */
+    checkInactivity() {
+        if (!this.isActive) {
+            return; // Already disconnected
+        }
+        
+        const timeSinceLastActivity = Date.now() - this.lastActivityTime;
+        
+        if (timeSinceLastActivity >= this.inactivityTimeout) {
+            console.log('Remote Controller: 30 seconds of inactivity detected, disconnecting...');
+            this.disconnect();
+        }
+    }
+    
+    /**
+     * Disconnect from main display due to inactivity
+     */
+    disconnect() {
+        this.isActive = false;
+        
+        // Stop polling to save battery/bandwidth
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        }
+        
+        // Pause hero rotation to save battery
+        this.pauseHeroRotation();
+        
+        // Update status
+        this.updateConnectionStatus('disconnected');
+        console.log('Remote Controller: Disconnected due to inactivity');
+        
+        // No toast notification for disconnect to avoid interrupting user
+    }
+    
+    /**
+     * Stop activity monitoring (cleanup)
+     */
+    stopActivityMonitoring() {
+        if (this.activityTimer) {
+            clearInterval(this.activityTimer);
+            this.activityTimer = null;
+        }
+        console.log('Remote Controller: Stopped activity monitoring');
     }
     
     async loadSettings() {
@@ -954,6 +1091,12 @@ class RemoteController {
             clearInterval(this.pollTimer);
         }
         
+        // Only start polling if we're active
+        if (!this.isActive) {
+            console.log('Remote Controller: Not starting polling - inactive state');
+            return;
+        }
+        
         // Clear any existing toast throttle timers
         if (this.toastThrottle.gallery) {
             clearTimeout(this.toastThrottle.gallery);
@@ -973,7 +1116,8 @@ class RemoteController {
     
     async pollForChanges() {
         try {
-            const response = await fetch('/api/settings');
+            // Include heartbeat in request to signal we're active
+            const response = await fetch('/api/settings?heartbeat=' + Date.now());
             if (!response.ok) {
                 this.updateConnectionStatus('disconnected');
                 return;

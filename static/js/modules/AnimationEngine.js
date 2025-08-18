@@ -717,13 +717,14 @@ export const AnimationEngine = {
    * @param {number} colorGrading.hue - Hue rotation degrees (0-360)
    */
   applyColorGrading(colorGrading) {
-    // Apply to entire canvas container to include background and matte border
-    const canvasContainer = document.getElementById('canvas-container');
-    if (!canvasContainer) return;
+    // Apply to artwork layers and texture overlay only, not the background
+    const imageLayers = document.getElementById('image-layers');
+    const textureOverlay = document.getElementById('texture-overlay');
+    if (!imageLayers) return;
 
     const { brightness = 100, contrast = 100, saturation = 100, hue = 0 } = colorGrading;
     
-    // Build CSS filter string for global application
+    // Build CSS filter string for artwork application
     const filters = [
       `brightness(${brightness}%)`,
       `contrast(${contrast}%)`,
@@ -731,19 +732,34 @@ export const AnimationEngine = {
       `hue-rotate(${hue}deg)`
     ];
 
-    canvasContainer.style.filter = filters.join(' ');
+    // Apply to image layers (artwork)
+    imageLayers.style.filter = filters.join(' ');
     
-    console.log(`AnimationEngine: Applied global color grading to entire canvas - brightness:${brightness}% contrast:${contrast}% saturation:${saturation}% hue:${hue}°`);
+    // Apply to texture overlay if it exists
+    if (textureOverlay) {
+      textureOverlay.style.filter = filters.join(' ');
+    }
+    
+    console.log(`AnimationEngine: Applied color grading to artwork layers - brightness:${brightness}% contrast:${contrast}% saturation:${saturation}% hue:${hue}°`);
   },
 
   /**
    * Reset color grading to defaults
    */
   resetColorGrading() {
-    const canvasContainer = document.getElementById('canvas-container');
-    if (!canvasContainer) return;
-    canvasContainer.style.filter = '';
-    console.log('AnimationEngine: Reset global color grading to defaults');
+    const imageLayers = document.getElementById('image-layers');
+    const textureOverlay = document.getElementById('texture-overlay');
+    if (!imageLayers) return;
+    
+    // Reset filters on artwork layers
+    imageLayers.style.filter = '';
+    
+    // Reset filters on texture overlay if it exists
+    if (textureOverlay) {
+      textureOverlay.style.filter = '';
+    }
+    
+    console.log('AnimationEngine: Reset color grading to defaults on artwork layers');
   },
 
   /**

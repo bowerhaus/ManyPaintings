@@ -5,12 +5,19 @@
 
 export class RemoteSync {
     constructor() {
-        this.pollingInterval = 2000; // Poll every 2 seconds
+        this.pollingInterval = 1000; // Poll every 1 second when active (maximum responsiveness)
+        this.heartbeatInterval = 10000; // Check for new remotes every 10 seconds when idle
         this.isPolling = false;
         this.pollTimer = null;
         this.lastSettings = {};
         this.lastPollTime = 0;
         this.lastPatternRequest = null; // Track last pattern request timestamp
+        this.hasActiveRemotes = false; // Track if we currently have active remotes
+        this.consecutiveEmptyChecks = 0; // Count consecutive checks with no remotes
+        
+        // Global toast cooldown to prevent spam
+        this.lastToastTime = 0;
+        this.toastCooldownPeriod = 2000; // 2 seconds between toasts
         
         console.log('RemoteSync: Initialized');
     }
@@ -68,6 +75,10 @@ export class RemoteSync {
             clearTimeout(this.pollTimer);
             this.pollTimer = null;
         }
+        
+        // Reset toast cooldown when stopping
+        this.lastToastTime = 0;
+        
         console.log('RemoteSync: Stopped polling');
     }
     
@@ -79,9 +90,12 @@ export class RemoteSync {
             return;
         }
         
+        // Use different intervals based on remote activity
+        const interval = this.hasActiveRemotes ? this.pollingInterval : this.heartbeatInterval;
+        
         this.pollTimer = setTimeout(() => {
             this.pollForChanges();
-        }, this.pollingInterval);
+        }, interval);
     }
     
     /**
@@ -93,29 +107,81 @@ export class RemoteSync {
         }
         
         try {
-            // Check for settings changes
-            await this.checkSettingsChanges();
+            // First check if any remote controls are active
+            const remoteStatus = await this.checkRemoteStatus();
+            const currentlyHasRemotes = remoteStatus.active_remotes > 0;
             
-            // Check for pattern generation requests
-            await this.checkPatternRequests();
+            // State transition logging
+            if (currentlyHasRemotes !== this.hasActiveRemotes) {
+                if (currentlyHasRemotes) {
+                    console.log(`RemoteSync: Remote activity detected! Switching to active polling (${this.pollingInterval}ms)`);
+                    this.consecutiveEmptyChecks = 0;
+                } else {
+                    console.log(`RemoteSync: No active remotes. Switching to heartbeat mode (${this.heartbeatInterval}ms)`);
+                }
+                this.hasActiveRemotes = currentlyHasRemotes;
+            }
             
-            // Check for favorite load requests
-            await this.checkFavoriteRequests();
-            
-            // Check for save favorite requests
-            await this.checkSimpleSaveFavoriteRequests();
-            
-            // Check for play/pause requests
-            await this.checkPlayPauseRequests();
-            
-            // Check for image refresh requests
-            await this.checkImageRefreshRequests();
+            if (this.hasActiveRemotes) {
+                // Active remotes detected - perform full polling
+                console.log(`RemoteSync: Processing ${remoteStatus.active_remotes} active remote(s)`);
+                
+                // Check for settings changes
+                await this.checkSettingsChanges();
+                
+                // Check for pattern generation requests
+                await this.checkPatternRequests();
+                
+                // Check for favorite load requests
+                await this.checkFavoriteRequests();
+                
+                // Check for save favorite requests
+                await this.checkSimpleSaveFavoriteRequests();
+                
+                // Check for play/pause requests
+                await this.checkPlayPauseRequests();
+                
+                // Check for image refresh requests
+                await this.checkImageRefreshRequests();
+                
+                this.consecutiveEmptyChecks = 0;
+            } else {
+                // No active remotes - heartbeat mode
+                this.consecutiveEmptyChecks++;
+                if (this.consecutiveEmptyChecks <= 2) {
+                    console.log('RemoteSync: Heartbeat mode - checking for new remote connections');
+                } else if (this.consecutiveEmptyChecks % 6 === 0) {
+                    // Log every minute in heartbeat mode (6 * 10 seconds)
+                    console.log('RemoteSync: Still in heartbeat mode - no active remotes detected');
+                }
+            }
             
         } catch (error) {
             console.warn('RemoteSync: Polling error:', error);
         } finally {
             // Schedule next poll
             this.scheduleNextPoll();
+        }
+    }
+    
+    /**
+     * Check if any remote controls are currently active
+     */
+    async checkRemoteStatus() {
+        try {
+            const response = await fetch('/api/remote-status');
+            if (!response.ok) {
+                // If endpoint fails, assume no active remotes
+                return { active_remotes: 0 };
+            }
+            
+            const status = await response.json();
+            return status;
+            
+        } catch (error) {
+            console.warn('RemoteSync: Failed to check remote status:', error);
+            // On error, assume no active remotes to be safe
+            return { active_remotes: 0 };
         }
     }
     
@@ -130,6 +196,13 @@ export class RemoteSync {
             }
             
             const currentSettings = await response.json();
+            
+            // On first poll, initialize lastSettings without detecting changes
+            if (Object.keys(this.lastSettings).length === 0) {
+                console.log('RemoteSync: Initializing settings baseline');
+                this.lastSettings = currentSettings;
+                return; // Skip change detection on first poll
+            }
             
             // Compare with last known settings
             const changes = this.detectSettingsChanges(this.lastSettings, currentSettings);
@@ -253,6 +326,13 @@ export class RemoteSync {
             
             const settings = await response.json();
             
+            // Initialize lastPatternRequest on first poll to avoid false positives
+            if (this.lastPatternRequest === null) {
+                this.lastPatternRequest = settings.newPatternRequest || 0;
+                console.log('RemoteSync: Initialized pattern request tracking');
+                return; // Skip triggering on initialization
+            }
+            
             // Check if there's a new pattern request timestamp
             if (settings.newPatternRequest && settings.newPatternRequest !== this.lastPatternRequest) {
                 console.log('RemoteSync: New pattern request detected');
@@ -280,8 +360,6 @@ export class RemoteSync {
             if (UI && UI.generateNewPattern) {
                 await UI.generateNewPattern();
                 console.log('RemoteSync: Successfully generated new pattern from remote request');
-                
-                // Show notification
                 this.showToast('New pattern generated');
             } else {
                 console.warn('RemoteSync: UI or generateNewPattern method not available');
@@ -381,7 +459,7 @@ export class RemoteSync {
                 // Toggle play/pause
                 UI.togglePlayPause();
                 
-                // Show appropriate toast message
+                // Show toast message
                 const newState = AnimationEngine ? AnimationEngine.isPlaying : !wasPlaying;
                 const message = newState ? 'Resumed' : 'Paused';
                 this.showToast(message);
@@ -591,7 +669,7 @@ export class RemoteSync {
     }
     
     /**
-     * Show a notification for remote changes
+     * Show a notification for remote changes (with throttling)
      */
     showChangeNotification(changes) {
         try {
@@ -624,10 +702,19 @@ export class RemoteSync {
     }
     
     /**
-     * Show a toast notification
+     * Show a toast notification (with global cooldown)
      */
     showToast(message, duration = 2000) {
         try {
+            // Check global cooldown to prevent toast spam
+            const currentTime = Date.now();
+            if (currentTime - this.lastToastTime < this.toastCooldownPeriod) {
+                console.log('RemoteSync: Toast suppressed due to cooldown:', message);
+                return;
+            }
+            
+            this.lastToastTime = currentTime;
+            
             // Create green toast matching main app style (upper middle)
             const toast = document.createElement('div');
             toast.style.cssText = `

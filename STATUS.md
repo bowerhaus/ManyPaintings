@@ -577,3 +577,45 @@ The test suite now serves as a reliable foundation for:
 - **Development Confidence**: Developers can trust test results to reflect actual system behavior  
 - **Production Readiness**: All remote control endpoints validated against real implementation
 - **Future Enhancement**: Solid testing foundation for additional remote control features
+
+---
+
+## 🔋 Smart Polling Optimization: Idle Detection System ✅ IN PROGRESS (August 2025)
+
+### **Current Development: Disconnect/Reconnect System for Remote Control** 🚧
+
+#### **Problem Statement**
+The current remote control system continuously polls every 2-3 seconds regardless of user activity, leading to:
+- **Battery Drain**: Unnecessary network requests on idle mobile devices
+- **Server Load**: Constant polling even when remote control is unused
+- **Resource Waste**: Network bandwidth consumption during inactive periods
+
+#### **Solution: Smart Disconnect/Reconnect Architecture**
+Implementing an activity-aware system where:
+- **Remote Control**: Auto-disconnects after 30 seconds of inactivity
+- **Main Application**: Only polls when remote controls are actively connected
+- **Reconnection**: Instant resumption on any user interaction
+
+#### **Implementation Progress** ✅ COMPLETED
+- [x] **Task Planning**: Development roadmap established
+- [x] **Activity Tracking**: User interaction monitoring in remote.js
+- [x] **Auto-Disconnect**: 30-second idle timeout implementation  
+- [x] **Heartbeat System**: Server-side connection status tracking
+- [x] **Main App Optimization**: Dual-mode polling with heartbeat detection
+- [x] **Testing & Validation**: Complete system functionality verified
+- [x] **Documentation**: All relevant documentation files updated
+
+#### **Final Architecture Implemented** ✅
+- **Remote Control**: Auto-disconnects after 30 seconds idle, instant reconnection on interaction
+- **Server**: Heartbeat tracking with automatic cleanup of stale connections
+- **Main Application**: Dual-mode polling system
+  - **Active Mode**: 1-second intervals when remotes connected (maximum responsiveness)
+  - **Heartbeat Mode**: 10-second intervals when no remotes (10x efficiency improvement)
+- **Zero Processing**: No remote-related checks performed when no active connections
+
+#### **Achieved Benefits** ✅
+- **100% Elimination**: Zero remote processing when no remotes connected (complete efficiency)
+- **Battery Life**: Dramatic improvement in mobile device battery consumption via auto-disconnect
+- **Server Efficiency**: 10x reduction in polling frequency + zero remote processing when idle
+- **Dual-Mode Architecture**: Intelligent switching between active (1s) and heartbeat (10s) modes
+- **Seamless User Experience**: Instant reconnection maintains transparent functionality

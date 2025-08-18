@@ -195,6 +195,44 @@ The application now features a comprehensive **iPhone Remote Control System** th
 
 **Access URL:** `http://[device-ip]:5000/remote` from any iPhone or mobile browser
 
+#### Smart Polling Optimization ✅ NEW FEATURE (August 2025)
+
+The iPhone Remote Control System now features an intelligent **Smart Disconnect/Reconnect Architecture** that dramatically improves battery life and reduces unnecessary network traffic.
+
+##### Core Benefits
+*   **Battery Conservation:** Eliminates 100% of unnecessary polling when remote is idle (vs progressive reduction)
+*   **Server Efficiency:** Dramatic reduction in API requests when no remote controls are active
+*   **Network Optimization:** Zero bandwidth usage during inactive periods
+*   **Instant Responsiveness:** Immediate reconnection on any user interaction
+
+##### Technical Implementation
+*   **Activity Monitoring:** Tracks all user interactions (touches, clicks, slider changes, scrolling)
+*   **Auto-Disconnect:** Remote automatically disconnects after 30 seconds of inactivity
+*   **Heartbeat System:** Server tracks active remote connections via timestamp validation  
+*   **Conditional Polling:** Main application only polls for remote changes when remotes are connected
+*   **Smart Reconnection:** Any user interaction instantly resumes full functionality
+
+##### Architecture Details
+*   **Remote Control Behavior:**
+    - Monitors user activity with global event listeners
+    - Stops polling after 30 seconds of inactivity
+    - Includes heartbeat timestamp with all API requests
+    - Instantly reconnects on touch/interaction detection
+
+*   **Main Application Optimization:**
+    - Checks `/api/remote-status` before polling for remote changes
+    - Active Mode: 1-second polling for maximum responsiveness when remotes connected
+    - Heartbeat Mode: 10-second polling when no remotes (10x efficiency improvement)
+    - Only processes remote requests when active connections detected
+    - Considers remotes active if heartbeat within last 35 seconds
+
+*   **Server-Side Intelligence:**
+    - Tracks heartbeat timestamps per session
+    - Automatically cleans up stale heartbeat data
+    - Provides real-time active remote counts
+
+This optimization maintains the seamless user experience while achieving dramatic efficiency improvements for mobile devices and server resources.
+
 ### 3.5. Intelligent Distribution System ✅ NEW FEATURE
 
 The application now features an advanced **Weighted Random Distribution System** that provides the perfect balance between natural randomness and equitable image representation.

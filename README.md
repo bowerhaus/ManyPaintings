@@ -233,7 +233,33 @@ The iPhone Remote Control System now features an intelligent **Smart Disconnect/
 
 This optimization maintains the seamless user experience while achieving dramatic efficiency improvements for mobile devices and server resources.
 
-### 3.5. Intelligent Distribution System ✅ NEW FEATURE
+### 3.5. Progressive Web App (PWA) ✅ NEW FEATURE
+
+The **iPhone Remote Control** can now be installed as a **Progressive Web App** for an enhanced native app experience with home screen access.
+
+#### PWA Features
+*   **Home Screen Installation:** Install the remote control as a native-like app on iPhone, Android, and desktop
+*   **Standalone Experience:** Full-screen app interface without browser UI when installed from home screen
+*   **Custom App Icon:** Automatically generated from your saved favorite artwork thumbnails
+*   **Auto-Updates:** Service worker handles version management with user notifications
+*   **Network-First Strategy:** Optimized for real-time remote control functionality (no offline mode)
+*   **Progressive Enhancement:** Maintains 100% compatibility with regular web browser usage
+
+#### Installation Instructions
+*   **iPhone/iPad:** Open `http://[server-ip]:5000/remote` in Safari → Share Button → "Add to Home Screen"
+*   **Android:** Open `http://[server-ip]:5000/remote` in Chrome → Menu → "Install app" or "Add to Home screen"
+*   **Desktop:** Chrome/Edge browsers will show an install icon in the address bar (optional)
+
+#### Technical Implementation
+*   **Web App Manifest:** Defines app metadata, icons, and display preferences
+*   **Service Worker:** Handles installation, caching, and auto-updates
+*   **Icon Generation:** PWA icons created from existing favorite artwork thumbnails
+*   **Cross-Platform Compatibility:** Works on iOS Safari, Android Chrome, and all desktop browsers
+*   **Zero Breaking Changes:** PWA features are progressive enhancements that don't affect normal browser usage
+
+The PWA provides the convenience of a native app experience while maintaining the flexibility and instant deployment benefits of a web application.
+
+### 3.6. Intelligent Distribution System ✅ NEW FEATURE
 
 The application now features an advanced **Weighted Random Distribution System** that provides the perfect balance between natural randomness and equitable image representation.
 

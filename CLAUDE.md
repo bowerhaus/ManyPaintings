@@ -75,6 +75,7 @@ sudo systemctl status manypaintings-kiosk.service
 - Main application: `http://localhost:5000`
 - Kiosk mode: `http://localhost:5000/kiosk`
 - iPhone Remote Control: `http://localhost:5000/remote`
+- **PWA Remote Control**: Installable version of remote control (iOS Safari: Add to Home Screen)
 
 ## Developer Notes
 
@@ -342,6 +343,27 @@ DEBUG_CONFIG=1 python launcher.py
 - **Advanced Graphics**: Multi-layer canvas texture system with background-adaptive blending  
 - **Developer Experience**: Full VS Code integration with comprehensive debugging support
 
+### Progressive Web App (PWA) Implementation ✅ NEW FEATURE (August 2025)
+- **Home Screen Installation**: Remote control interface can be installed as native-like app on iPhone/Android
+- **Standalone Experience**: Full-screen app without browser UI when installed
+- **Progressive Enhancement**: Maintains 100% compatibility with regular browsers
+- **Auto-Updates**: Service worker handles version management with user notifications
+- **Icon Generation**: Automatically created from favorite artwork thumbnails
+- **Network-First Strategy**: Optimized for real-time remote control (no offline functionality)
+- **Cross-Platform Support**: Works on iOS Safari, Android Chrome, and all desktop browsers
+
+#### PWA Installation Instructions:
+- **iPhone/iPad**: Open `http://localhost:5000/remote` in Safari → Share → Add to Home Screen
+- **Android**: Open `http://localhost:5000/remote` in Chrome → Menu → Install app / Add to Home screen
+- **Desktop**: Chrome/Edge will show install icon in address bar (optional)
+
+#### PWA Features:
+- **Custom App Icon**: Generated from your saved favorite artwork
+- **Full-Screen Mode**: Immersive app experience without browser UI
+- **Auto-Updates**: Automatic service worker updates with toast notifications
+- **Network Resilience**: Graceful handling of network issues with status indicators
+- **Native Integration**: Platform-specific optimizations (iOS status bar, Android navigation)
+
 ## Current Development Status: COMPLETE ✅
 
 The ManyPaintings application has achieved full production readiness with:
@@ -351,7 +373,8 @@ The ManyPaintings application has achieved full production readiness with:
 - ✅ **Professional Polish**: Gallery-grade presentation with Samsung Frame TV-style interface
 - ✅ **Enhanced Favorites System**: Complete favorites management with background preservation and cross-platform delete functionality
 - ✅ **Remote Control Integration**: Full iPhone remote interface with automatic image appearance, favorites management, and theme synchronization
+- ✅ **Progressive Web App**: Installable remote control with home screen access and native app experience
 - ✅ **Smart Polling Optimization**: Intelligent disconnect/reconnect system for dramatic battery life improvement
 - ✅ **Documentation**: Complete README, STATUS, and developer guidance
 
-The project stands as a complete implementation of the original vision with significant enhancements beyond initial requirements, including comprehensive remote control capabilities and advanced favorites management.
+The project stands as a complete implementation of the original vision with significant enhancements beyond initial requirements, including comprehensive remote control capabilities, PWA installation support, and advanced favorites management.

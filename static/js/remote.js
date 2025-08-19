@@ -20,7 +20,7 @@ class RemoteController {
         
         // Activity tracking for smart disconnect
         this.lastActivityTime = Date.now();
-        this.inactivityTimeout = 60000; // 60 seconds
+        this.inactivityTimeout = 120000; // 120 seconds (2 minutes)
         this.activityCheckInterval = 5000; // Check every 5 seconds
         this.activityTimer = null;
         this.isActive = true;
@@ -97,6 +97,10 @@ class RemoteController {
         // Toast
         this.elements.toast = document.getElementById('remote-toast');
         this.elements.toastMessage = document.getElementById('remote-toast-message');
+        
+        // IP Address Display
+        this.elements.ipDisplay = document.getElementById('remote-ip-display');
+        
     }
     
     setupEventListeners() {
@@ -187,6 +191,10 @@ class RemoteController {
         console.log('Remote Controller: Initializing...');
         
         try {
+            
+            // Set IP address display
+            this.setIPAddress();
+            
             // Load initial settings
             await this.loadSettings();
             this.updateConnectionStatus('connected');
@@ -231,8 +239,6 @@ class RemoteController {
             
             // Resume hero cycling
             this.resumeHeroRotation();
-            
-            this.showToast('Reconnected to main display');
         }
     }
     
@@ -248,7 +254,7 @@ class RemoteController {
             this.checkInactivity();
         }, this.activityCheckInterval);
         
-        console.log('Remote Controller: Started activity monitoring (60s timeout)');
+        console.log('Remote Controller: Started activity monitoring (120s timeout)');
     }
     
     /**
@@ -262,7 +268,7 @@ class RemoteController {
         const timeSinceLastActivity = Date.now() - this.lastActivityTime;
         
         if (timeSinceLastActivity >= this.inactivityTimeout) {
-            console.log('Remote Controller: 60 seconds of inactivity detected, disconnecting...');
+            console.log('Remote Controller: 120 seconds of inactivity detected, disconnecting...');
             this.disconnect();
         }
     }
@@ -302,7 +308,7 @@ class RemoteController {
     
     async loadSettings() {
         try {
-            const response = await fetch('/api/settings');
+            const response = await fetch(`/api/settings`);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -318,7 +324,7 @@ class RemoteController {
     
     async saveSettings(updates) {
         try {
-            const response = await fetch('/api/settings', {
+            const response = await fetch(`/api/settings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -347,7 +353,7 @@ class RemoteController {
         try {
             this.showFavoritesLoading(true);
             
-            const response = await fetch('/api/favorites');
+            const response = await fetch(`/api/favorites`);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -506,7 +512,7 @@ class RemoteController {
                 case 'play-pause':
                     // Trigger play/pause on main display
                     const currentlyPlaying = this.settings.isPlaying !== false;
-                    await fetch('/api/play-pause', { method: 'POST' });
+                    await fetch(`/api/play-pause`, { method: 'POST' });
                     // Show what state we're switching TO
                     message = currentlyPlaying ? 'Paused' : 'Playing';
                     // Optimistically update the state (will be corrected by polling if wrong)
@@ -516,7 +522,7 @@ class RemoteController {
                     
                 case 'new-pattern':
                     // Trigger new pattern via API call
-                    await fetch('/api/new-pattern', { method: 'POST' });
+                    await fetch(`/api/new-pattern`, { method: 'POST' });
                     message = 'New pattern generated';
                     break;
                     
@@ -527,7 +533,7 @@ class RemoteController {
                     
                 case 'save-favorite':
                     // Request save and start progressive refresh
-                    await fetch('/api/save-current-favorite', { method: 'POST' });
+                    await fetch(`/api/save-current-favorite`, { method: 'POST' });
                     message = 'Saving favorite...';
                     this.startProgressiveRefresh();
                     break;
@@ -762,7 +768,7 @@ class RemoteController {
         
         try {
             console.log('Remote Controller: Making fetch request to /api/images/refresh');
-            const refreshResponse = await fetch('/api/images/refresh', {
+            const refreshResponse = await fetch(`/api/images/refresh`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -803,7 +809,7 @@ class RemoteController {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('/api/images/upload', {
+        const response = await fetch(`/api/images/upload`, {
             method: 'POST',
             body: formData
         });
@@ -1118,7 +1124,7 @@ class RemoteController {
     async pollForChanges() {
         try {
             // Include heartbeat in request to signal we're active
-            const response = await fetch('/api/settings?heartbeat=' + Date.now());
+            const response = await fetch(`/api/settings?heartbeat=${Date.now()}`);
             if (!response.ok) {
                 this.updateConnectionStatus('disconnected');
                 return;
@@ -1194,7 +1200,7 @@ class RemoteController {
                 // Set refresh visual state
                 this.setRefreshState(true);
                 
-                const response = await fetch('/api/favorites');
+                const response = await fetch(`/api/favorites`);
                 if (response.ok) {
                     const newFavorites = await response.json();
                     
@@ -1407,13 +1413,90 @@ class RemoteController {
         this.currentHeroIndex = 0;
         this.loadHeroImages();
     }
+    
+    /**
+     * Set the IP address display in the header
+     */
+    setIPAddress() {
+        if (this.elements.ipDisplay) {
+            // Extract IP address from window.location.hostname
+            const ipAddress = window.location.hostname;
+            this.elements.ipDisplay.textContent = ipAddress;
+            console.log(`Remote Controller: IP address set to: ${ipAddress}`);
+        }
+    }
 }
 
 // Initialize the remote controller when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Remote Control: DOM loaded, initializing...');
     window.remoteController = new RemoteController();
+    
+    // Register service worker for PWA functionality
+    registerServiceWorker();
 });
+
+/**
+ * Register service worker for Progressive Web App functionality
+ */
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then((registration) => {
+                console.log('[PWA] Service worker registered successfully:', registration.scope);
+                
+                // Check for service worker updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    if (newWorker) {
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    // New content is available, show update notification
+                                    showUpdateNotification();
+                                } else {
+                                    // Content is cached for the first time
+                                    console.log('[PWA] App is ready for offline use');
+                                }
+                            }
+                        });
+                    }
+                });
+            })
+            .catch((error) => {
+                console.warn('[PWA] Service worker registration failed:', error);
+            });
+        
+        // Handle service worker updates
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('[PWA] Service worker controller changed');
+            // Optionally refresh the page to get the new content
+            // window.location.reload();
+        });
+    } else {
+        console.log('[PWA] Service workers not supported in this browser');
+    }
+}
+
+/**
+ * Show update notification when new version is available
+ */
+function showUpdateNotification() {
+    // Use the existing toast system if available
+    if (window.remoteController && window.remoteController.showToast) {
+        window.remoteController.showToast('Update available - refresh to get latest version', 'success');
+    } else {
+        // Fallback notification
+        console.log('[PWA] Update available - refresh to get latest version');
+    }
+    
+    // Optionally auto-update after a delay
+    setTimeout(() => {
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+        }
+    }, 5000); // Auto-update after 5 seconds
+}
 
 // Add viewport meta tag for proper mobile rendering
 if (!document.querySelector('meta[name="viewport"]')) {

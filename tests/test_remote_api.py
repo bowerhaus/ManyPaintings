@@ -132,12 +132,22 @@ class TestRemoteControlAPI:
             assert data['success'] == True
         
         # Test 3: Favorite load with nonexistent ID
-        response = client.post('/api/favorites/test-id/load')
-        assert response.status_code == 404
+        # Create empty favorites.json file to ensure we get "Favorite not found" instead of "No favorites found"
+        import os
+        with open('favorites.json', 'w') as f:
+            json.dump({}, f)
         
-        data = json.loads(response.data)
-        assert 'error' in data
-        assert 'Favorite not found' in data['error']
+        try:
+            response = client.post('/api/favorites/test-id/load')
+            assert response.status_code == 404
+        
+            data = json.loads(response.data)
+            assert 'error' in data
+            assert 'Favorite not found' in data['error']
+        finally:
+            # Clean up test file
+            if os.path.exists('favorites.json'):
+                os.remove('favorites.json')
         
         # Test 4: Request queue endpoints
         # Save favorite request polling

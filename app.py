@@ -54,6 +54,12 @@ def create_app(config_name=None):
     def favicon():
         return '', 204  # No content
     
+    @app.route('/service-worker.js')
+    def service_worker():
+        # Serve the service worker from the static directory
+        return send_from_directory('static', 'service-worker.js', mimetype='application/javascript')
+    
+    
     @app.route('/api/images')
     def get_images():
         from utils.image_manager import ImageManager

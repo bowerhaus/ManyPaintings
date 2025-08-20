@@ -2697,6 +2697,113 @@ body.remote-control.white-theme .remote-image-details {
     }
 }
 
+/* iPad and tablet responsive adjustments */
+@media (min-width: 768px) {
+    .remote-app {
+        max-width: 750px; /* Wider for better iPad utilization */
+    }
+    
+    .hero-container {
+        height: 300px; /* Increase hero height for larger screens */
+    }
+    
+    .remote-title {
+        font-size: 1.8rem; /* Larger title for tablets */
+    }
+    
+    .remote-subtitle {
+        font-size: 1rem;
+    }
+    
+    .remote-ip-address {
+        font-size: 0.9rem;
+    }
+    
+    .header-content {
+        padding: 2rem 1.5rem 1.5rem 1.5rem; /* More padding for larger screens */
+    }
+    
+    .control-section {
+        padding: 1.5rem; /* More padding for sections */
+        margin-bottom: 1.5rem;
+    }
+    
+    .quick-actions-grid {
+        gap: 1rem; /* More space between buttons */
+    }
+    
+    .action-btn {
+        min-height: 80px; /* Larger buttons for better touch targets */
+        padding: 1rem;
+    }
+    
+    .action-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .action-label {
+        font-size: 0.95rem;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Large iPad Pro and desktop adjustments */
+@media (min-width: 1024px) {
+    .remote-app {
+        max-width: 900px; /* Much wider for large tablets */
+    }
+    
+    .hero-container {
+        height: 350px; /* Larger hero for big screens */
+    }
+    
+    .remote-title {
+        font-size: 2rem; /* Even larger title */
+    }
+    
+    .header-content {
+        padding: 2.5rem 2rem 2rem 2rem;
+    }
+    
+    .control-section {
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .action-btn {
+        min-height: 90px;
+        padding: 1.25rem;
+    }
+    
+    .action-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .action-label {
+        font-size: 1rem;
+        margin-top: 0.75rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem; /* Larger section titles */
+        margin-bottom: 1.25rem;
+    }
+    
+    .control-item {
+        margin-bottom: 1.5rem; /* More space between controls */
+    }
+    
+    .control-label {
+        font-size: 1rem;
+    }
+    
+    .control-value {
+        font-size: 1rem;
+    }
+}
+
 /* Additional responsive styles for very small screens */
 @media (max-width: 360px) {
     .hero-container {

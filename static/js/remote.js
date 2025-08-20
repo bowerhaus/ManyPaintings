@@ -180,8 +180,6 @@ class RemoteController {
             });
         }
         
-        // Hero image long-press detection for HD export
-        this.setupHeroImageExport();
         
         // Global activity tracking for touch and mouse events
         document.addEventListener('touchstart', () => this.recordActivity(), { passive: true });
@@ -681,77 +679,6 @@ class RemoteController {
         }
     }
     
-    setupHeroImageExport() {
-        /**
-         * Add long-press detection to hero images for HD export functionality.
-         */
-        const heroElements = [this.elements.heroImage1, this.elements.heroImage2];
-        
-        heroElements.forEach((heroElement, index) => {
-            if (!heroElement) return;
-            
-            let pressTimer = null;
-            
-            // Touch events for long-press detection (mobile)
-            heroElement.addEventListener('touchstart', (e) => {
-                this.recordActivity();
-                
-                pressTimer = setTimeout(() => {
-                    // Find the currently active hero image and get its favorite ID
-                    const currentFavoriteId = this.getCurrentHeroFavoriteId();
-                    if (currentFavoriteId) {
-                        this.exportFavoriteHD(currentFavoriteId);
-                    } else {
-                        this.showToast('No favorite currently displayed');
-                    }
-                    
-                    // Prevent context menu on iOS
-                    e.preventDefault();
-                }, 500); // 500ms for long press
-            }, { passive: false });
-            
-            heroElement.addEventListener('touchend', () => {
-                if (pressTimer) {
-                    clearTimeout(pressTimer);
-                    pressTimer = null;
-                }
-            });
-            
-            heroElement.addEventListener('touchmove', () => {
-                // Cancel long press if user moves finger
-                if (pressTimer) {
-                    clearTimeout(pressTimer);
-                    pressTimer = null;
-                }
-            });
-            
-            // Desktop context menu for HD export
-            heroElement.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                this.recordActivity();
-                
-                const currentFavoriteId = this.getCurrentHeroFavoriteId();
-                if (currentFavoriteId) {
-                    this.exportFavoriteHD(currentFavoriteId);
-                } else {
-                    this.showToast('No favorite currently displayed');
-                }
-            });
-        });
-    }
-    
-    getCurrentHeroFavoriteId() {
-        /**
-         * Get the favorite ID of the currently displayed hero image.
-         */
-        if (this.heroImages.length === 0) {
-            return null;
-        }
-        
-        // Return the ID of the current hero image
-        const currentHero = this.heroImages[this.currentHeroIndex];
-        return currentHero ? currentHero.id : null;
-    }
     
     async loadImages() {
         try {
@@ -1483,8 +1410,11 @@ class RemoteController {
         // Clear any existing timer
         this.pauseHeroRotation();
         
-        // Show first image immediately
-        this.showHeroImage(0);
+        // Start from a random index in the sequence
+        this.currentHeroIndex = Math.floor(Math.random() * this.heroImages.length);
+        
+        // Show random starting image immediately
+        this.showHeroImage(this.currentHeroIndex);
         
         // Start rotation if we have more than one image
         if (this.heroImages.length > 1) {
@@ -1493,7 +1423,7 @@ class RemoteController {
             }, this.heroRotationInterval);
         }
         
-        console.log('Hero Images: Rotation started');
+        console.log(`Hero Images: Rotation started from random index ${this.currentHeroIndex}`);
     }
     
     /**

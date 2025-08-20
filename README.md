@@ -28,7 +28,7 @@ This document outlines the Product Requirements for a generative art application
 *   **Background Audio:** Continuous ambient MP3 audio playback with volume control, play/pause functionality, and browser autoplay handling for an immersive audiovisual experience.
 *   **Kiosk Mode:** The application will have a kiosk mode that displays the generative art in full-screen, hiding all browser UI elements. On Raspberry Pi, this mode will also disable user input to prevent accidental interruption.
 *   **Pattern Identification Code:** The sequence should be deterministic being derived from a random seed. A unique code will be displayed on the screen, representing the current sequence of images and their current animation state. This code can be used to restart the application with the same visual pattern if required.
-*   **Enhanced Favouriting System:** ✅ **ENHANCED FEATURE (August 2025)** - Professional-grade image capture system with dual-resolution storage and download capabilities. Save specific painting moments with enhanced quality for different use cases. Features include crisp remote header display, full-resolution downloads, and optimized storage architecture.
+*   **Favouriting System:** ✅ **NEW FEATURE** - Save and share specific painting moments with exact layer states, transformations, and opacity values. Generate shareable URLs that recreate favorite paintings across different devices and screen sizes. Features pixel-perfect thumbnail generation using html2canvas library.
 
 ### 3.2. Animation System
 
@@ -118,38 +118,28 @@ The drop shadow creates a professional gallery-style presentation with exponenti
 *   `bevel.inner_color` - Light highlight color (default: "rgba(255, 255, 255, 0.3)")
 *   `bevel.outer_color` - Dark shadow color (default: "rgba(0, 0, 0, 0.2)")
 
-#### Enhanced Favouriting System ✅ ENHANCED FEATURE (August 2025)
-The application now includes a professional-grade favouriting system with dual-resolution storage and download capabilities:
-
-**Revolutionary Multi-Resolution Architecture:**
-*   **Dual-Resolution Storage:** Optimized quality for each specific use case
-    - **Thumbnails:** 200x200 PNG (base64 in JSON) for fast gallery loading
-    - **Hero Images:** 800x400 JPEG files for stunning remote control header display
-    - **Full Downloads:** 1920x1080 JPEG exports for professional-quality saving
-*   **Smart Storage Strategy:** JSON remains lean with filename references only, avoiding base64 image bloat
-*   **Universal Capture Engine:** Advanced `captureCanvas()` method supports any resolution and format
+#### Favouriting System ✅ NEW FEATURE
+The application now includes a comprehensive favouriting system that allows users to save and share specific painting moments:
 
 **Core Features:**
 *   **State Capture:** Saves exact painting moments with all visible layer properties including image IDs, opacity levels, transformations (rotation, scale, translation, hue shift), and animation phases
-*   **Enhanced Image Quality:** Remote control header displays crisp 800x400 images instead of upscaled thumbnails
-*   **Professional Downloads:** Full 1920x1080 JPEG downloads with automatic timestamped filenames (`ManyPaintings_YYYYMMDD_HHMMSS.jpg`)
-*   **Server-Side Storage:** Persistent JSON database with UUID identifiers plus separate hero image files
-*   **Cross-Platform Access:** Complete functionality available via iPhone remote control
-*   **Backwards Compatibility:** Existing favorites continue working while new ones get enhanced quality
+*   **Pixel-Perfect Thumbnails:** Uses html2canvas library to capture exact visual state as 200x200px thumbnails, handling all CSS transforms and effects automatically
+*   **Server-Side Storage:** Persistent JSON database storage with UUID identifiers and base64 thumbnail data for reliable retrieval across browser sessions
+*   **URL Sharing:** Generate shareable links that recreate favorite paintings exactly, enabling easy sharing via email, social media, or bookmarks
+*   **Cross-Viewport Compatibility:** Favorites automatically adapt to different screen sizes and aspect ratios using responsive positioning
+*   **Staggered Restoration:** Natural fade-out timing when loading favorites, with layers disappearing at different intervals for smooth transition back to normal generation
 
 **User Interface:**
-*   **Enhanced Remote Experience:** iPhone remote header showcases favorites in stunning detail
-*   **Download Button:** Added to remote control Quick Actions for instant full-resolution downloads
-*   **Heart Button (♥):** Save favorites from both main interface and mobile remote
+*   **Heart Button (♥):** Added to both main interface and kiosk mode action groups for easy access
 *   **Keyboard Shortcut:** F key for quick favoriting without interrupting the viewing experience
-*   **Professional Downloads:** Download current artwork as high-quality JPEG from any device
+*   **Toast Notifications:** Success feedback with UUID display and clickable URL copying to clipboard
+*   **Visual Feedback:** Heart button changes color on hover for clear interaction cues
 
 **Technical Implementation:**
-*   **Enhanced API Endpoints:** 
-    - `POST /api/favorites` - Save current state with dual-resolution capture
-    - `GET /api/favorites` - List favorites with hero image URLs
-    - `POST /api/download-current-image` - Trigger full-resolution downloads
-    - `DELETE /api/favorites/<uuid>` - Remove favorites with automatic file cleanup
+*   **REST API Endpoints:** 
+    - `POST /api/favorites` - Save current painting state, returns UUID
+    - `GET /api/favorites/<uuid>` - Load saved painting state
+    - `DELETE /api/favorites/<uuid>` - Remove favorite (for future management features)
 *   **State Data Structure:** Comprehensive JSON format capturing all layer properties and metadata
 *   **Performance Optimized:** Sub-second loading times with intelligent image preloading
 *   **Error Handling:** Graceful fallbacks for missing images or invalid favorite IDs

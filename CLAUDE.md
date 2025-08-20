@@ -153,23 +153,14 @@ DEBUG_CONFIG=1 python launcher.py
 
 ## Key Features
 
-### Enhanced Favorites System ✅ NEW FEATURE (August 2025)
-- **Dual-Resolution Storage**: Revolutionary architecture with optimized quality for each use case
-  - **Thumbnails**: 200x200 PNG (base64 in JSON) for fast gallery loading and listings
-  - **Hero Images**: 800x400 JPEG files for stunning remote header display quality
-  - **Full Downloads**: 1920x1080 JPEG exports for professional-quality image saving
-- **Smart Storage Architecture**: JSON remains lean with only filename references, no image bloat
-- **Enhanced Capture Engine**: Universal `captureCanvas()` method supports any resolution and format
+### Favorites System
 - **Save Favorites**: Press F key or click heart button to save current painting state
 - **Thumbnail Generation**: Uses html2canvas library to capture pixel-perfect thumbnails with preserved background colors
-- **Hero Image Quality**: Remote control header now displays crisp 800x400 images instead of upscaled thumbnails
-- **Background Preservation**: All image formats maintain original background color (black/white) from when they were saved
-- **Professional Downloads**: Full 1920x1080 JPEG downloads with automatic timestamped filenames
-- **Remote Download**: Download button in iPhone remote control triggers downloads on main display
+- **Background Preservation**: Thumbnails maintain original background color (black/white) from when they were saved
+- **Storage**: Favorites saved as JSON with base64 thumbnail data
 - **Gallery**: Press V key or click gallery button to view/load saved favorites
-- **Delete Functionality**: Automatic cleanup of all associated files (thumbnail, hero image) when favorites deleted
-- **Cross-Platform**: Enhanced experience across desktop and iPhone remote control with superior image quality
-- **Backwards Compatibility**: Existing favorites continue with original thumbnails, new favorites get full enhancement
+- **Delete Functionality**: Full delete capabilities in both main browser and mobile remote interfaces
+- **Cross-Platform**: Consistent favorites experience across desktop and iPhone remote control
 
 ### JavaScript Architecture
 - **Modular Design**: Refactored from 3,684-line monolith into manageable ES6 modules
@@ -286,17 +277,6 @@ DEBUG_CONFIG=1 python launcher.py
       - `GET /api/check-refresh-images` - Polling for refresh requests
       - `DELETE /api/refresh-images-status` - Clears processed requests
 - **Favorites Management**: Full browsing, loading, and deletion with mobile-optimized interface
-- **✅ ENHANCED: High-Quality Hero Images** - **NEW FEATURE (August 2025)**
-  - Remote header now displays crisp 800x400 JPEG hero images instead of low-res thumbnails
-  - Graceful fallback to thumbnails for older favorites without hero images
-  - Dramatically improved visual quality for cycling favorite display
-- **✅ NEW: Professional Download Feature** - **NEW FEATURE (August 2025)**
-  - Download button in Quick Actions grid triggers full-resolution image capture
-  - Downloads 1920x1080 JPEG files with automatic timestamped filenames
-  - Remote control triggers downloads on main display (not mobile device)
-  - Real-time communication via new API endpoints:
-    - `POST /api/download-current-image` - Triggers main display download
-    - `GET /api/check-download-image` - Polling for download requests
 - **Gallery Controls**: All Samsung Frame TV-style color grading controls accessible on mobile
 - **Theme Synchronization**: Remote interface automatically matches main display theme
 - **Touch Optimization**: Large touch targets and gesture-friendly interfaces
@@ -344,15 +324,6 @@ DEBUG_CONFIG=1 python launcher.py
 - **Connection Status**: Enhanced pulsating connection indicator in Quick Actions header with dramatic fade and expanding shadow ring effect
 
 ## Recent Development Achievements ✅
-
-### Enhanced Favorites System Implementation (August 2025) ✅ NEW
-- **Dual-Resolution Architecture**: Revolutionary storage system with optimized quality for each use case
-- **Professional Download Feature**: Full 1920x1080 JPEG downloads with automatic timestamped filenames
-- **Hero Image Enhancement**: Remote control header upgraded from low-res thumbnails to crisp 800x400 images
-- **Smart Storage Strategy**: JSON remains lean with filename references, avoiding base64 image bloat
-- **Cross-Platform Integration**: Download functionality accessible via iPhone remote control
-- **Backwards Compatibility**: Seamless operation with existing favorites while providing enhanced quality for new ones
-- **Automatic File Management**: Hero images cleaned up automatically when favorites are deleted
 
 ### Visual Testing Implementation (2025-01)
 - **Comprehensive UI Validation**: Windows-only visual testing with screenshot capture

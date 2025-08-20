@@ -1,7 +1,6 @@
 import os
 import json
 import uuid
-import base64
 from datetime import datetime
 from pathlib import Path
 from flask import Flask, render_template, jsonify, send_from_directory, request
@@ -11,7 +10,6 @@ from config import config
 save_favorite_request = {'timestamp': None, 'processed': True}
 play_pause_request = {'timestamp': None, 'processed': True, 'action': None}
 refresh_images_request = {'timestamp': None, 'processed': True, 'uploaded_images': []}
-download_image_request = {'timestamp': None, 'processed': True}
 
 # Global variable to track remote control heartbeats
 remote_heartbeats = {}  # {session_id: timestamp}
@@ -159,10 +157,9 @@ def create_app(config_name=None):
             if not favorite_request:
                 return jsonify({'error': 'No favorite data provided'}), 400
             
-            # Extract state, thumbnail, and hero image from request
+            # Extract state and thumbnail from request
             state_data = favorite_request.get('state')
             thumbnail_data = favorite_request.get('thumbnail')
-            hero_image_data = favorite_request.get('heroImage')
             
             if not state_data:
                 return jsonify({'error': 'No state data provided'}), 400
@@ -173,43 +170,12 @@ def create_app(config_name=None):
             # Generate a unique ID for this favorite
             favorite_id = str(uuid.uuid4())
             
-            # Save hero image to file if provided
-            hero_filename = None
-            if hero_image_data:
-                try:
-                    # Remove data URL prefix if present
-                    if hero_image_data.startswith('data:image/'):
-                        _, base64_data = hero_image_data.split(',', 1)
-                    else:
-                        base64_data = hero_image_data
-                    
-                    # Decode base64 image data
-                    image_binary = base64.b64decode(base64_data)
-                    
-                    # Create hero image filename
-                    hero_filename = f"{favorite_id}.jpg"
-                    hero_path = os.path.join('static', 'favorites', hero_filename)
-                    
-                    # Ensure directory exists
-                    os.makedirs(os.path.dirname(hero_path), exist_ok=True)
-                    
-                    # Save hero image to file
-                    with open(hero_path, 'wb') as f:
-                        f.write(image_binary)
-                    
-                    print(f"Hero image saved: {hero_path}")
-                    
-                except Exception as e:
-                    print(f"Warning: Failed to save hero image: {e}")
-                    hero_filename = None
-            
-            # Add metadata including thumbnail (in JSON) and hero filename reference
+            # Add metadata including thumbnail
             favorite_data = {
                 'id': favorite_id,
                 'created_at': datetime.now().isoformat(),
                 'state': state_data,
-                'thumbnail': thumbnail_data,  # Store base64 thumbnail data in JSON
-                'hero_filename': hero_filename  # Store only filename reference
+                'thumbnail': thumbnail_data  # Store base64 thumbnail data
             }
             
             # Load existing favorites or create new file
@@ -237,8 +203,7 @@ def create_app(config_name=None):
             return jsonify({
                 'success': True,
                 'id': favorite_id,
-                'created_at': favorite_data['created_at'],
-                'has_hero_image': hero_filename is not None
+                'created_at': favorite_data['created_at']
             })
             
         except Exception as e:
@@ -269,83 +234,6 @@ def create_app(config_name=None):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
-    @app.route('/api/download-current-image', methods=['POST'])
-    def download_current_image():
-        """Request download of current canvas image."""
-        global download_image_request
-        download_image_request = {
-            'timestamp': datetime.now().isoformat(),
-            'processed': False,
-            'imageData': None
-        }
-        return jsonify({
-            'success': True,
-            'message': 'Download request received'
-        })
-    
-    @app.route('/api/get-download-image', methods=['GET'])
-    def get_download_image():
-        """Get captured image data for download."""
-        global download_image_request
-        
-        if download_image_request.get('processed') and download_image_request.get('imageData'):
-            filename = f"ManyPaintings_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
-            
-            # Clear the request after retrieving
-            imageData = download_image_request['imageData']
-            download_image_request = {'timestamp': None, 'processed': True, 'imageData': None}
-            
-            return jsonify({
-                'success': True,
-                'imageData': imageData,
-                'filename': filename,
-                'message': 'Image ready for download'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'Image not ready yet'
-            })
-    
-    @app.route('/api/store-download-image', methods=['POST'])
-    def store_download_image():
-        """Store captured image data for remote download."""
-        global download_image_request
-        
-        try:
-            request_data = request.get_json()
-            if not request_data or not request_data.get('imageData'):
-                return jsonify({'error': 'No image data provided'}), 400
-            
-            # Store the image data in the global request object
-            download_image_request['imageData'] = request_data['imageData']
-            download_image_request['processed'] = True
-            
-            return jsonify({
-                'success': True,
-                'message': 'Image data stored successfully'
-            })
-            
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    
-    @app.route('/api/test-download-capture', methods=['POST'])
-    def test_download_capture():
-        """Test endpoint to manually trigger a download capture."""
-        global download_image_request
-        
-        # Simulate what RemoteSync should do
-        download_image_request = {
-            'timestamp': datetime.now().isoformat(),
-            'processed': False,
-            'imageData': None
-        }
-        
-        return jsonify({
-            'success': True,
-            'message': 'Test download request created - check console on main display'
-        })
-    
     @app.route('/api/favorites/<favorite_id>', methods=['DELETE'])
     def delete_favorite(favorite_id):
         """Delete a saved favorite by ID."""
@@ -361,21 +249,7 @@ def create_app(config_name=None):
             if favorite_id not in favorites:
                 return jsonify({'error': 'Favorite not found'}), 404
             
-            # Get favorite data to check for hero image file
-            favorite_data = favorites[favorite_id]
-            hero_filename = favorite_data.get('hero_filename')
-            
-            # Delete hero image file if it exists
-            if hero_filename:
-                hero_path = os.path.join('static', 'favorites', hero_filename)
-                if os.path.exists(hero_path):
-                    try:
-                        os.remove(hero_path)
-                        print(f"Deleted hero image: {hero_path}")
-                    except Exception as e:
-                        print(f"Warning: Failed to delete hero image {hero_path}: {e}")
-            
-            # Remove the favorite from JSON
+            # Remove the favorite
             del favorites[favorite_id]
             
             # Save back to file
@@ -407,20 +281,11 @@ def create_app(config_name=None):
             # Convert to list format with metadata
             favorites_list = []
             for favorite_id, favorite_data in favorites.items():
-                # Check if hero image file exists
-                hero_filename = favorite_data.get('hero_filename')
-                hero_url = None
-                if hero_filename:
-                    hero_path = os.path.join('static', 'favorites', hero_filename)
-                    if os.path.exists(hero_path):
-                        hero_url = f'/static/favorites/{hero_filename}'
-                
                 favorites_list.append({
                     'id': favorite_id,
                     'created_at': favorite_data.get('created_at'),
                     'layer_count': len(favorite_data.get('state', {}).get('layers', [])),
-                    'thumbnail': favorite_data.get('thumbnail'),  # Base64 canvas thumbnail
-                    'hero_url': hero_url  # URL to high-res hero image file
+                    'thumbnail': favorite_data.get('thumbnail')  # Base64 canvas thumbnail
                 })
             
             # Sort by creation date (newest first)
@@ -649,22 +514,6 @@ def create_app(config_name=None):
             return jsonify({
                 'has_request': True,
                 'timestamp': save_favorite_request['timestamp']
-            })
-        else:
-            return jsonify({
-                'has_request': False
-            })
-    
-    @app.route('/api/check-download-image', methods=['GET'])
-    def check_download_image():
-        """Check if there's a pending download image request."""
-        global download_image_request
-        if not download_image_request['processed']:
-            # Mark as processed and return the request
-            download_image_request['processed'] = True
-            return jsonify({
-                'has_request': True,
-                'timestamp': download_image_request['timestamp']
             })
         else:
             return jsonify({

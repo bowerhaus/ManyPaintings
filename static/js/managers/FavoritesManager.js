@@ -3,7 +3,7 @@
  * Extracted from main.js for better modularity
  */
 export const FavoritesManager = {
-  async captureCanvasThumbnail() {
+  async captureCanvas(targetWidth, targetHeight, format = 'png', quality = 0.8) {
     try {
       // Check if html2canvas is available
       if (typeof html2canvas === 'undefined') {
@@ -17,14 +17,14 @@ export const FavoritesManager = {
         throw new Error('Image layers container not found');
       }
 
-      console.log('FavoritesManager: Capturing thumbnail with html2canvas...');
+      console.log(`FavoritesManager: Capturing canvas at ${targetWidth}x${targetHeight} (${format})...`);
 
       // Use html2canvas to capture the layers container
       const canvas = await html2canvas(layersContainer, {
         width: layersContainer.offsetWidth,
         height: layersContainer.offsetHeight,
         backgroundColor: null, // Keep transparency to get the actual background
-        scale: 200 / Math.max(layersContainer.offsetWidth, layersContainer.offsetHeight), // Scale to fit 200px
+        scale: Math.max(targetWidth / layersContainer.offsetWidth, targetHeight / layersContainer.offsetHeight),
         logging: false,
         useCORS: true, // Allow cross-origin images
         allowTaint: true, // Allow images from same origin
@@ -69,34 +69,83 @@ export const FavoritesManager = {
         }
       });
 
-      // Create final thumbnail canvas at 200x200
-      const thumbnailCanvas = document.createElement('canvas');
-      const ctx = thumbnailCanvas.getContext('2d');
-      thumbnailCanvas.width = 200;
-      thumbnailCanvas.height = 200;
+      // Create final canvas at target dimensions
+      const finalCanvas = document.createElement('canvas');
+      const ctx = finalCanvas.getContext('2d');
+      finalCanvas.width = targetWidth;
+      finalCanvas.height = targetHeight;
 
       // Fill background color first - check the actual background mode
       const isWhiteBackground = document.body.classList.contains('white-background');
       const bgColor = isWhiteBackground ? '#ffffff' : '#000000';
       ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, 200, 200);
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
 
       // Calculate centering for the captured canvas
-      const scale = Math.min(200 / canvas.width, 200 / canvas.height);
+      const scale = Math.min(targetWidth / canvas.width, targetHeight / canvas.height);
       const scaledWidth = canvas.width * scale;
       const scaledHeight = canvas.height * scale;
-      const x = (200 - scaledWidth) / 2;
-      const y = (200 - scaledHeight) / 2;
+      const x = (targetWidth - scaledWidth) / 2;
+      const y = (targetHeight - scaledHeight) / 2;
 
-      // Draw the captured canvas centered in the thumbnail
+      // Draw the captured canvas centered in the final canvas
       ctx.drawImage(canvas, x, y, scaledWidth, scaledHeight);
 
-      console.log('FavoritesManager: Thumbnail captured successfully');
-      return thumbnailCanvas.toDataURL('image/png', 0.8);
+      const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      console.log(`FavoritesManager: Canvas captured successfully at ${targetWidth}x${targetHeight}`);
+      return finalCanvas.toDataURL(mimeType, quality);
       
     } catch (error) {
-      console.error('FavoritesManager: Failed to capture canvas thumbnail:', error);
+      console.error(`FavoritesManager: Failed to capture canvas at ${targetWidth}x${targetHeight}:`, error);
       return null;
+    }
+  },
+
+  async captureCanvasThumbnail() {
+    return await this.captureCanvas(200, 200, 'png', 0.8);
+  },
+
+  async captureCanvasHero() {
+    return await this.captureCanvas(800, 400, 'jpeg', 0.8);
+  },
+
+  async captureCanvasDownload() {
+    return await this.captureCanvas(1920, 1080, 'jpeg', 0.9);
+  },
+
+  async downloadCurrentImage() {
+    try {
+      const imageData = await this.captureCanvasDownload();
+      if (!imageData) {
+        throw new Error('Failed to capture image for download');
+      }
+
+      // Create download link
+      const link = document.createElement('a');
+      link.download = `ManyPaintings_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.jpg`;
+      link.href = imageData;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log('FavoritesManager: Image download triggered');
+      
+      // Show success feedback
+      const UI = window.App?.UI;
+      if (UI) {
+        UI.showSuccess('Image downloaded');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('FavoritesManager: Failed to download image:', error);
+      const UI = window.App?.UI;
+      if (UI) {
+        UI.showError('Failed to download image: ' + error.message);
+      }
+      throw error;
     }
   },
 
@@ -153,16 +202,20 @@ export const FavoritesManager = {
     try {
       const state = await this.captureCurrentState();
       const thumbnail = await this.captureCanvasThumbnail();
+      const heroImage = await this.captureCanvasHero();
 
       const favoriteData = {
         state: state,
-        thumbnail: thumbnail
+        thumbnail: thumbnail,
+        heroImage: heroImage
       };
 
-      console.log('FavoritesManager: Saving favorite with thumbnail:', {
+      console.log('FavoritesManager: Saving favorite with dual resolutions:', {
         stateSize: JSON.stringify(state).length,
         thumbnailSize: thumbnail ? thumbnail.length : 0,
-        hasThumbnail: !!thumbnail
+        heroImageSize: heroImage ? heroImage.length : 0,
+        hasThumbnail: !!thumbnail,
+        hasHeroImage: !!heroImage
       });
 
       const response = await fetch('/api/favorites', {

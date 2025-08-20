@@ -57,6 +57,7 @@ class RemoteController {
         this.elements.newPatternBtn = document.getElementById('remote-new-pattern-btn');
         this.elements.backgroundToggleBtn = document.getElementById('remote-background-toggle-btn');
         this.elements.favoriteBtn = document.getElementById('remote-favorite-btn');
+        this.elements.downloadBtn = document.getElementById('remote-download-btn');
         
         // Control sliders
         this.elements.speedSlider = document.getElementById('remote-speed-slider');
@@ -120,6 +121,10 @@ class RemoteController {
         this.elements.favoriteBtn?.addEventListener('click', () => {
             this.recordActivity();
             this.handleAction('save-favorite');
+        });
+        this.elements.downloadBtn?.addEventListener('click', () => {
+            this.recordActivity();
+            this.downloadCurrentImage();
         });
         
         // Control sliders - wrapped with activity tracking
@@ -554,6 +559,100 @@ class RemoteController {
         } catch (error) {
             console.error('Failed to handle action:', error);
             this.showToast('Action failed');
+        }
+    }
+    
+    async downloadCurrentImage() {
+        try {
+            this.showToast('Capturing image...');
+            
+            // Request image capture from main display
+            await fetch('/api/download-current-image', {
+                method: 'POST'
+            });
+            
+            // Wait for the main display to process and provide the image
+            this.showToast('Preparing download...');
+            
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds total (50 * 100ms)
+            
+            while (attempts < maxAttempts) {
+                try {
+                    const response = await fetch('/api/get-download-image');
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        
+                        if (result.success && result.imageData) {
+                            // Convert data URL to blob for proper iOS handling
+                            const response = await fetch(result.imageData);
+                            const blob = await response.blob();
+                            
+                            // Create object URL for the blob
+                            const url = URL.createObjectURL(blob);
+                            
+                            // Create a temporary image element for iOS photo library save
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.style.position = 'fixed';
+                            img.style.top = '-9999px';
+                            img.style.left = '-9999px';
+                            img.style.width = '1px';
+                            img.style.height = '1px';
+                            img.style.opacity = '0';
+                            
+                            document.body.appendChild(img);
+                            
+                            // For iOS Safari - create download link with proper attributes
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = result.filename || `ManyPaintings_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.jpg`;
+                            link.style.position = 'fixed';
+                            link.style.top = '-9999px';
+                            link.style.left = '-9999px';
+                            
+                            // Add target="_blank" for iOS compatibility
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            
+                            document.body.appendChild(link);
+                            
+                            // Trigger download with iOS-specific handling
+                            if (navigator.userAgent.match(/iPhone|iPad|iPod/)) {
+                                // For iOS devices, open in new tab which allows "Save to Photos"
+                                link.click();
+                                this.showToast('Tap and hold the image, then "Save to Photos"');
+                            } else {
+                                // Standard download for other devices
+                                link.click();
+                                this.showToast('Image downloaded');
+                            }
+                            
+                            // Cleanup
+                            setTimeout(() => {
+                                document.body.removeChild(img);
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(url);
+                            }, 1000);
+                            
+                            return;
+                        }
+                    }
+                } catch (fetchError) {
+                    console.log('Download not ready yet, retrying...');
+                }
+                
+                // Wait 100ms before trying again
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            throw new Error('Timeout waiting for image capture');
+            
+        } catch (error) {
+            console.error('Failed to download image:', error);
+            this.showToast('Download failed: ' + error.message);
         }
     }
     
@@ -1356,8 +1455,11 @@ class RemoteController {
         // Preload the new image
         const img = new Image();
         img.onload = () => {
+            // Use hero image if available, fallback to thumbnail
+            const imageUrl = heroData.hero_url || heroData.thumbnail;
+            
             // Set the background image on the next layer
-            nextElement.style.backgroundImage = `url(${heroData.thumbnail})`;
+            nextElement.style.backgroundImage = `url(${imageUrl})`;
             nextElement.classList.remove('fallback');
             
             // Fade in the next layer
@@ -1372,7 +1474,8 @@ class RemoteController {
             }, 100);
         };
         
-        img.src = heroData.thumbnail;
+        // Use hero image if available, fallback to thumbnail for preloading
+        img.src = heroData.hero_url || heroData.thumbnail;
     }
     
     /**

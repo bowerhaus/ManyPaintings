@@ -144,6 +144,9 @@ export class RemoteSync {
                 // Check for image refresh requests
                 await this.checkImageRefreshRequests();
                 
+                // Check for download image requests
+                await this.checkDownloadImageRequests();
+                
                 this.consecutiveEmptyChecks = 0;
             } else {
                 // No active remotes - heartbeat mode
@@ -665,6 +668,60 @@ export class RemoteSync {
         } catch (error) {
             console.error('RemoteSync: Failed to handle image refresh from remote:', error);
             this.showToast('Failed to refresh images: ' + error.message);
+        }
+    }
+    
+    /**
+     * Check for download image requests from remote control
+     */
+    async checkDownloadImageRequests() {
+        try {
+            const response = await fetch('/api/check-download-image');
+            if (response.ok) {
+                const result = await response.json();
+                
+                if (result.has_request) {
+                    console.log('RemoteSync: Detected download image request from remote');
+                    await this.handleDownloadImageFromRemote();
+                }
+            }
+        } catch (error) {
+            // This is expected when no requests are pending
+        }
+    }
+    
+    /**
+     * Handle download image triggered by remote control
+     */
+    async handleDownloadImageFromRemote() {
+        try {
+            const { FavoritesManager } = await import('./FavoritesManager.js');
+            
+            if (FavoritesManager && FavoritesManager.captureCanvasDownload) {
+                // Capture the image data
+                const imageData = await FavoritesManager.captureCanvasDownload();
+                
+                if (imageData) {
+                    // Send the captured image data back to the server for remote download
+                    await fetch('/api/store-download-image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            imageData: imageData
+                        })
+                    });
+                    
+                    console.log('RemoteSync: Successfully captured and stored image for remote download');
+                } else {
+                    console.error('RemoteSync: Failed to capture image data');
+                }
+            } else {
+                console.error('RemoteSync: FavoritesManager.captureCanvasDownload not available');
+            }
+        } catch (error) {
+            console.error('RemoteSync: Failed to handle download image from remote:', error);
         }
     }
     

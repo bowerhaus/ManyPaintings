@@ -102,6 +102,7 @@ favorites.json
 settings.json
 ManyPaintings-Windows.exe
 test-results/
+cache/
 
 # Claude Code settings
 .claude/settings.local.json

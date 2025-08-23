@@ -956,10 +956,14 @@ class RemoteController {
         
         if (this.favorites.length === 0) {
             this.showFavoritesEmpty(true);
+            // Hide grid when empty
+            this.elements.favoritesGrid.classList.add('hidden');
             return;
         }
         
         this.showFavoritesEmpty(false);
+        // Show grid when favorites exist
+        this.elements.favoritesGrid.classList.remove('hidden');
         
         // Clear existing favorites
         this.elements.favoritesGrid.innerHTML = '';

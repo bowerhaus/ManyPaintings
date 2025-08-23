@@ -100,6 +100,113 @@ export const FavoritesManager = {
     }
   },
 
+  async captureHighResolution() {
+    /**
+     * Capture high-resolution 1920x1080 image for hero display and export.
+     * This will be used by the backend API to generate proper high-res images
+     * instead of scaling up thumbnails.
+     */
+    try {
+      // Check if html2canvas is available
+      if (typeof html2canvas === 'undefined') {
+        console.error('FavoritesManager: html2canvas library not loaded');
+        return null;
+      }
+
+      // Get the image layers container
+      const layersContainer = document.getElementById('image-layers');
+      if (!layersContainer) {
+        throw new Error('Image layers container not found');
+      }
+
+      console.log('FavoritesManager: Capturing high-resolution image at 1920x1080...');
+
+      // Calculate scale to achieve 1920px width
+      const targetWidth = 1920;
+      const currentWidth = layersContainer.offsetWidth;
+      const scale = targetWidth / currentWidth;
+
+      // Use html2canvas to capture at high resolution
+      const canvas = await html2canvas(layersContainer, {
+        width: layersContainer.offsetWidth,
+        height: layersContainer.offsetHeight,
+        scale: scale, // Scale to achieve 1920px width
+        backgroundColor: null, // Keep transparency to get the actual background
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        ignoreElements: (element) => {
+          // Don't ignore any elements - capture everything including opacity
+          return false;
+        },
+        onclone: (clonedDoc, element) => {
+          // Ensure all computed styles are preserved in the clone
+          const originalLayers = layersContainer.querySelectorAll('.image-layer');
+          const clonedLayers = element.querySelectorAll('.image-layer');
+          
+          originalLayers.forEach((originalLayer, index) => {
+            if (clonedLayers[index]) {
+              const computedStyle = window.getComputedStyle(originalLayer);
+              const clonedLayer = clonedLayers[index];
+              
+              // Force all styles to ensure they're preserved
+              clonedLayer.style.opacity = computedStyle.opacity;
+              clonedLayer.style.transform = computedStyle.transform;
+              clonedLayer.style.filter = computedStyle.filter;
+              clonedLayer.style.display = computedStyle.display;
+              clonedLayer.style.visibility = computedStyle.visibility;
+              clonedLayer.style.position = computedStyle.position;
+              clonedLayer.style.left = computedStyle.left;
+              clonedLayer.style.top = computedStyle.top;
+              clonedLayer.style.width = computedStyle.width;
+              clonedLayer.style.height = computedStyle.height;
+              clonedLayer.style.zIndex = computedStyle.zIndex;
+              
+              // Force remove any transitions that might interfere
+              clonedLayer.style.transition = 'none';
+              clonedLayer.style.animation = 'none';
+              
+              // Ensure minimum opacity for very low values
+              const opacity = parseFloat(computedStyle.opacity);
+              if (opacity > 0 && opacity < 0.01) {
+                clonedLayer.style.opacity = '0.01'; // Make very low opacity visible
+              }
+            }
+          });
+        }
+      });
+
+      // Create final high-resolution canvas at exactly 1920x1080
+      const hdCanvas = document.createElement('canvas');
+      const ctx = hdCanvas.getContext('2d');
+      hdCanvas.width = 1920;
+      hdCanvas.height = 1080;
+
+      // Fill background color first - check the actual background mode
+      const isWhiteBackground = document.body.classList.contains('white-background');
+      const bgColor = isWhiteBackground ? '#ffffff' : '#000000';
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      // Calculate centering for the captured canvas on 1920x1080
+      const scale1080 = Math.min(1920 / canvas.width, 1080 / canvas.height);
+      const scaledWidth = canvas.width * scale1080;
+      const scaledHeight = canvas.height * scale1080;
+      const x = (1920 - scaledWidth) / 2;
+      const y = (1080 - scaledHeight) / 2;
+
+      // Draw the captured canvas centered in the 1920x1080 frame
+      ctx.drawImage(canvas, x, y, scaledWidth, scaledHeight);
+
+      console.log('FavoritesManager: High-resolution image captured successfully (1920x1080)');
+      return hdCanvas.toDataURL('image/png', 0.95); // Higher quality for high-res
+      
+    } catch (error) {
+      console.error('FavoritesManager: Failed to capture high-resolution image:', error);
+      return null;
+    }
+  },
+
   async captureCurrentState() {
     // Capture only visible layers from AnimationEngine
     const layers = [];

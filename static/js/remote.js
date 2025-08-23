@@ -180,6 +180,7 @@ class RemoteController {
             });
         }
         
+        
         // Global activity tracking for touch and mouse events
         document.addEventListener('touchstart', () => this.recordActivity(), { passive: true });
         document.addEventListener('touchmove', () => this.recordActivity(), { passive: true });
@@ -622,6 +623,63 @@ class RemoteController {
         }
     }
     
+    async exportFavoriteHD(favoriteId) {
+        /**
+         * Export a favorite as high-resolution 1920x1080 PNG to device photo library.
+         * Uses the high-resolution API endpoint with download parameter.
+         */
+        try {
+            console.log(`Remote Controller: Exporting favorite ${favoriteId} as HD image`);
+            
+            // Show loading feedback with longer duration for mobile
+            this.showToast('Preparing HD image...', 3000);
+            
+            // Add vibration feedback on mobile if supported
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
+            
+            // Create a download link using the high-res API
+            const downloadUrl = `/api/favorites/${favoriteId}/highres?download=true`;
+            console.log(`Remote Controller: Download URL: ${downloadUrl}`);
+            
+            // Test the URL first to make sure it's working
+            const testResponse = await fetch(downloadUrl, { method: 'HEAD' });
+            if (!testResponse.ok) {
+                throw new Error(`High-res API returned ${testResponse.status}`);
+            }
+            
+            // Create temporary link element for download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `painting_${favoriteId}.png`;
+            link.style.display = 'none';
+            
+            // Add to DOM, click, and remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Success feedback after a short delay
+            setTimeout(() => {
+                this.showToast('HD image saved to Photos', 3000);
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            }, 1000);
+            
+            console.log(`Remote Controller: HD export initiated for favorite ${favoriteId}`);
+            
+        } catch (error) {
+            console.error('Failed to export favorite:', error);
+            this.showToast('Failed to export HD image', 3000);
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+    }
+    
+    
     async loadImages() {
         try {
             this.showImagesLoading(true);
@@ -898,10 +956,14 @@ class RemoteController {
         
         if (this.favorites.length === 0) {
             this.showFavoritesEmpty(true);
+            // Hide grid when empty
+            this.elements.favoritesGrid.classList.add('hidden');
             return;
         }
         
         this.showFavoritesEmpty(false);
+        // Show grid when favorites exist
+        this.elements.favoritesGrid.classList.remove('hidden');
         
         // Clear existing favorites
         this.elements.favoritesGrid.innerHTML = '';
@@ -922,6 +984,11 @@ class RemoteController {
         thumbnail.src = favorite.thumbnail || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
         thumbnail.alt = favorite.name || 'Favorite';
         
+        // Prevent default image behaviors but allow parent events to bubble
+        thumbnail.draggable = false;
+        thumbnail.addEventListener('contextmenu', (e) => e.preventDefault());
+        thumbnail.addEventListener('dragstart', (e) => e.preventDefault());
+        
         // Create delete button
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'remote-favorite-delete-btn';
@@ -940,10 +1007,57 @@ class RemoteController {
         const timeStr = createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         title.textContent = `${dateStr} ${timeStr}`;
         
+        // Long-press detection for HD export
+        let pressTimer = null;
+        let isLongPress = false;
+        
         // Add click handler for loading favorite (on the main area, not delete button)
         item.addEventListener('click', (e) => {
-            if (!e.target.closest('.remote-favorite-delete-btn')) {
+            if (!e.target.closest('.remote-favorite-delete-btn') && !isLongPress) {
                 this.loadFavorite(favorite.id);
+            }
+        });
+        
+        // Touch events for long-press detection (mobile)
+        item.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.remote-favorite-delete-btn')) return;
+            
+            isLongPress = false;
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                this.exportFavoriteHD(favorite.id);
+                
+                // Prevent default behavior only for long press
+                e.preventDefault();
+                e.stopPropagation();
+            }, 500); // 500ms for long press
+        }, { passive: false });
+        
+        item.addEventListener('touchend', (e) => {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+            
+            // Reset isLongPress after a short delay to allow click handler to check it
+            setTimeout(() => {
+                isLongPress = false;
+            }, 100);
+        });
+        
+        item.addEventListener('touchmove', (e) => {
+            // Cancel long press if user moves finger
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+        });
+        
+        // Desktop context menu for HD export
+        item.addEventListener('contextmenu', (e) => {
+            if (!e.target.closest('.remote-favorite-delete-btn')) {
+                e.preventDefault();
+                this.exportFavoriteHD(favorite.id);
             }
         });
         
@@ -1300,8 +1414,11 @@ class RemoteController {
         // Clear any existing timer
         this.pauseHeroRotation();
         
-        // Show first image immediately
-        this.showHeroImage(0);
+        // Start from a random index in the sequence
+        this.currentHeroIndex = Math.floor(Math.random() * this.heroImages.length);
+        
+        // Show random starting image immediately
+        this.showHeroImage(this.currentHeroIndex);
         
         // Start rotation if we have more than one image
         if (this.heroImages.length > 1) {
@@ -1310,7 +1427,7 @@ class RemoteController {
             }, this.heroRotationInterval);
         }
         
-        console.log('Hero Images: Rotation started');
+        console.log(`Hero Images: Rotation started from random index ${this.currentHeroIndex}`);
     }
     
     /**
@@ -1353,26 +1470,29 @@ class RemoteController {
         
         if (!nextElement) return;
         
-        // Preload the new image
-        const img = new Image();
-        img.onload = () => {
-            // Set the background image on the next layer
-            nextElement.style.backgroundImage = `url(${heroData.thumbnail})`;
-            nextElement.classList.remove('fallback');
-            
-            // Fade in the next layer
-            nextElement.classList.add('active');
-            
-            // After transition, fade out current layer and switch active
-            setTimeout(() => {
-                if (currentElement) {
-                    currentElement.classList.remove('active');
-                }
-                this.activeHeroLayer = nextLayer;
-            }, 100);
-        };
+        // Use high-resolution API endpoint (browser will scale it down automatically)
+        const highResUrl = `/api/favorites/${heroData.id}/highres`;
         
-        img.src = heroData.thumbnail;
+        console.log(`Hero Images: Loading high-res image for favorite ${heroData.id}`);
+        console.log(`Hero Images: High-res URL: ${highResUrl}`);
+        
+        // Set the high-res image directly as background - no preloading needed for background images
+        nextElement.style.backgroundImage = `url(${highResUrl})`;
+        nextElement.classList.remove('fallback');
+        
+        console.log(`Hero Images: High-res image set as background for favorite ${heroData.id}`);
+        console.log(`Hero Images: Background style applied: ${nextElement.style.backgroundImage}`);
+        
+        // Fade in the next layer
+        nextElement.classList.add('active');
+        
+        // After transition, fade out current layer and switch active
+        setTimeout(() => {
+            if (currentElement) {
+                currentElement.classList.remove('active');
+            }
+            this.activeHeroLayer = nextLayer;
+        }, 1500);
     }
     
     /**
@@ -1425,6 +1545,7 @@ class RemoteController {
             console.log(`Remote Controller: IP address set to: ${ipAddress}`);
         }
     }
+    
 }
 
 // Initialize the remote controller when the page loads

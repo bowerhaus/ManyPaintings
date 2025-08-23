@@ -1,9 +1,13 @@
 import os
 import json
 import uuid
+import time
+import base64
+import hashlib
+import math
 from datetime import datetime
 from pathlib import Path
-from flask import Flask, render_template, jsonify, send_from_directory, request
+from flask import Flask, render_template, jsonify, send_from_directory, request, send_file
 from config import config
 
 # Global variables to track requests
@@ -13,6 +17,225 @@ refresh_images_request = {'timestamp': None, 'processed': True, 'uploaded_images
 
 # Global variable to track remote control heartbeats
 remote_heartbeats = {}  # {session_id: timestamp}
+
+def generate_highres_from_favorite(favorite_data):
+    """
+    Generate a true high-resolution (1920x1080) image by recreating the artwork 
+    from the saved layer states, transformations, and opacity values.
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageEnhance, ImageOps
+        import io
+        
+        print(f"Generating high-res image from favorite state data...")
+        
+        state = favorite_data.get('state', {})
+        layers = state.get('layers', [])
+        background_color = state.get('backgroundColor', 'black')
+        
+        if not layers:
+            print("No layers found in state data")
+            return None
+        
+        # Create 1920x1080 canvas
+        canvas = Image.new('RGBA', (1920, 1080), (0, 0, 0, 0))
+        
+        # Set background color
+        bg_color = (255, 255, 255, 255) if background_color == 'white' else (0, 0, 0, 255)
+        background = Image.new('RGBA', (1920, 1080), bg_color)
+        canvas = Image.alpha_composite(background, canvas)
+        
+        # Load image directory
+        image_dir = Path('static/images')
+        if not image_dir.exists():
+            print(f"Image directory not found: {image_dir}")
+            return None
+        
+        print(f"Processing {len(layers)} layers...")
+        
+        # Process each layer in order
+        for i, layer_data in enumerate(layers):
+            try:
+                image_id = layer_data.get('imageId')
+                opacity = layer_data.get('opacity', 1.0)
+                transformations = layer_data.get('transformations', {})
+                
+                print(f"Processing layer {i+1}: imageId={image_id}, opacity={opacity}")
+                
+                # Find the actual image file by matching the image ID
+                image_file = find_image_by_id(image_dir, image_id)
+                if not image_file:
+                    print(f"Image file not found for ID: {image_id}")
+                    continue
+                
+                print(f"Loading image: {image_file}")
+                
+                # Load the source image
+                try:
+                    source_image = Image.open(image_file).convert('RGBA')
+                except Exception as e:
+                    print(f"Failed to load image {image_file}: {e}")
+                    continue
+                
+                # Apply transformations to recreate the exact layer state
+                layer_image = apply_transformations(source_image, transformations, (1920, 1080), Image)
+                
+                # Apply opacity
+                if opacity < 1.0:
+                    # Create an alpha mask based on opacity
+                    alpha = layer_image.split()[-1]  # Get alpha channel
+                    alpha = alpha.point(lambda p: int(p * opacity))
+                    layer_image.putalpha(alpha)
+                
+                # Composite this layer onto the canvas
+                canvas = Image.alpha_composite(canvas, layer_image)
+                print(f"Layer {i+1} composited successfully")
+                
+            except Exception as e:
+                print(f"Error processing layer {i+1}: {e}")
+                continue
+        
+        # Convert to RGB for final output
+        final_image = Image.new('RGB', (1920, 1080), bg_color[:3])
+        final_image = Image.alpha_composite(Image.new('RGBA', (1920, 1080), bg_color), canvas)
+        final_image = final_image.convert('RGB')
+        
+        # Save to bytes with high quality
+        output_buffer = io.BytesIO()
+        final_image.save(output_buffer, format='PNG', optimize=True, compress_level=1)
+        output_buffer.seek(0)
+        
+        print("High-resolution image generated successfully")
+        return output_buffer.read()
+        
+    except Exception as e:
+        print(f"Error generating high-res image: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def find_image_by_id(image_dir, image_id):
+    """Find the actual image file that corresponds to the given image ID."""
+    try:
+        for image_path in image_dir.iterdir():
+            if image_path.suffix.lower() in {'.png', '.jpg', '.jpeg', '.gif', '.webp'}:
+                # Generate ID same way as in utils/image_manager.py
+                generated_id = hashlib.md5(image_path.name.encode()).hexdigest()[:8]
+                if generated_id == image_id:
+                    return image_path
+        return None
+    except Exception as e:
+        print(f"Error finding image by ID {image_id}: {e}")
+        return None
+
+def apply_transformations(image, transformations, canvas_size, Image):
+    """Apply transformations to recreate the exact layer positioning and effects."""
+    try:
+        canvas_width, canvas_height = canvas_size
+        
+        # Extract transformation values
+        rotation = transformations.get('rotation', 0)
+        scale = transformations.get('scale', 1.0)
+        translate_x = transformations.get('translateX', 0)
+        translate_y = transformations.get('translateY', 0)
+        hue_shift = transformations.get('hueShift', 0)
+        
+        print(f"Applying transformations: rotation={rotation}, scale={scale}, translate=({translate_x}, {translate_y}), hue={hue_shift}")
+        
+        # Apply hue shift if needed
+        if hue_shift != 0:
+            image = apply_hue_shift(image, hue_shift, Image)
+        
+        # Calculate the scaled size
+        original_width, original_height = image.size
+        new_width = int(original_width * scale)
+        new_height = int(original_height * scale)
+        
+        # Scale the image
+        if scale != 1.0:
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Rotate the image
+        if rotation != 0:
+            image = image.rotate(rotation, expand=True, fillcolor=(0, 0, 0, 0))
+        
+        # Create a canvas-sized transparent image for positioning
+        positioned_image = Image.new('RGBA', canvas_size, (0, 0, 0, 0))
+        
+        # Calculate position (translate values are relative to center)
+        final_width, final_height = image.size
+        center_x = canvas_width // 2
+        center_y = canvas_height // 2
+        
+        # Position the image (translate_x and translate_y offset from center)
+        paste_x = center_x - final_width // 2 + int(translate_x)
+        paste_y = center_y - final_height // 2 + int(translate_y)
+        
+        print(f"Positioning image at ({paste_x}, {paste_y}) on {canvas_size} canvas")
+        
+        # Paste the transformed image onto the positioned canvas
+        if paste_x < canvas_width and paste_y < canvas_height and paste_x + final_width > 0 and paste_y + final_height > 0:
+            positioned_image.paste(image, (paste_x, paste_y), image)
+        
+        return positioned_image
+        
+    except Exception as e:
+        print(f"Error applying transformations: {e}")
+        return Image.new('RGBA', canvas_size, (0, 0, 0, 0))
+
+def apply_hue_shift(image, hue_shift_degrees, Image):
+    """Apply hue shift to an image."""
+    try:
+        if hue_shift_degrees == 0:
+            return image
+        
+        # Convert to HSV for hue manipulation
+        hsv_image = image.convert('HSV')
+        h, s, v = hsv_image.split()
+        
+        # Shift hue values
+        hue_shift = int((hue_shift_degrees % 360) / 360 * 255)
+        h = h.point(lambda p: (p + hue_shift) % 256)
+        
+        # Recombine and convert back
+        hsv_shifted = Image.merge('HSV', (h, s, v))
+        result = hsv_shifted.convert('RGBA')
+        
+        # Preserve alpha channel
+        if image.mode == 'RGBA':
+            result.putalpha(image.split()[-1])
+        
+        return result
+        
+    except Exception as e:
+        print(f"Error applying hue shift: {e}")
+        return image
+
+def cleanup_cache(cache_dir, max_age_hours=24):
+    """
+    Clean up cache files older than max_age_hours.
+    Called periodically to prevent cache from growing indefinitely.
+    """
+    try:
+        cache_path = Path(cache_dir)
+        if not cache_path.exists():
+            return
+        
+        current_time = time.time()
+        max_age_seconds = max_age_hours * 3600
+        
+        for cache_file in cache_path.iterdir():
+            if cache_file.is_file():
+                file_age = current_time - cache_file.stat().st_mtime
+                if file_age > max_age_seconds:
+                    try:
+                        cache_file.unlink()
+                        print(f"Cleaned up old cache file: {cache_file.name}")
+                    except OSError as e:
+                        print(f"Error removing cache file {cache_file.name}: {e}")
+                        
+    except Exception as e:
+        print(f"Error during cache cleanup: {e}")
 
 def create_app(config_name=None):
     if config_name is None:
@@ -489,6 +712,81 @@ def create_app(config_name=None):
             
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/favorites/<favorite_id>/highres', methods=['GET'])
+    def get_favorite_highres(favorite_id):
+        """Generate or return cached 1920x1080 high-resolution image of a favorite."""
+        try:
+            # Check if download mode is requested
+            download = request.args.get('download', 'false').lower() == 'true'
+            
+            # Set up cache directory and file
+            cache_dir = Path('cache/favorites')
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Clean up old cache files (run cleanup on every request for simplicity)
+            cleanup_cache(cache_dir)
+            
+            cache_file = cache_dir / f'{favorite_id}_1920x1080.png'
+            
+            # Check if cached version exists and is less than 24 hours old
+            if cache_file.exists():
+                file_age = time.time() - cache_file.stat().st_mtime
+                if file_age < 86400:  # 24 hours in seconds
+                    # Return cached file
+                    if download:
+                        return send_file(
+                            cache_file,
+                            mimetype='image/png',
+                            as_attachment=True,
+                            download_name=f'painting_{favorite_id}.png'
+                        )
+                    else:
+                        return send_file(cache_file, mimetype='image/png')
+            
+            # Need to generate high-res image
+            favorites_file = 'favorites.json'
+            
+            if not os.path.exists(favorites_file):
+                return jsonify({'error': 'No favorites found'}), 404
+            
+            with open(favorites_file, 'r') as f:
+                favorites = json.load(f)
+            
+            if favorite_id not in favorites:
+                return jsonify({'error': 'Favorite not found'}), 404
+            
+            favorite_data = favorites[favorite_id]
+            
+            # For now, we'll generate the high-res image from the existing thumbnail
+            # This will be improved in Phase 2 when we add the frontend capture method
+            thumbnail_data = favorite_data.get('thumbnail')
+            if not thumbnail_data:
+                return jsonify({'error': 'No thumbnail data available'}), 400
+            
+            # Generate high-resolution image from state data
+            highres_image = generate_highres_from_favorite(favorite_data)
+            
+            if not highres_image:
+                return jsonify({'error': 'Failed to generate high-resolution image'}), 500
+            
+            # Save to cache
+            with open(cache_file, 'wb') as f:
+                f.write(highres_image)
+            
+            # Return the image
+            if download:
+                return send_file(
+                    cache_file,
+                    mimetype='image/png',
+                    as_attachment=True,
+                    download_name=f'painting_{favorite_id}.png'
+                )
+            else:
+                return send_file(cache_file, mimetype='image/png')
+                
+        except Exception as e:
+            return jsonify({'error': f'Failed to generate high-resolution image: {str(e)}'}), 500
     
     
     @app.route('/api/save-current-favorite', methods=['POST'])

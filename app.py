@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import socket
 from datetime import datetime
 from pathlib import Path
 from flask import Flask, render_template, jsonify, send_from_directory, request
@@ -829,6 +830,20 @@ def create_app(config_name=None):
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/api/ip-address')
+    def get_ip_address():
+        """Get the server's local IP address."""
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # doesn't even have to be reachable
+            s.connect(('10.255.255.255', 1))
+            IP = s.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            s.close()
+        return jsonify({'ip_address': IP})
+
     @app.errorhandler(404)
     def not_found_error(error):
         return jsonify({'error': 'Not found'}), 404

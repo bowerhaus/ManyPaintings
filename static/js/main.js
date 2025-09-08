@@ -11,6 +11,7 @@ import { FavoritesManager } from './managers/FavoritesManager.js';
 import { MatteBorderManager } from './managers/MatteBorderManager.js';
 import { DropShadowManager } from './managers/DropShadowManager.js';
 import { CPUTemperatureManager } from './managers/CPUTemperatureManager.js';
+import { IPAddressManager } from './managers/IPAddressManager.js';
 import { userPreferences } from './managers/UserPreferences.js';
 import { remoteSync } from './managers/RemoteSync.js';
 import ConfigManager from './managers/ConfigManager.js';
@@ -26,6 +27,7 @@ let config = {};
 let isInitialized = false;
 let kioskMode = false;
 let cpuTemperatureManager = null;
+let ipAddressManager = null;
 
 /**
  * Main Application Interface
@@ -87,6 +89,9 @@ const App = {
 
       // Initialize CPU temperature manager (RPi only)
       cpuTemperatureManager = new CPUTemperatureManager();
+
+      // Initialize IP address manager
+      ipAddressManager = new IPAddressManager();
 
       await PatternManager.init();
 
